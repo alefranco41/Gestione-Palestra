@@ -1,9 +1,45 @@
+{% load static %}
 <nav>
-    <ul>
-      <li><a href="{% url 'homepage' %}">Home</a></li>
-      <li><a href="{% url 'trainer-list' %}">Our trainers</a></li>
-      <li><a href="{% url 'classes-schedule' %}">Gym classes schedule</a></li>
-      <li><a href="{% url 'subscription-plans' %}">Subscription plans</a></li>
-      <li><a href="{% url 'login' %}">Login</a></li> 
-    </ul>
-  </nav>
+  <ul>
+    <li><a href="{% url 'homepage' %}">Home</a></li>
+    <li><a href="{% url 'trainer-list' %}">Our trainers</a></li>
+    <li><a href="{% url 'classes-schedule' %}">Gym classes schedule</a></li>
+    <li><a href="{% url 'subscription-plans' %}">Subscription plans</a></li>
+      
+    {% if request.user.is_authenticated %}
+    <li>
+      <div class="profile-container">
+        <button onclick="toggleUserMenu()"> <img src="{% static 'img/default_profile_image.png' %}" alt="Profile Image"> </button>
+        <div id="user-menu" class="user-menu" style="display:none;">
+          <a href="{% url 'account' user.id %}">My membership</a> <br>
+          <a href="{% url 'profile' user.id %}">Profile</a> <br>
+          <a href="{% url 'logout' %}">Logout</a>
+        </div>
+      </div>
+    </li>
+    {% else %}
+    <li><a href="{% url 'login' %}">Login</a></li>
+    {% endif %}
+  </ul>
+</nav>
+
+
+<script>
+  document.addEventListener("click", function(event) {
+    var userMenu = document.getElementById("user-menu");
+    var profileContainer = document.querySelector(".profile-container");
+  
+    if (!profileContainer.contains(event.target) && !userMenu.contains(event.target)) {
+      userMenu.style.display = "none";
+    }
+  });
+  
+function toggleUserMenu() {
+  var menu = document.getElementById("user-menu");
+  if (menu.style.display === "none") {
+    menu.style.display = "block";
+  } else {
+    menu.style.display = "none";
+  }
+}
+</script>

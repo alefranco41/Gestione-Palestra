@@ -1,3 +1,6 @@
-def gym_name(request):
-    gym_name = "Fit4All"
-    return {'gym_name': gym_name}
+def global_context(request):    
+    context =   {
+                'gym_name': 'Fit4All',
+                }
+    
+    return context

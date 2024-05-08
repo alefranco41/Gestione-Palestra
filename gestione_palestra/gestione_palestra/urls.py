@@ -21,6 +21,8 @@ from . import views
 urlpatterns = [
     re_path(r"^$|^/$|^home/$", views.homepage, name="homepage"),
     path('logout/', views.LogoutView.as_view(), name="logout"),
+    path('account/<int:user_id>/', views.AccountView.as_view(), name='account'),
+    path('profile/<int:user_id>/', views.ProfileView.as_view(), name='profile'),
     path('login/', views.LoginView.as_view(), name='login'),
     path('registration/', views.RegistrationView.as_view(), name='registration'),
     path('trainer-list/', views.TrainerListView.as_view(), name='trainer-list'),

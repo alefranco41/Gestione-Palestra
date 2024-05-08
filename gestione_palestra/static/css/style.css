@@ -1,34 +1,60 @@
+.user-menu {
+  background-color: #fff; /* Colore di sfondo del menu */
+  border: 1px solid #ccc; /* Bordo del menu */
+  padding: 10px; /* Spaziatura interna del menu */
+  position: absolute; /* Posizionamento assoluto rispetto al contenitore */
+  top: 40px; /* Distanza dal bordo superiore del contenitore */
+  right: 0; /* Allineamento a destra */
+  z-index: 1; /* Z-index per mantenere il menu sopra altri contenuti */
+  width: 200px; /* Larghezza del menu */
+  height: auto; /* Altezza del menu */
+}
+
+.profile-container {
+  position: relative; /* Per consentire il posizionamento assoluto del menu rispetto ad esso */
+  display: inline-block; /* Per evitare la creazione di una nuova riga */
+}
+
 body {
-    font-family: Arial, sans-serif;
-    margin: 0;
-    padding: 0;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 0;
 }
 
-.content{
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    margin: 0;
+
+img {
+  width: 20px; /* Imposta la larghezza desiderata */
+  height: auto; /* Imposta l'altezza automaticamente per mantenere l'aspetto proporzionato */
 }
+.content {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  margin: 0;
+}
+
 form {
-    width: 300px;
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+  width: 300px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
 }
 
-header, footer {
+header,
+footer {
   background-color: #333;
   color: #fff;
   text-align: center;
   padding: 20px 0;
 }
 
-label, input, button {
-    display: block;
-    margin-bottom: 10px;
+label,
+input,
+button {
+  display: block;
+  margin-bottom: 10px;
 }
 
 nav ul {
@@ -70,57 +96,49 @@ footer {
 }
 
 button {
-    padding: 10px;
-    background-color: #007bff;
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
+  padding: 10px;
+  background-color: #e9e9e9;
+  color: #fff;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
 }
 
 button:hover {
-    background-color: #0056b3;
+  background-color: #0056b3;
 }
 
 p {
-    margin-top: 20px;
-    text-align: center;
+  margin-top: 20px;
+  text-align: center;
 }
 
-
 .login-form {
-    text-align: center;
-    margin-top: -500px;
+  text-align: center;
+  margin-top: -500px;
 }
 
 .login-form form {
-    width: 300px;
-    margin: 0 auto; /* Imposta il margine laterale a "auto" per centrare il form */
-    padding: 20px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: #f9f9f9;
+  width: 300px;
+  margin: 0 auto; /* Imposta il margine laterale a "auto" per centrare il form */
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
 }
 
 .login-form label,
 .login-form input,
 .login-form button {
-    display: block;
-    margin: 0 auto; /* Centra gli elementi nel form */
+  display: block;
+  margin: 0 auto; /* Centra gli elementi nel form */
 }
 
 .login-form button {
-    margin-top: 20px; /* Aggiunge spazio sopra il pulsante */
+  margin-top: 20px; /* Aggiunge spazio sopra il pulsante */
 }
 
 .login-form p {
-    margin-top: 20px;
+  margin-top: 20px;
 }
-
-
-
-
-
-
-
 
