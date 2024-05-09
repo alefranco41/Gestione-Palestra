@@ -10,9 +10,29 @@
   height: auto; /* Altezza del menu */
 }
 
+.user-details {
+  width: 50%;
+  margin: 50px auto 0; /* Sposta la tabella più in alto */
+  border-collapse: collapse;
+}
+
+
+
+.user-details th,
+.user-details td {
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: left;
+}
+
+.user-details th {
+  background-color: #f2f2f2;
+}
+
+
 .profile-container {
   position: relative; /* Per consentire il posizionamento assoluto del menu rispetto ad esso */
-  display: inline-block; /* Per evitare la creazione di una nuova riga */
+  display: inline-block; /* Make the profile container inline with other list items */
 }
 
 body {
@@ -65,6 +85,7 @@ nav ul {
 
 nav ul li {
   display: inline;
+  width: 100px;
   margin: 0 10px;
 }
 
@@ -115,7 +136,7 @@ p {
 
 .login-form {
   text-align: center;
-  margin-top: -500px;
+  margin-top: 100px;
 }
 
 .login-form form {

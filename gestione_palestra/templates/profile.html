@@ -1,4 +1,63 @@
 {% extends "base.html" %}
 {% block title %} {{ gym_name }} - Your Personal Profile {% endblock title %}
 
-{% block header %} {{ request.user }}'s profile {% endblock %}
+{% block header %} {{ request.user }}'s profile {% endblock header %}
+
+
+
+{% block content %}
+<!-- Mostra i dettagli dell'utente -->
+    <!-- Aggiungi un pulsante per permettere la modifica -->
+    <div>
+      <table class="user-details">
+        <tr>
+        <th>First Name:</th>
+        <td>{{ user_profile.first_name }}</td>
+        </tr>
+        <tr>
+        <th>Last Name:</th>
+        <td>{{ user_profile.last_name }}</td>
+        </tr>
+        <tr>
+        <th>Gender:</th>
+        <td>{{ user_profile.get_gender_display }}</td> <!-- Utilizzo di get_gender_display per ottenere la rappresentazione leggibile del genere -->
+        </tr>
+        {% if user_profile.date_of_birth|date:"Y-m-d" == now|date:"Y-m-d" %}
+          <tr>
+            <th>Date of Birth:</th>
+            <td></td> <!-- Formattazione della data -->
+          </tr>
+        {% else %}
+          <tr>
+            <th>Date of Birth:</th>
+            <td>{{ user_profile.date_of_birth|date:"F d, Y" }}</td> <!-- Formattazione della data -->
+          </tr>
+        {% endif %}
+        
+        {% if user_profile.height %}
+          <tr>
+            <th>Height:</th>
+            <td>{{ user_profile.height }} cm</td>
+          </tr>
+        {% else %}
+          <tr>
+            <th>Height:</th>
+            <td></td>
+          </tr>
+        {% endif %}
+
+        {% if user_profile.weight %}
+          <tr>
+            <th>Weight:</th>
+            <td>{{ user_profile.weight }} kg</td>
+          </tr>
+        {% else %}
+          <tr>
+            <th>Weight:</th>
+            <td></td>
+          </tr>
+        {% endif %}
+    </table>
+    <a href="{% url 'update-profile' %}" id="edit-profile-button">Edit Profile</a>
+  </div>
+{% endblock content %}

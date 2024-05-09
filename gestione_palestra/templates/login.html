@@ -1,6 +1,7 @@
 {% extends "base.html" %}
 {% block title %} {{ gym_name }} - Login {% endblock title %}
 
+
 {% block header %} Login form {% endblock %}
 
 
@@ -19,4 +20,4 @@
     </form>
     <p>If you are not a member yet, <a href="{% url 'registration' %}">Register here</a>.</p>
 </div>
-{% endblock %}
+{% endblock content %}

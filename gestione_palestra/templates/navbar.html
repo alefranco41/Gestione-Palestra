@@ -9,10 +9,15 @@
     {% if request.user.is_authenticated %}
     <li>
       <div class="profile-container">
-        <button onclick="toggleUserMenu()"> <img src="{% static 'img/default_profile_image.png' %}" alt="Profile Image"> </button>
+        <button id="profile-button" onclick="toggleUserMenu()" style="border: none; background: none; padding: 0; max-width: 25px; border-radius: 30%;">
+          <img src="{% if request.user.userprofile.profile_picture %}{{ request.user.userprofile.profile_picture.url }}{% else %}{% static 'img/default_profile_image.png' %}{% endif %}" alt="Profile Image" style="width: 100%; height: auto; border-radius: 50%;">
+      </button>
+      
+      
+      
         <div id="user-menu" class="user-menu" style="display:none;">
-          <a href="{% url 'account' user.id %}">My membership</a> <br>
-          <a href="{% url 'profile' user.id %}">Profile</a> <br>
+          <a href="{% url 'account' %}">My membership</a> <br>
+          <a href="{% url 'profile' %}">Profile</a> <br>
           <a href="{% url 'logout' %}">Logout</a>
         </div>
       </div>
