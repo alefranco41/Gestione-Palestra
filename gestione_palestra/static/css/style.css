@@ -29,6 +29,25 @@
   background-color: #f2f2f2;
 }
 
+.subscription-plans {
+  display: flex; /* Utilizza il layout flessibile */
+  flex-wrap: wrap; /* Avvolgi i piani su una nuova riga quando necessario */
+  justify-content: space-around; /* Distribuisci uniformemente i piani lungo il contenitore */
+}
+
+.plan {
+  width: calc(33.33% - 20px); /* Imposta la larghezza dei piani, sottraendo lo spazio per il margine */
+  margin: 10px; /* Aggiunge uno spazio tra i piani */
+  text-align: center; /* Centra il testo all'interno di ciascun piano */
+  border: 1px solid #ccc; /* Aggiunge un bordo intorno ai piani */
+  padding: 10px; /* Aggiunge spazio interno ai piani */
+  border-radius: 5px; /* Aggiunge bordi arrotondati */
+  display: flex; /* Utilizza il layout flessibile */
+  flex-direction: column; /* Imposta la direzione dei figli in colonna */
+  justify-content: center; /* Centra verticalmente il contenuto */
+  align-items: center; /* Centra orizzontalmente il contenuto */
+}
+
 
 .profile-container {
   position: relative; /* Per consentire il posizionamento assoluto del menu rispetto ad esso */
@@ -52,6 +71,27 @@ img {
   align-items: center;
   height: 100vh;
   margin: 0;
+}
+
+.purchase-form {
+  width: auto; /* Sovrascrivi la larghezza specifica per il form di acquisto */
+  padding: 0; /* Rimuovi il padding specifico per il form di acquisto */
+  border: none; /* Rimuovi il bordo specifico per il form di acquisto */
+  border-radius: 0; /* Rimuovi il bordo arrotondato specifico per il form di acquisto */
+  background-color: transparent; /* Rimuovi il colore di sfondo specifico per il form di acquisto */
+}
+
+.purchase-form button {
+  padding: 10px; /* Aggiungi il padding solo per il pulsante all'interno del form di acquisto */
+  background-color: #e9e9e9; /* Cambia il colore di sfondo solo per il pulsante all'interno del form di acquisto */
+  color: #fff; /* Cambia il colore del testo solo per il pulsante all'interno del form di acquisto */
+  border: none; /* Rimuovi il bordo solo per il pulsante all'interno del form di acquisto */
+  border-radius: 5px; /* Aggiungi il bordo arrotondato solo per il pulsante all'interno del form di acquisto */
+  cursor: pointer; /* Cambia il cursore solo per il pulsante all'interno del form di acquisto */
+}
+
+.purchase-form button:hover {
+  background-color: #0056b3; /* Cambia il colore di sfondo del pulsante solo al passaggio del mouse all'interno del form di acquisto */
 }
 
 form {
@@ -107,7 +147,8 @@ section {
 }
 
 h2 {
-  color: #c01010;
+  text-align: center;
+  color: #000000;
 }
 
 footer {

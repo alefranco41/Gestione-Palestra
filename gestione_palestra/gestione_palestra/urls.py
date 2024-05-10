@@ -23,13 +23,13 @@ from django.conf.urls.static import static
 urlpatterns = [
     re_path(r"^$|^/$|^home/$", views.homepage, name="homepage"),
     path('logout/', views.LogoutView.as_view(), name="logout"),
-    path('account/', views.AccountView.as_view(), name='account'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('update-profile/', views.UpdateProfile.as_view(), name='update-profile'),
     path('login/', views.LoginView.as_view(), name='login'),
     path('registration/', views.RegistrationView.as_view(), name='registration'),
     path('trainer-list/', views.TrainerListView.as_view(), name='trainer-list'),
     path('subscription-plans/', views.SubscriptionPlansView.as_view(), name='subscription-plans'),
+    path('dashboard/', views.Dashboard.as_view(), name='dashboard'),
     path('classes-schedule/', views.GymClassesView.as_view(), name='classes-schedule'),
     path('admin/', admin.site.urls)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

@@ -1,5 +1,64 @@
 {% extends "base.html" %}
 {% block title %} {{ gym_name }} - Subscription Plans {% endblock title %}
 
-{% block header %} Our Subscription Plans {% endblock %}
+{% block header %} Our Subscription Plans {% endblock header %}
 
+{% block content %}
+
+
+<div class="subscription-plans" style="display: flex; justify-content: center;">
+{% for plan in subscription_plans %}
+  <div class="plan">
+    <h3>{{ plan.name }}</h3>
+    <table class="user-details">
+        <tr>
+            <th>Full price:</th>
+            <td>{{ plan.monthly_price }} $</td>
+        </tr>
+        <tr>
+            <th>Age discounted price (U18/O65):</th>
+            <td>{{ plan.discounted_price|floatformat:2 }} $</td>
+        </tr>
+        <tr>
+            <th>Duration:</th>
+            <td>
+                {% for duration, duration_label in plan.DURATION_CHOICES %}
+                    <input type="radio" id="{{ plan.id }}_{{ duration }}" name="{{ plan.id }}_duration" value="{{ duration }}" {% if duration == 1 %}checked{% endif %} form="form_{{ plan.id }}">
+                    <label for="{{ plan.id }}_{{ duration }}">{{ duration_label }}</label><br>
+                {% endfor %}
+            </td>
+        </tr>
+    </table>
+    <form id="form_{{ plan.id }}" class="purchase-form" action="{% url 'subscription-plans'  %}" method="post">
+        {% csrf_token %}
+        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+        <input type="hidden" name="duration_selected" id="duration_selected_{{ plan.id }}" value="">
+        <button type="submit" style="margin-top: 10px;">Purchase</button>
+    </form>
+  </div>
+{% endfor %}
+</div>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Seleziona tutti gli input di tipo radio
+      var radioButtons = document.querySelectorAll('input[type="radio"]');
+      
+      // Aggiungi un listener agli input di tipo radio
+      radioButtons.forEach(function(radioButton) {
+        radioButton.addEventListener('change', function() {
+          // Se un radio button viene selezionato, aggiorna il valore del campo input nascosto corrispondente al form
+          var selectedDuration = this.value;
+          var planId = this.getAttribute('name').split('_')[0];
+          document.getElementById('duration_selected_' + planId).value = selectedDuration;
+        });
+      });
+    });
+
+    {% if error %}
+        setTimeout(function() {
+          alert("{{ error }}");
+        }, 100);
+      {% endif %}
+
+</script>
+{% endblock content %}

@@ -6,6 +6,7 @@
 
 
 {% block content %}
+<h2> Your personal info: </h2>
 <!-- Mostra i dettagli dell'utente -->
     <!-- Aggiungi un pulsante per permettere la modifica -->
     <div>
@@ -58,6 +59,30 @@
           </tr>
         {% endif %}
     </table>
+
+    <h2> Your Subscription Plan: </h2>
+    <table class="user-details">
+      <tr>
+        <th>Access Type:</th>
+        <td>{{ user_subscription.plan_type }}</td>
+      </tr>
+      <tr>
+        <th>Creation Date:</th>
+        <td>{{ user_subscription.start_date }}</td>
+      </tr>
+      <tr>
+        <th>Expiration Date:</th>
+        <td>{{ user_subscription.end_date }}</td>
+      </tr>
+      <tr>
+        <th>Monthly Price:</th>
+        {% if user_subscription.monthly_price %} 
+        <td>{{ user_subscription.monthly_price }} $</td>
+        {% else %}
+        <td></td>
+        {% endif %}
+      </tr>   
+  </table>
     <a href="{% url 'update-profile' %}" id="edit-profile-button">Edit Profile</a>
   </div>
 {% endblock content %}
