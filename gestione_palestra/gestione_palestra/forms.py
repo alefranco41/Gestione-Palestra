@@ -31,3 +31,18 @@ class UserProfileForm(forms.ModelForm):
     class Meta:
         model = models.UserProfile
         fields = ['first_name', 'last_name', 'gender', 'date_of_birth', 'height', 'weight', 'profile_picture']
+
+class TrainerProfileForm(forms.ModelForm):
+    
+    fitness_goals_choices = models.FitnessGoal.objects.all()
+
+    choices = [(goal.id, goal.name) for goal in fitness_goals_choices]
+
+    fitness_goals = forms.MultipleChoiceField(choices=choices, widget=forms.CheckboxSelectMultiple)
+
+    class Meta:
+        model = models.TrainerProfile
+        fields = ['first_name', 'last_name', 'gender', 'date_of_birth', 'profile_picture', 'pt_photo', 'certifications']
+
+
+

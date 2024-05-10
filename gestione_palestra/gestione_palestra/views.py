@@ -10,6 +10,8 @@ from django.http import HttpResponseRedirect
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
+from django.db import connection
+
 
 def homepage(request):
     context = {
@@ -23,13 +25,26 @@ class GymClassesView(View):
 
 class TrainerListView(View):
     def get(self, request):
-        return render(request=request, template_name="trainer-list.html", context={})
+        trainers_users = models.User.objects.filter(is_instructor=True)
+        trainers = []
+        for trainer_user in trainers_users:
+            trainer_profile = models.TrainerProfile.objects.get(user=trainer_user)
+            with connection.cursor() as cursor:
+                cursor.execute(f"SELECT fg.name FROM gestione_palestra_fitnessgoal AS fg WHERE fg.id IN (SELECT fitnessgoal_id FROM gestione_palestra_trainerprofile_fitness_goals WHERE trainerprofile_id = {trainer_profile.id})")
+                fitness_goals = [row[0] for row in cursor.fetchall()]
+
+            trainers.append((trainer_profile,fitness_goals))
+            
+        return render(request=request, template_name="trainer-list.html", context={'trainers':trainers})
 
 class SubscriptionPlansView(View):
     def get(self, request):
         return render(request=request, template_name="subscription-plans.html", context={})
     
     def post(self, request, *args, **kwargs):
+        if request.user.is_instructor:
+            return render(request=request, template_name="subscription-plans.html", context={'error':' You are a personal trainer!!'})
+        
         old_subscription = None
         if models.Subscription.objects.filter(user=request.user).exists(): #utente già abbonato, assicurarsi che non sia scaduto
             subscription = models.Subscription.objects.get(user=request.user)
@@ -118,25 +133,40 @@ class RegistrationView(View):
 
 class ProfileView(View):
     def get(self, request):
-        form = forms.UserProfileForm()
-        
-        user_profile, created = models.UserProfile.objects.get_or_create(user=request.user)
-
-
-        try:
-            user_subscription = models.Subscription.objects.get(user=request.user)
-            plan_id = user_subscription.plan.id
-            plan = models.SubscriptionPlan.objects.get(id=plan_id)
-            user_subscription.plan_type = plan.plan_type
-            context = {'form': form, 'user_profile':user_profile, 'user_subscription':user_subscription}
-        except models.Subscription.DoesNotExist:
-            context = {'form': form, 'user_profile':user_profile}
+        if request.user.is_instructor:
+            user_profile, created = models.TrainerProfile.objects.get_or_create(user=request.user)
+            form = forms.TrainerProfileForm(instance=user_profile)
+            with connection.cursor() as cursor:
+                cursor.execute(f"SELECT fg.name FROM gestione_palestra_fitnessgoal AS fg WHERE fg.id IN (SELECT fitnessgoal_id FROM gestione_palestra_trainerprofile_fitness_goals WHERE trainerprofile_id = {user_profile.id})")
+                fitness_goals = [row[0] for row in cursor.fetchall()]
+            context = {'form': form, 'user_profile':user_profile, 'user_fitness_goals':fitness_goals}
+        elif request.user.is_manager:
+            pass
+        else:
+            user_profile = models.UserProfile.objects.get(user=request.user)
+            form = forms.UserProfileForm(instance=user_profile)
+            try:
+                user_subscription = models.Subscription.objects.get(user=request.user)
+                plan_id = user_subscription.plan.id
+                plan = models.SubscriptionPlan.objects.get(id=plan_id)
+                user_subscription.plan_type = plan.plan_type
+                context = {'form': form, 'user_profile':user_profile, 'user_subscription':user_subscription}
+            except Exception:
+                pass
+                
 
         return render(request=request, template_name='profile.html', context=context)
 
     def post(self, request, *args, **kwargs):
-        form = forms.UserProfileForm(request.POST)
-        user_profile = get_object_or_404(models.UserProfile, user=request.user)
+        if request.user.is_instructor:
+            form = forms.TrainerProfileForm(request.POST)
+            user_profile = get_object_or_404(models.TrainerProfile, user=request.user)
+        elif request.user.is_manager:
+            pass
+        else:
+            form = forms.UserProfileForm(request.POST)
+            user_profile = get_object_or_404(models.UserProfile, user=request.user)
+        
         if form.is_valid():
             profile = form.save(commit=False)
             profile.user = request.user
@@ -148,15 +178,40 @@ class ProfileView(View):
 
 class UpdateProfile(View):
     def get(self, request):
-        user_profile = models.UserProfile.objects.get(user=request.user)
-        form = forms.UserProfileForm(request.POST, instance=user_profile)
+        if request.user.is_instructor:
+            user_profile = models.TrainerProfile.objects.get(user=request.user)
+            form = forms.TrainerProfileForm(request.POST, instance=user_profile)
+            
+            
+        elif request.user.is_manager:
+            pass
+        else:
+            user_profile = models.UserProfile.objects.get(user=request.user)
+            form = forms.UserProfileForm(request.POST, instance=user_profile)
+            
         return render(request, 'update_profile.html', {'form': form, 'user_profile':user_profile})
     
     def post(self, request, *args, **kwargs):
-        user_profile = models.UserProfile.objects.get(user=request.user)
-        form = forms.UserProfileForm(request.POST, request.FILES, instance=user_profile)
+        if request.user.is_instructor:
+            user_profile = models.TrainerProfile.objects.get(user=request.user)
+            form = forms.TrainerProfileForm(request.POST, request.FILES, instance=user_profile)
+
+        elif request.user.is_manager:
+            pass
+        else:
+            user_profile = models.UserProfile.objects.get(user=request.user)
+            form = forms.UserProfileForm(request.POST, request.FILES, instance=user_profile)
+        
+        
         if form.is_valid():
-            form.save()
+            instance = form.save(commit=False)
+
+            if request.user.is_instructor:
+                fitness_goals_ids = request.POST.getlist('fitness_goals')
+                fitness_goals_objects = models.FitnessGoal.objects.filter(pk__in=fitness_goals_ids)
+                instance.fitness_goals.set(fitness_goals_objects)
+                instance.save()
+
             return redirect('profile')  # Reindirizza alla pagina del profilo
         
         return render(request, 'update_profile.html', {'form': form, 'user_profile':user_profile})

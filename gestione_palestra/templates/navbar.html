@@ -10,7 +10,14 @@
     <li>
       <div class="profile-container">
         <button id="profile-button" onclick="toggleUserMenu()" style="border: none; background: none; padding: 0; max-width: 25px; border-radius: 30%;">
-          <img src="{% if request.user.userprofile.profile_picture %}{{ request.user.userprofile.profile_picture.url }}{% else %}{% static 'img/default_profile_image.png' %}{% endif %}" alt="Profile Image" style="width: 100%; height: auto; border-radius: 50%;">
+          {% if request.user.userprofile.profile_picture %}
+          <img src="{{ request.user.userprofile.profile_picture.url }}" alt="Profile Image" style="width: 100%; height: auto; border-radius: 50%;">
+          {% elif request.user.trainerprofile.profile_picture %} 
+          <img src="{{ request.user.trainerprofile.profile_picture.url }}" alt="Profile Image" style="width: 100%; height: auto; border-radius: 50%;">
+          {% else %}
+          <img src="{% static 'img/default_profile_image.png' %}" alt="Profile Image" style="width: 100%; height: auto; border-radius: 50%;">
+          {% endif %}
+          
       </button>
       
       

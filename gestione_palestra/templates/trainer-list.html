@@ -1,5 +1,27 @@
 {% extends "base.html" %}
+{% load static %}
+
 {% block title %} {{ gym_name }} - Our Trainers {% endblock title %}
 
 {% block header %} Our Trainers {% endblock %}
 
+{% block content %}
+<h2>Trainers List</h2>
+<div class="trainer-list">
+    
+    <div class="trainers-container">
+        {% for trainer, fitness_goals in trainers %}
+        <div class="trainer-card">
+            <img src="{% if trainer.pt_photo %}{{ trainer.pt_photo.url }}{% else %}{% static 'img/default_profile_image.png' %}{% endif %}" alt="Profile Picture" style="max-width: 200px;">
+            <div class="trainer-details">
+                <p><strong>First Name:</strong> {{ trainer.first_name|default:"-" }}</p>
+                <p><strong>Last Name:</strong> {{ trainer.last_name|default:"-" }}</p>
+                <p><strong>Gender:</strong> {{ trainer.gender|default:"-" }}</p>
+                <p><strong>Date of Birth:</strong> {{ trainer.date_of_birth|default:"-" }}</p>
+                <p><strong>Fitness Goals:</strong> {% for goal in fitness_goals %}<li>{{ goal }}</li>{% endfor %}</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

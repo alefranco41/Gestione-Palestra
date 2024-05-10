@@ -3,90 +3,84 @@
 
 {% block header %} {{ request.user }}'s profile {% endblock header %}
 
-
-
 {% block content %}
-<h2> Your personal info: </h2>
-<!-- Mostra i dettagli dell'utente -->
-    <!-- Aggiungi un pulsante per permettere la modifica -->
-    <div>
-      <table class="user-details">
+<div style="display: flex; justify-content: center;">
+    <table class="user-details">
         <tr>
-        <th>First Name:</th>
-        <td>{{ user_profile.first_name }}</td>
+            <th>First Name:</th>
+            <td>{{ user_profile.first_name }}</td>
         </tr>
         <tr>
-        <th>Last Name:</th>
-        <td>{{ user_profile.last_name }}</td>
+            <th>Last Name:</th>
+            <td>{{ user_profile.last_name }}</td>
         </tr>
         <tr>
-        <th>Gender:</th>
-        <td>{{ user_profile.get_gender_display }}</td> <!-- Utilizzo di get_gender_display per ottenere la rappresentazione leggibile del genere -->
+            <th>Gender:</th>
+            <td>{{ user_profile.get_gender_display }}</td>
         </tr>
-        {% if user_profile.date_of_birth|date:"Y-m-d" == now|date:"Y-m-d" %}
-          <tr>
+        <tr>
             <th>Date of Birth:</th>
-            <td></td> <!-- Formattazione della data -->
-          </tr>
-        {% else %}
-          <tr>
-            <th>Date of Birth:</th>
-            <td>{{ user_profile.date_of_birth|date:"F d, Y" }}</td> <!-- Formattazione della data -->
-          </tr>
-        {% endif %}
-        
+            {% if user_profile.date_of_birth|date:"Y-m-d" == now|date:"Y-m-d" %}
+                <td></td>
+            {% else %}
+                <td>{{ user_profile.date_of_birth|date:"F d, Y" }}</td>
+            {% endif %}
+        </tr>
         {% if user_profile.height %}
-          <tr>
-            <th>Height:</th>
-            <td>{{ user_profile.height }} cm</td>
-          </tr>
-        {% else %}
-          <tr>
-            <th>Height:</th>
-            <td></td>
-          </tr>
+            <tr>
+                <th>Height:</th>
+                <td>{{ user_profile.height }} cm</td>
+            </tr>
         {% endif %}
-
         {% if user_profile.weight %}
-          <tr>
-            <th>Weight:</th>
-            <td>{{ user_profile.weight }} kg</td>
-          </tr>
-        {% else %}
-          <tr>
-            <th>Weight:</th>
-            <td></td>
-          </tr>
+            <tr>
+                <th>Weight:</th>
+                <td>{{ user_profile.weight }} kg</td>
+            </tr>
+        {% endif %}
+        {% if request.user.is_instructor %}
+        <tr>
+            <th>Fitness Goals:</th>
+            <td>
+                <ul>
+                    {% for goal in user_fitness_goals %}
+                        <li>{{ goal }}</li>
+                    {% endfor %}
+                </ul>
+            </td>
+        </tr>
         {% endif %}
     </table>
-
-    <h2> Your Subscription Plan: </h2>
-    <table class="user-details">
-      <tr>
-        <th>Access Type:</th>
-        <td>{{ user_subscription.plan_type }}</td>
-      </tr>
-      <tr>
-        <th>Age Discount</th>
-        <td>{{ user_subscription.age_reduction }}</td>
-      </tr>
-      <tr>
-        <th>Creation Date:</th>
-        <td>{{ user_subscription.start_date }}</td>
-      </tr>
-      <tr>
-        <th>Expiration Date:</th>
-        <td>{{ user_subscription.end_date }}</td>
-      </tr>
-      <tr>
-        <th>Monthly Price:</th>
-        {% if user_subscription.monthly_price %} 
-        <td>{{ user_subscription.monthly_price }} $</td>
-        {% else %}
-        <td></td>
-        {% endif %}
-      </tr>   
-  </table>
+    
+    {% if not request.user.is_instructor and not request.user.is_manager %}
+        <h2> Your Subscription Plan: </h2>
+        <table class="user-details">
+            <tr>
+                <th>Access Type:</th>
+                <td>{{ user_subscription.plan_type }}</td>
+            </tr>
+            <tr>
+                <th>Age Discount</th>
+                <td>{{ user_subscription.age_reduction }}</td>
+            </tr>
+            <tr>
+                <th>Creation Date:</th>
+                <td>{{ user_subscription.start_date }}</td>
+            </tr>
+            <tr>
+                <th>Expiration Date:</th>
+                <td>{{ user_subscription.end_date }}</td>
+            </tr>
+            <tr>
+                <th>Monthly Price:</th>
+                {% if user_subscription.monthly_price %} 
+                    <td>{{ user_subscription.monthly_price }} $</td>
+                {% else %}
+                    <td></td>
+                {% endif %}
+            </tr>   
+        </table>
+    {% endif %}
     <a href="{% url 'update-profile' %}" id="edit-profile-button">Edit Profile</a>
-  </div>
-{% endblock content %}
+</div>
+{% endblock %}

@@ -94,12 +94,77 @@ img {
   background-color: #0056b3; /* Cambia il colore di sfondo del pulsante solo al passaggio del mouse all'interno del form di acquisto */
 }
 
-form {
-  width: 300px;
+.trainers-container {
+  display: flex;
+  text-align: left;
+}
+
+.trainer-list {
+  display: flex;
+  justify-content: center;
+  margin-top: 100px;
+}
+
+.trainer-card {
+  display: inline-block;
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f9;
+}
+
+.trainer-card img {
+  display: block;
+  margin: 0 auto;
+  border-radius: 50%; /* Per rendere l'immagine rotonda */
+  max-width: 100%; /* Per far sì che l'immagine non superi la larghezza massima della sua area genitore */
+  height: auto; /* Per mantenere l'aspetto corretto dell'immagine */
+}
+
+
+form {
+  width: 1000px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 10px;
+}
+
+.form-group label {
+  margin-bottom: 5px;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  width: 250px; /* Imposta la larghezza desiderata */
+}
+
+@media (min-width: 768px) {
+  .form-group {
+      flex-direction: row;
+      align-items: center;
+  }
+
+  .form-group label {
+      font-weight: bold;
+      margin-right: 10px;
+      flex: 1;
+      margin-left: 10px;
+  }
+
+  .form-group input,
+  .form-group select,
+  .form-group textarea {
+      width: auto;
+      flex: 2;
+  }
 }
 
 header,

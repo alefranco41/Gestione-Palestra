@@ -39,6 +39,24 @@ class UserProfile(models.Model):
     def profileInfo(self):
         return True if self.first_name and self.last_name and self.date_of_birth else False
 
+class FitnessGoal(models.Model):
+    name = models.CharField(max_length=100)
+
+class TrainerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    gender_choices = [
+        ('M', 'Male'),
+        ('F', 'Female'),
+    ]
+    gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
+    first_name = models.CharField(max_length=100, null=False,blank=True)
+    last_name = models.CharField(max_length=100, null=False,blank=True)
+    date_of_birth = models.DateField(null=False,blank=True,default=date.today)
+    certifications = models.FileField(blank=True)
+    profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
+    fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
+    pt_photo = models.ImageField(upload_to='pt_images/', null=True, blank=True)
+
 class Subscription(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     plan = models.ForeignKey('SubscriptionPlan', on_delete=models.CASCADE)
