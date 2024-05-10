@@ -7,7 +7,8 @@ from . import forms
 from . import models
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
-from datetime import datetime, timedelta
+from datetime import datetime
+from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 
 def homepage(request):
@@ -29,31 +30,52 @@ class SubscriptionPlansView(View):
         return render(request=request, template_name="subscription-plans.html", context={})
     
     def post(self, request, *args, **kwargs):
+        old_subscription = None
         if models.Subscription.objects.filter(user=request.user).exists(): #utente già abbonato, assicurarsi che non sia scaduto
             subscription = models.Subscription.objects.get(user=request.user)
             
             if not subscription.expired():
                 return render(request=request, template_name="subscription-plans.html", context={'error':' You already have a plan that is still valid!!'})
+            else:
+                old_subscription = subscription 
+
+        user = models.UserProfile.objects.get(user=request.user)
+        if not user.profileInfo():
+            return render(request=request, template_name="subscription-plans.html", context={'error':' You must complete your profile first!!'})
         
         plan = models.SubscriptionPlan.objects.get(id=request.POST.get('plan_id'))
         duration = int(request.POST.get('duration_selected'))
         
         start_date = datetime.now()
-        end_date = start_date + timedelta(days=30*duration)
+        end_date = start_date + relativedelta(months=duration)
 
         duration_discounts = models.DurationDiscount.objects.filter(subscription_plan=plan)
+        duration_discount = duration_discounts.get(duration=duration)
         
-        duration_discount = duration_discounts.filter(duration=duration).first()
         if duration_discount:
             discount_percentage = duration_discount.discount_percentage
         else:
             discount_percentage = 0
         
-        price = plan.monthly_price * (Decimal(1) - Decimal(discount_percentage) / Decimal(100))
+        age_discount = 0
+        age_reduction = False
+        if user.ageReduction():
+            age_discount = plan.age_discount
+            age_reduction = True
 
+        price = plan.monthly_price * (Decimal(1) - Decimal(discount_percentage) / Decimal(100)) - age_discount
 
-        sub = models.Subscription(user=request.user, plan=plan, monthly_price=price, start_date=start_date, end_date=end_date)
-        sub.save()
+        if old_subscription:
+            old_subscription.plan = plan
+            old_subscription.monthly_price = price
+            old_subscription.start_date = start_date
+            old_subscription.end_date = end_date
+            old_subscription.age_reduction = age_reduction
+            old_subscription.save()
+        else:
+            sub = models.Subscription(user=request.user, plan=plan, monthly_price=price, start_date=start_date, end_date=end_date, age_reduction=age_reduction)
+            sub.save()
+
         return redirect('profile')
 
 
@@ -97,8 +119,9 @@ class RegistrationView(View):
 class ProfileView(View):
     def get(self, request):
         form = forms.UserProfileForm()
-        user_profile, created = models.UserProfile.objects.get_or_create(user=request.user)
         
+        user_profile, created = models.UserProfile.objects.get_or_create(user=request.user)
+
 
         try:
             user_subscription = models.Subscription.objects.get(user=request.user)
@@ -127,7 +150,7 @@ class UpdateProfile(View):
     def get(self, request):
         user_profile = models.UserProfile.objects.get(user=request.user)
         form = forms.UserProfileForm(request.POST, instance=user_profile)
-        return render(request, 'update_profile.html', {'form': form})
+        return render(request, 'update_profile.html', {'form': form, 'user_profile':user_profile})
     
     def post(self, request, *args, **kwargs):
         user_profile = models.UserProfile.objects.get(user=request.user)
@@ -136,7 +159,7 @@ class UpdateProfile(View):
             form.save()
             return redirect('profile')  # Reindirizza alla pagina del profilo
         
-        return render(request, 'update_profile.html', {'form': form})
+        return render(request, 'update_profile.html', {'form': form, 'user_profile':user_profile})
     
 class Dashboard(View):
     def get(self, request):

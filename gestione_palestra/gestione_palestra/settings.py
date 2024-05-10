@@ -1,3 +1,4 @@
+
 """
 Django settings for gestione_palestra project.
 
@@ -38,7 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'gestione_palestra'
+    'gestione_palestra',
 ]
 
 MIDDLEWARE = [
@@ -73,6 +74,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'gestione_palestra.wsgi.application'
+AUTH_USER_MODEL = 'gestione_palestra.User'
 
 
 # Database

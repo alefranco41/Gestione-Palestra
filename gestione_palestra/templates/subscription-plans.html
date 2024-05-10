@@ -39,26 +39,34 @@
 {% endfor %}
 </div>
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Seleziona tutti gli input di tipo radio
-      var radioButtons = document.querySelectorAll('input[type="radio"]');
-      
-      // Aggiungi un listener agli input di tipo radio
-      radioButtons.forEach(function(radioButton) {
-        radioButton.addEventListener('change', function() {
-          // Se un radio button viene selezionato, aggiorna il valore del campo input nascosto corrispondente al form
-          var selectedDuration = this.value;
-          var planId = this.getAttribute('name').split('_')[0];
-          document.getElementById('duration_selected_' + planId).value = selectedDuration;
-        });
+  document.addEventListener('DOMContentLoaded', function() {
+    // Seleziona tutti gli input di tipo radio
+    var radioButtons = document.querySelectorAll('input[type="radio"]');
+    
+    // Aggiungi un listener agli input di tipo radio
+    radioButtons.forEach(function(radioButton) {
+      radioButton.addEventListener('change', function() {
+        // Se un radio button viene selezionato, aggiorna il valore del campo input nascosto corrispondente al form
+        var selectedDuration = this.value;
+        var planId = this.getAttribute('name').split('_')[0];
+        document.getElementById('duration_selected_' + planId).value = selectedDuration;
       });
     });
 
-    {% if error %}
-        setTimeout(function() {
-          alert("{{ error }}");
-        }, 100);
-      {% endif %}
+    // Aggiorna il valore dell'input nascosto quando la pagina viene caricata per la prima volta
+    radioButtons.forEach(function(radioButton) {
+      if (radioButton.checked) {
+        var selectedDuration = radioButton.value;
+        var planId = radioButton.getAttribute('name').split('_')[0];
+        document.getElementById('duration_selected_' + planId).value = selectedDuration;
+      }
+    });
+  });
 
+  {% if error %}
+      setTimeout(function() {
+        alert("{{ error }}");
+      }, 100);
+    {% endif %}
 </script>
 {% endblock content %}
