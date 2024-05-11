@@ -1,6 +1,8 @@
 import datetime 
 from . import models
 
+week_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
+
 def global_context(request):
     plans = models.SubscriptionPlan.objects.all()
     fitness_goals_choices = models.FitnessGoal.objects.all()
@@ -13,7 +15,9 @@ def global_context(request):
                     'gym_name': 'Fit4All',
                     'now': datetime.date.today,
                     'subscription_plans':plans,
-                    'fitness_goals':fitness_goals
+                    'fitness_goals':fitness_goals,
+                    'days':week_days,
+                    'hours':range(9,19)
                 }
     
     return context

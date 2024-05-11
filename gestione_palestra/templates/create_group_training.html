@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %} {{ gym_name }} - Group Training Creator {% endblock title %}
+
+{% block header %} Create a new Group Training at {{ gym_name }} {% endblock header %}
+
+{% block content %}
+<div style="margin:auto;">
+    <h2>Create Group Training</h2>
+    <form method="post" style="margin:auto; width:400px">
+        {% csrf_token %}
+        <label for="trainer">Trainer:</label>
+        <select name="trainer" id="trainer">
+            {% for trainer in trainers %}
+                <option value="{{ trainer.id }}">{{ trainer.first_name }} {{ trainer.last_name }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="day">Day:</label>
+        <select name="day" id="day">
+            {% for day, day_name in form.fields.day.choices %}
+                <option value="{{ day }}">{{ day_name }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="start_hour">Start Hour:</label>
+        <select name="start_hour" id="start_hour">
+            {% for hour, hour_name in form.fields.start_hour.choices %}
+                <option value="{{ hour }}">{{ hour_name }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="duration">Duration (minutes):</label>
+        <input type="number" name="duration" id="duration"><br>
+        <label for="max_participants">Max Participants:</label>
+        <input type="number" name="max_participants" id="max_participants"><br>
+        <label for="image">Photo:</label>
+        <input type="file" id="image" name="image" accept="image/*">
+        <label for="description">Description:</label><br>
+        <textarea name="description" id="description" rows="4" cols="50"></textarea><br>
+        <button type="submit">Create Group Training</button>
+    </form>
+</div>
+
+<script>
+    {% if error %}
+        setTimeout(function() {
+          alert("{{ error }}");
+        }, 100);
+      {% endif %}
+  </script>
+{% endblock %}
+

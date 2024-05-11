@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block title %} {{ gym_name }} - Edit Group Class Info {% endblock title %}
+
+
+{% block header %} Edit Group Class Info {% endblock %}
+
+
+{% block content %}
+<div style="margin:auto;">
+    <h2>Edit Group Training</h2>
+    <form method="post" enctype="multipart/form-data" style="margin:auto; width:400px">
+        {% csrf_token %}
+        <input type="hidden" id="id" name="id" value="{{class.id}}">
+        <label for="trainer">Trainer:</label>
+        <select name="trainer" id="trainer">
+            {% for trainer in trainers %}
+                <option value="{{ trainer.id }}" {% if trainer.first_name == class.trainer.first_name %} selected {% endif %}>{{ trainer.first_name }} {{ trainer.last_name }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="day">Day:</label>
+        <select name="day" id="day">
+            {% for day, day_name in form.fields.day.choices %}
+                <option value="{{ day }}" {% if day == class.day %} selected {% endif %}>{{ day_name }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="start_hour">Start Hour:</label>
+        <select name="start_hour" id="start_hour">
+            {% for hour, hour_name in form.fields.start_hour.choices %}
+                <option value="{{ hour }}" {% if hour == class.start_hour %} selected {% endif %} >{{ hour_name }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="duration">Duration (minutes):</label>
+        <input type="number" name="duration" id="duration" value="{{class.duration}}"><br>
+        <label for="max_participants">Max Participants:</label>
+        <input type="number" name="max_participants" id="max_participants" value="{{class.max_participants}}"><br>
+        <label for="image">Photo:</label>
+        <input type="file" id="image" name="image" accept="image/*">
+        <label for="description">Description:</label><br>
+        <textarea name="description" id="description" rows="4" cols="50">{{ class.description }}</textarea><br>
+        <button type="submit">Edit Group Training</button>
+    </form>
+</div>
+{% endblock %}

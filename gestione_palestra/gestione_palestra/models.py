@@ -3,8 +3,6 @@ from django.db import models
 from datetime import datetime, date
 from django.utils.translation import gettext_lazy as _
 
-
-
 class User(AbstractUser):
     is_manager = models.BooleanField(default=False)
     is_instructor = models.BooleanField(default=False)
@@ -102,3 +100,41 @@ class DurationDiscount(models.Model):
     duration = models.IntegerField()
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
     subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE)
+
+
+
+class GroupTraining(models.Model):
+    trainer = models.ForeignKey(TrainerProfile, on_delete=models.CASCADE)
+    DAY_CHOICES = [
+        ('Monday', 'Monday'),
+        ('Tuesday', 'Tuesday'),
+        ('Wednesday', 'Wednesday'),
+        ('Thursday', 'Thursday'),
+        ('Friday', 'Friday'),
+        ('Saturday', 'Saturday'),
+        ('Sunday', 'Sunday'),
+    ]
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    START_HOUR_CHOICES = [
+        (9, '9:00'),
+        (10, '10:00'),
+        (11, '11:00'),
+        (12, '12:00'),
+        (13, '13:00'),
+        (14, '14:00'),
+        (15, '15:00'),
+        (16, '16:00'),
+        (17, '17:00'),
+        (18, '18:00'),
+    ]
+    start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
+    duration = models.PositiveIntegerField()  # Durata in minuti
+    training_type = models.CharField(max_length=10, choices=[(goal.id, goal.name) for goal in FitnessGoal.objects.all()])
+    max_participants = models.PositiveIntegerField()
+    description = models.TextField()
+    image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
+
+#class Reservation(models.Model):
+    #training = models.ForeignKey(Training, on_delete=models.CASCADE)
+    #user = models.ForeignKey(User, on_delete=models.CASCADE)
+

@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from . import forms
 from . import models
+from . import context_processors
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponseRedirect
 from datetime import datetime
@@ -21,7 +22,19 @@ def homepage(request):
 
 class GymClassesView(View):
     def get(self, request):
-        return render(request=request, template_name="classes-schedule.html", context={})
+        classes = models.GroupTraining.objects.all()
+        schedule = {}
+
+        for day in context_processors.week_days:
+            schedule[day] = {}
+        
+        for class_instance in classes:
+            schedule[class_instance.day][class_instance.start_hour] = class_instance
+
+        
+        
+
+        return render(request=request, template_name="classes-schedule.html", context={'schedule': schedule})
 
 class TrainerListView(View):
     def get(self, request):
@@ -42,9 +55,12 @@ class SubscriptionPlansView(View):
         return render(request=request, template_name="subscription-plans.html", context={})
     
     def post(self, request, *args, **kwargs):
-        if request.user.is_instructor:
-            return render(request=request, template_name="subscription-plans.html", context={'error':' You are a personal trainer!!'})
+        if not request.user.is_authenticated:
+            return render(request=request, template_name="subscription-plans.html", context={'error':' You need to login first!!'})
         
+        if request.user.is_instructor or request.user.is_manager:
+            return render(request=request, template_name="subscription-plans.html", context={'error':' You are a staff member!!'})
+            
         old_subscription = None
         if models.Subscription.objects.filter(user=request.user).exists(): #utente già abbonato, assicurarsi che non sia scaduto
             subscription = models.Subscription.objects.get(user=request.user)
@@ -141,7 +157,7 @@ class ProfileView(View):
                 fitness_goals = [row[0] for row in cursor.fetchall()]
             context = {'form': form, 'user_profile':user_profile, 'user_fitness_goals':fitness_goals}
         elif request.user.is_manager:
-            pass
+            context = {}
         else:
             user_profile = models.UserProfile.objects.get(user=request.user)
             form = forms.UserProfileForm(instance=user_profile)
@@ -218,7 +234,54 @@ class UpdateProfile(View):
     
 class Dashboard(View):
     def get(self, request):
-        return render(request=request, template_name="dashboard.html", context={})
+        context = {}
+        if request.user.is_instructor:  
+            context = {'training_sessions':{}}
+        return render(request=request, template_name="dashboard.html", context=context)
 
     def post(self, request, *args, **kwargs):
         pass
+
+class NewGroupTraining(View):    
+    def get(self, request):
+        if not request.user.is_manager:
+            return redirect('dashboard')  
+        
+        form = forms.GroupTrainingForm()
+        trainers = models.TrainerProfile.objects.all()
+        return render(request, 'create_group_training.html', {'form': form, 'trainers':trainers})
+    
+    def post(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            form = forms.GroupTrainingForm(request.POST, request.FILES)
+            if form.is_valid():
+                existing_courses = models.GroupTraining.objects.filter(day=form.cleaned_data.get('day'), start_hour=form.cleaned_data.get('start_hour'))
+                if not existing_courses:
+                    form.save()
+                else:
+                    trainers = models.TrainerProfile.objects.all()
+                    return render(request, 'create_group_training.html', {'form': form, 'trainers':trainers, 'error':'There is already a group class in that time frame!!'})
+        
+        return redirect('dashboard')  
+    
+
+class EditGroupTraining(View):
+    def get(self, request, course_id):
+        if not request.user.is_manager:
+            return redirect('dashboard')  
+        
+        class_item = models.GroupTraining.objects.get(id=course_id)
+        form = forms.GroupTrainingForm()
+        trainers = models.TrainerProfile.objects.all()
+
+        return render(request, 'edit_group_training.html', {'class':class_item, 'form':form, 'trainers':trainers})
+    
+    def post(self, request, *args, **kwargs):
+        if request.method == 'POST':
+            class_id = kwargs.get('course_id')
+            class_item = models.GroupTraining.objects.get(id=class_id)
+            form = forms.GroupTrainingForm(request.POST, request.FILES, instance=class_item)
+
+            if form.is_valid():
+                form.save()
+        return redirect('classes-schedule') 

@@ -46,3 +46,10 @@ class TrainerProfileForm(forms.ModelForm):
 
 
 
+class GroupTrainingForm(forms.ModelForm):
+    day = forms.ChoiceField(choices=models.GroupTraining.DAY_CHOICES)
+    start_hour = forms.ChoiceField(choices=models.GroupTraining.START_HOUR_CHOICES)
+
+    class Meta:
+        model = models.GroupTraining
+        fields = ['trainer', 'day', 'start_hour', 'duration', 'max_participants', 'description']

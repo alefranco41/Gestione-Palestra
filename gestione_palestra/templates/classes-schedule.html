@@ -1,5 +1,46 @@
 {% extends "base.html" %}
 {% block title %} {{ gym_name }} - Our Schedule {% endblock title %}
 
-{% block header %} Our Schedule {% endblock %}
+{% block header %} Our Schedule {% endblock header %}
 
+{% block content %}
+<div style="margin:auto; max-width:800px;">
+    <table border="1" style="margin:auto;">
+        <tr>
+            <th>Day</th>
+            {% for hour in hours %}
+                <th>{{ hour }}:00</th>
+            {% endfor %}
+        </tr>
+        {% for day, hours_data in schedule.items %}
+        <tr>
+            <td>{{ day }}</td>
+            {% for hour in hours %}
+                {% if hour in hours_data.keys %}
+                    <td>
+                        {% for class in hours_data.values %}
+                        <div class="trainer-card">
+                            {% if class.image %} <img  src="{{ class.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
+                            <div class="trainer-details">
+                                <p><strong>Trainer:</strong> {{ class.trainer.first_name}} {{ class.trainer.last_name}}</p>
+                                <p><strong>Duration:</strong> {{ class.duration }}</p>
+                                <p><strong>Description:</strong> {{ class.description }}</p>
+                                <p><strong>Max Participants:</strong> {{ class.max_participants }}</p>
+                                {% if request.user.is_manager %}
+                                 <a href="{%  url 'edit_group_training' course_id=class.id %}">Edit Class</button>
+                                {% elif request.user.is_authenticated and not request.user.is_instructor%}
+                                <a href="{%  url ''%}">Book Class</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </td>
+                {% else %}
+                    <td> - </td>
+                {% endif %}
+            {% endfor %}
+        </tr>
+        {% endfor %}
+    </table>
+</div>
+{% endblock %}

@@ -2,3 +2,21 @@
 {% block title %} {{ gym_name }} - Your Dashboard {% endblock title %}
 
 {% block header %} {{ request.user }}'s Dashboard {% endblock header %}
+
+{% block content %}
+{% if request.user.is_instructor %}
+    <h2>Your incoming training sessions</h2>
+    <div class="trainer-list">
+        <div class="trainers-container">
+            {% for training_session in training_sessions %}
+                <div class="trainer-card">
+                    <!-- Visualizza i dettagli della sessione di allenamento -->
+                </div>
+            {% endfor %}
+        </div>
+    </div>
+{% elif request.user.is_manager %}
+        <h2>Create Group Training</h2>
+        <a href="{% url 'create_group_training' %}" class="button">Create Group Training</button>
+{% endif %}
+{% endblock %}

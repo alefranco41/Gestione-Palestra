@@ -23,6 +23,8 @@ from django.conf.urls.static import static
 urlpatterns = [
     re_path(r"^$|^/$|^home/$", views.homepage, name="homepage"),
     path('logout/', views.LogoutView.as_view(), name="logout"),
+    path('create_group_training/', views.NewGroupTraining.as_view(), name='create_group_training'),
+    path('edit_group_training/<int:course_id>/', views.EditGroupTraining.as_view(), name='edit_group_training'),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('update-profile/', views.UpdateProfile.as_view(), name='update-profile'),
     path('login/', views.LoginView.as_view(), name='login'),
