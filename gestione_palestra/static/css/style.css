@@ -54,10 +54,16 @@
   display: inline-block; /* Make the profile container inline with other list items */
 }
 
+html, body {
+  height: 100%;
+}
+
 body {
   font-family: Arial, sans-serif;
   margin: 0;
   padding: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 
@@ -66,6 +72,7 @@ img {
   height: auto; /* Imposta l'altezza automaticamente per mantenere l'aspetto proporzionato */
 }
 .content {
+  flex: 1;
   display: flex;
   justify-content: center;
   align-items: center;
@@ -179,13 +186,27 @@ form {
   }
 }
 
-header,
-footer {
+header{
   background-color: #333;
   color: #fff;
   text-align: center;
   padding: 20px 0;
 }
+
+
+
+.footer {
+  position: fixed;
+  z-index: 1;
+  bottom: 0;
+  left: 0; /* Se vuoi che il footer sia allineato a sinistra */
+  width: 100%; /* Se vuoi che il footer si estenda per tutta la larghezza */
+  background-color: #333; /* Colore di sfondo del footer */
+  color: #fff; /* Colore del testo del footer */
+  padding: 20px 0;
+  text-align: center; /* Allinea il testo al centro nel footer */
+}
+  
 
 label,
 input,

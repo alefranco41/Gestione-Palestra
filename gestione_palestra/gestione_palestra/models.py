@@ -131,10 +131,11 @@ class GroupTraining(models.Model):
     duration = models.PositiveIntegerField()  # Durata in minuti
     training_type = models.CharField(max_length=10, choices=[(goal.id, goal.name) for goal in FitnessGoal.objects.all()])
     max_participants = models.PositiveIntegerField()
+    total_partecipants = models.PositiveIntegerField(default=0)
     description = models.TextField()
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
-#class Reservation(models.Model):
-    #training = models.ForeignKey(Training, on_delete=models.CASCADE)
-    #user = models.ForeignKey(User, on_delete=models.CASCADE)
+class GroupClassReservation(models.Model):
+    group_class = models.ForeignKey(GroupTraining, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 

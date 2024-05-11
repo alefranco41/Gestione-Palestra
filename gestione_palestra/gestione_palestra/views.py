@@ -31,10 +31,37 @@ class GymClassesView(View):
         for class_instance in classes:
             schedule[class_instance.day][class_instance.start_hour] = class_instance
 
+        return render(request=request, template_name="classes-schedule.html", context={'schedule': schedule})
+
+    def post(self, request, *args, **kwargs):
+        class_id = request.POST.get('class_id')
+        group_class = models.GroupTraining.objects.get(id=class_id)
+            
+        if group_class.total_partecipants == group_class.max_participants:
+            return render(request=request, template_name="classes-schedule.html", context={'error': 'The class you are trying to access is full!!'})
         
+        try:
+            subscription = models.Subscription.objects.get(user=request.user)
+            if subscription.expired():
+                return render(request=request, template_name="classes-schedule.html", context={'error': 'Your subscription is expired!!'})
+            if subscription.plan.name == 'Gym Access Only':
+                return render(request=request, template_name="classes-schedule.html", context={'error': "Your subscription does not allow that!!"})
+        except models.Subscription.DoesNotExist:
+            return render(request=request, template_name="classes-schedule.html", context={'error': 'You are not a member!!'})
+        
+        try:
+            if models.GroupClassReservation.objects.get(user=request.user,group_class=group_class):
+                return render(request=request, template_name="classes-schedule.html", context={'error': 'You are already booked in this class!!'})
+        except (models.GroupClassReservation.DoesNotExist):
+            pass
         
 
-        return render(request=request, template_name="classes-schedule.html", context={'schedule': schedule})
+        reservation = models.GroupClassReservation(user=request.user,group_class=group_class)
+        
+        group_class.total_partecipants += 1
+        group_class.save()
+        reservation.save()
+        return redirect("dashboard")
 
 class TrainerListView(View):
     def get(self, request):
@@ -120,7 +147,10 @@ class LoginView(View):
         user = authenticate(username=username, password=password)
         if user is not None:
             login(request, user)
-            return redirect(reverse('profile'))
+            if not user.is_manager:
+                return redirect(reverse('profile'))
+            else:
+                return redirect(reverse('dashboard'))
         else:
             error_message = "Username or password is incorrect."
             return render(request=request, template_name="login.html", context={'error_message': error_message})
@@ -159,14 +189,15 @@ class ProfileView(View):
         elif request.user.is_manager:
             context = {}
         else:
-            user_profile = models.UserProfile.objects.get(user=request.user)
+            user_profile, created = models.UserProfile.objects.get_or_create(user=request.user)
             form = forms.UserProfileForm(instance=user_profile)
+            context = {'form': form, 'user_profile':user_profile}
             try:
                 user_subscription = models.Subscription.objects.get(user=request.user)
                 plan_id = user_subscription.plan.id
                 plan = models.SubscriptionPlan.objects.get(id=plan_id)
                 user_subscription.plan_type = plan.plan_type
-                context = {'form': form, 'user_profile':user_profile, 'user_subscription':user_subscription}
+                context['user_subscription'] = user_subscription
             except Exception:
                 pass
                 
@@ -220,13 +251,16 @@ class UpdateProfile(View):
         
         
         if form.is_valid():
-            instance = form.save(commit=False)
+            
 
             if request.user.is_instructor:
+                instance = form.save(commit=False)
                 fitness_goals_ids = request.POST.getlist('fitness_goals')
                 fitness_goals_objects = models.FitnessGoal.objects.filter(pk__in=fitness_goals_ids)
                 instance.fitness_goals.set(fitness_goals_objects)
                 instance.save()
+            else:
+                form.save()
 
             return redirect('profile')  # Reindirizza alla pagina del profilo
         
@@ -274,7 +308,8 @@ class EditGroupTraining(View):
         form = forms.GroupTrainingForm()
         trainers = models.TrainerProfile.objects.all()
 
-        return render(request, 'edit_group_training.html', {'class':class_item, 'form':form, 'trainers':trainers})
+        
+        return render(request, 'edit_group_training.html', {'course':class_item, 'form':form, 'trainers':trainers})
     
     def post(self, request, *args, **kwargs):
         if request.method == 'POST':
@@ -284,4 +319,5 @@ class EditGroupTraining(View):
 
             if form.is_valid():
                 form.save()
+            
         return redirect('classes-schedule') 

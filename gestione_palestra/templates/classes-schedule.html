@@ -1,4 +1,6 @@
 {% extends "base.html" %}
+{% load custom_filters %}
+
 {% block title %} {{ gym_name }} - Our Schedule {% endblock title %}
 
 {% block header %} Our Schedule {% endblock header %}
@@ -18,18 +20,19 @@
             {% for hour in hours %}
                 {% if hour in hours_data.keys %}
                     <td>
-                        {% for class in hours_data.values %}
+                        {% for course in hours_data.values %}
                         <div class="trainer-card">
-                            {% if class.image %} <img  src="{{ class.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
+                            {% if course.image %} <img  src="{{ course.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
                             <div class="trainer-details">
-                                <p><strong>Trainer:</strong> {{ class.trainer.first_name}} {{ class.trainer.last_name}}</p>
-                                <p><strong>Duration:</strong> {{ class.duration }}</p>
-                                <p><strong>Description:</strong> {{ class.description }}</p>
-                                <p><strong>Max Participants:</strong> {{ class.max_participants }}</p>
+                                <p><strong>Trainer:</strong> {{ course.trainer.first_name}} {{ course.trainer.last_name}}</p>
+                                <p><strong>Duration:</strong> {{ course.duration }}</p>
+                                <p><strong>Description:</strong> {{ course.description }}</p>
+                                <p><strong>Max Participants:</strong> {{ course.max_participants }}</p>
+                                <p><strong>Remaining Spots:</strong> {{ course.max_participants|subtract:course.total_partecipants }}</p>
                                 {% if request.user.is_manager %}
-                                 <a href="{%  url 'edit_group_training' course_id=class.id %}">Edit Class</button>
+                                 <a href="{%  url 'edit_group_training' course_id=course.id %}">Edit Class</button>
                                 {% elif request.user.is_authenticated and not request.user.is_instructor%}
-                                <a href="{%  url ''%}">Book Class</button>
+                                <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="class_id" value="{{ course.id }}"><button type="submit">Join Class</form>
                                 {% endif %}
                             </div>
                         </div>
@@ -43,4 +46,12 @@
         {% endfor %}
     </table>
 </div>
+
+<script>
+    {% if error %}
+        setTimeout(function() {
+          alert("{{ error }}");
+        }, 100);
+      {% endif %}
+  </script>
 {% endblock %}
