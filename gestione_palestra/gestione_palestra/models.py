@@ -132,7 +132,7 @@ class GroupTraining(models.Model):
     training_type = models.CharField(max_length=10, choices=[(goal.id, goal.name) for goal in FitnessGoal.objects.all()])
     max_participants = models.PositiveIntegerField()
     total_partecipants = models.PositiveIntegerField(default=0)
-    description = models.TextField()
+    title = models.TextField()
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
 class GroupClassReservation(models.Model):

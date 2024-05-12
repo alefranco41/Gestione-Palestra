@@ -8,7 +8,7 @@
     <h2>Insert Workout Information</h2>
     <form method="post" style="margin:auto; width:400px">
         {% csrf_token %}
-        <label for="trainer">{{trainer.first_name}} {{trainer.last_name}}:</label>
+        <label for="trainer">Trainer: {{trainer.first_name}} {{trainer.last_name}}:</label>
         <label for="day">Day:</label>
         <select name="day" id="day">
             {% for day in availability.keys %}
@@ -22,7 +22,7 @@
         <label for="training_type">Training Type:</label><br>
         {{ form.training_type }}
  
-        <label for="description">Additional Info:</label><br>
+        <label for="additional_info">Additional Info:</label><br>
         <textarea name="additional_info" id="additional_info" rows="4" cols="50"></textarea><br>
         <input type="hidden" name="trainer" value="{{trainer.id}}">
         <input type="hidden" name="user" value="{{request.user.id}}">

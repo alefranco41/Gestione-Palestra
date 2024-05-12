@@ -13,6 +13,7 @@ https://docs.djangoproject.com/en/5.0/ref/settings/
 
 from pathlib import Path
 import os
+from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -131,3 +132,12 @@ STATICFILES_DIRS = [os.path.join(BASE_DIR, "static")]
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+CELERY_BEAT_SCHEDULE = {
+    'delete_entries_every_sunday_at_6pm': {
+        'task': 'gestione_palestra.tasks.DeleteReservations',  # Sostituisci con il percorso della tua funzione delete_entries
+        'schedule': crontab(hour=18, minute=0, day_of_week=0),  # Ogni domenica alle 18:00
+    },
+}
+
+CELERY_IMPORTS = ('gestione_palestra.tasks',)

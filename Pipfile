@@ -5,6 +5,8 @@ name = "pypi"
 
 [packages]
 django = "*"
+django-background-tasks = "*"
+celery = "*"
 
 [dev-packages]
 

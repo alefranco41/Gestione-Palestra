@@ -4,19 +4,49 @@
 {% block header %} {{ request.user }}'s Dashboard {% endblock header %}
 
 {% block content %}
-{% if request.user.is_instructor %}
-    <h2>Your incoming training sessions</h2>
-    <div class="trainer-list">
-        <div class="trainers-container">
-            {% for training_session in training_sessions %}
-                <div class="trainer-card">
-                    <!-- Visualizza i dettagli della sessione di allenamento -->
-                </div>
-            {% endfor %}
-        </div>
-    </div>
-{% elif request.user.is_manager %}
-        <h2>Create Group Training</h2>
-        <a href="{% url 'create_group_training' %}" class="button">Create Group Training</button>
+
+{% if request.user.is_manager %}
+    <h2>Create Group Training</h2>
+    <a href="{% url 'create_group_training' %}" class="button">Create Group Training</button>
+{% else %}
+<h2>Your Weekly schedule</h2>
+<table border="1" style="margin:auto;">
+    <tr>
+        <th>Day</th>
+        {% for hour in hours %}
+            <th>{{ hour }}:00</th>
+        {% endfor %}
+    </tr>
+    {% for day, daily_schedule in schedule.items %}
+    <tr>
+        <td>{{ day }}</td>
+        {% for hour, event in daily_schedule.items %}
+            {% if event %}
+                {% if event.max_participants %}
+                    <td>
+                        {{ event.title }} Group Class with {{ event.trainer.first_name }} {{ event.trainer.last_name }} <br>
+                        {% if event.expired %}
+                            <b> ended </b>
+                        {% else %}
+                            <b><a> Cancel </a></b>
+                        {% endif %}
+                    </td>
+                {% else %}
+                    <td>
+                        {{ event.training_type }} Workout with {{ event.trainer.first_name }} {{ event.trainer.last_name }}
+                        {% if event.expired %}
+                            <b> ended </b>
+                        {% else %}
+                            <b><a> Cancel </a></b>
+                        {% endif %}
+                    </td>
+                {% endif %}
+            {% else %}
+            <td> - </td>
+            {% endif %}
+        {% endfor %}
+    </tr>
+    {% endfor %}
+</table>
 {% endif %}
 {% endblock %}

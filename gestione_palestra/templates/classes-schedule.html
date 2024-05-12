@@ -26,7 +26,7 @@
                             <div class="trainer-details">
                                 <p><strong>Trainer:</strong> {{ course.trainer.first_name}} {{ course.trainer.last_name}}</p>
                                 <p><strong>Duration:</strong> {{ course.duration }}</p>
-                                <p><strong>Description:</strong> {{ course.description }}</p>
+                                <p><strong>Description:</strong> {{ course.title }}</p>
                                 <p><strong>Max Participants:</strong> {{ course.max_participants }}</p>
                                 <p><strong>Remaining Spots:</strong> {{ course.max_participants|subtract:course.total_partecipants }}</p>
                                 {% if request.user.is_manager %}

@@ -53,7 +53,7 @@ class GroupTrainingForm(forms.ModelForm):
 
     class Meta:
         model = models.GroupTraining
-        fields = ['trainer', 'day', 'start_hour', 'duration', 'max_participants', 'description']
+        fields = ['trainer', 'day', 'start_hour', 'duration', 'max_participants', 'title']
 
 
 class PersonalTrainingForm(forms.ModelForm):

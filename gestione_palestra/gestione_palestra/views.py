@@ -15,6 +15,9 @@ from django.db import connection
 from datetime import timedelta
 import pytz
 
+today = datetime.now(pytz.timezone('Europe/Rome'))
+
+
 def homepage(request):
     context = {
         'gym_name' : 'Fit4All'
@@ -284,8 +287,66 @@ class UpdateProfile(View):
 class Dashboard(View):
     def get(self, request):
         context = {}
-        if request.user.is_instructor:  
-            context = {'training_sessions':{}}
+        if request.user.is_manager:
+            pass
+        else:
+            if request.user.is_instructor:
+                trainer = models.TrainerProfile.objects.get(user=request.user)
+                instructor_group_classes = models.GroupTraining.objects.filter(trainer=trainer)
+
+                booked_group_classes = []
+                for group_class in instructor_group_classes:
+                    booked_group_classes.append(models.GroupClassReservation.objects.filter(group_class=group_class).first())
+                
+                booked_training_sessions = models.PersonalTraining.objects.filter(trainer=trainer)
+            else:
+                booked_group_classes = models.GroupClassReservation.objects.filter(user=request.user)
+                booked_training_sessions = models.PersonalTraining.objects.filter(trainer=request.user)
+
+            day_mapping = {
+                'Monday': 0,
+                'Tuesday': 1,
+                'Wednesday': 2,
+                'Thursday': 3,
+                'Friday': 4,
+                'Saturday': 5,
+                'Sunday': 6
+            }
+            
+            schedule = {}
+            for day in context_processors.week_days:
+                schedule[day] = {}
+                for hour in range(9,19):
+                    schedule[day][hour] = None
+            
+            for booked_group_class in booked_group_classes:
+                group_class = booked_group_class.group_class
+                if day_mapping[group_class.day] > today.weekday():
+                    group_class.expired = False
+                elif day_mapping[group_class.day] == today.weekday():
+                    if group_class.start_hour >= today.hour:
+                        group_class.expired = False
+                    else:
+                        group_class.expired = True
+                else:
+                    group_class.expired = True
+                schedule[group_class.day][group_class.start_hour] = group_class
+            
+            for booked_training_session in booked_training_sessions:
+                booked_training_session.training_type = models.FitnessGoal.objects.get(id=booked_training_session.training_type).name
+                if day_mapping[booked_training_session.day] > today.weekday():
+                    booked_training_session.expired = False
+                elif day_mapping[booked_training_session.day] == today.weekday():
+                    if booked_training_session.start_hour >= today.hour:
+                        booked_training_session.expired = False
+                    else:
+                        booked_training_session.expired = True
+                else:
+                    booked_training_session.expired = True
+
+                schedule[booked_training_session.day][booked_training_session.start_hour] = booked_training_session
+
+            context = {'schedule':schedule}
         return render(request=request, template_name="dashboard.html", context=context)
 
     def post(self, request, *args, **kwargs):
@@ -342,7 +403,6 @@ class BookWorkout(View):
     def get(self, request, pt_id):
         trainer = models.TrainerProfile.objects.get(id=pt_id)
 
-        today = datetime.now(pytz.timezone('Europe/Rome'))
         today_day_name = today.strftime("%A")
         today_hour = today.hour 
 
