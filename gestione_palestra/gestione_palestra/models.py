@@ -139,3 +139,33 @@ class GroupClassReservation(models.Model):
     group_class = models.ForeignKey(GroupTraining, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+
+
+class PersonalTraining(models.Model):
+    trainer = models.ForeignKey(TrainerProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    DAY_CHOICES = [
+        ('Monday', 'Monday'),
+        ('Tuesday', 'Tuesday'),
+        ('Wednesday', 'Wednesday'),
+        ('Thursday', 'Thursday'),
+        ('Friday', 'Friday'),
+        ('Saturday', 'Saturday'),
+        ('Sunday', 'Sunday'),
+    ]
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    START_HOUR_CHOICES = [
+        (9, '9:00'),
+        (10, '10:00'),
+        (11, '11:00'),
+        (12, '12:00'),
+        (13, '13:00'),
+        (14, '14:00'),
+        (15, '15:00'),
+        (16, '16:00'),
+        (17, '17:00'),
+        (18, '18:00'),
+    ]
+    start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
+    training_type = models.CharField(max_length=10, choices=[(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()])
+    additional_info = models.TextField(blank=True)

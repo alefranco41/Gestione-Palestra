@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% block title %} {{ gym_name }} - Book a Workout {% endblock title %}
+
+{% block header %} Book a Workout with {{trainer.first_name}} {{trainer.last_name}} {% endblock header %}
+
+{% block content %}
+<div style="margin:auto;">
+    <h2>Insert Workout Information</h2>
+    <form method="post" style="margin:auto; width:400px">
+        {% csrf_token %}
+        <label for="trainer">{{trainer.first_name}} {{trainer.last_name}}:</label>
+        <label for="day">Day:</label>
+        <select name="day" id="day">
+            {% for day in availability.keys %}
+                <option value="{{ day }}">{{ day }}</option>
+            {% endfor %}
+        </select><br>
+        <label for="start_hour">Start Hour:</label>
+        <select name="start_hour" id="start_hour">
+        <option value="{{ hour }}">{{ hour }}</option>
+        </select><br>
+        <label for="training_type">Training Type:</label><br>
+        {{ form.training_type }}
+ 
+        <label for="description">Additional Info:</label><br>
+        <textarea name="additional_info" id="additional_info" rows="4" cols="50"></textarea><br>
+        <input type="hidden" name="trainer" value="{{trainer.id}}">
+        <input type="hidden" name="user" value="{{request.user.id}}">
+        <button type="submit">Book the workout</button>
+    </form>
+</div>
+
+<script>
+    {% if error %}
+        setTimeout(function() {
+          alert("{{ error }}");
+        }, 100);
+      {% endif %}
+
+    var daySelect = document.getElementById("day");
+    var startHourSelect = document.getElementById("start_hour");
+    var selectedDay = daySelect.value;
+
+    daySelect.addEventListener("change", function() {
+        var selectedDay = daySelect.value;
+    });
+
+    var availability = {{ availability | safe }}
+
+    if (availability.hasOwnProperty(selectedDay)) {
+        var availableHours = availability[selectedDay];
+        
+        startHourSelect.innerHTML = ""; 
+        
+        availableHours.forEach(function(hour) {
+            var option = document.createElement("option");
+            option.value = hour;
+            option.textContent = hour;
+            startHourSelect.appendChild(option);
+        });
+    } else {
+        startHourSelect.innerHTML = "<option value='' disabled selected>Nessuna ora disponibile</option>";
+    }
+
+  </script>
+{% endblock %}
+

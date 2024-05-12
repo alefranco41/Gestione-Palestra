@@ -31,9 +31,8 @@
                                 <p><strong>Remaining Spots:</strong> {{ course.max_participants|subtract:course.total_partecipants }}</p>
                                 {% if request.user.is_manager %}
                                  <a href="{%  url 'edit_group_training' course_id=course.id %}">Edit Class</button>
-                                {% elif request.user.is_authenticated and not request.user.is_instructor%}
-                                <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="class_id" value="{{ course.id }}"><button type="submit">Join Class</form>
                                 {% endif %}
+                                <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="class_id" value="{{ course.id }}"><button type="submit">Join Class</form>
                             </div>
                         </div>
                         {% endfor %}

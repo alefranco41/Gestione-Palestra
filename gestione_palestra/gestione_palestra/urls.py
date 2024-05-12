@@ -25,6 +25,7 @@ urlpatterns = [
     path('logout/', views.LogoutView.as_view(), name="logout"),
     path('create_group_training/', views.NewGroupTraining.as_view(), name='create_group_training'),
     path('edit_group_training/<int:course_id>/', views.EditGroupTraining.as_view(), name='edit_group_training'),
+    path('book-workout/<int:pt_id>/', views.BookWorkout.as_view(), name="book-workout"),
     path('profile/', views.ProfileView.as_view(), name='profile'),
     path('update-profile/', views.UpdateProfile.as_view(), name='update-profile'),
     path('login/', views.LoginView.as_view(), name='login'),

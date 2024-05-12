@@ -1,5 +1,6 @@
 from django import forms
 from . import models
+from django.db import connection
 
 
 class UserRegistrationForm(forms.ModelForm):
@@ -53,3 +54,17 @@ class GroupTrainingForm(forms.ModelForm):
     class Meta:
         model = models.GroupTraining
         fields = ['trainer', 'day', 'start_hour', 'duration', 'max_participants', 'description']
+
+
+class PersonalTrainingForm(forms.ModelForm):
+    day = forms.ChoiceField(choices=models.GroupTraining.DAY_CHOICES)
+    start_hour = forms.ChoiceField(choices=models.GroupTraining.START_HOUR_CHOICES)
+    fitness_goals_choices = models.FitnessGoal.objects.all()
+
+    choices = [(str(goal.id), goal.name) for goal in fitness_goals_choices]
+    
+    training_type = forms.ChoiceField(choices=choices)
+
+    class Meta:
+        model = models.PersonalTraining
+        fields = ['trainer', 'user', 'day', 'start_hour', 'training_type', 'additional_info']

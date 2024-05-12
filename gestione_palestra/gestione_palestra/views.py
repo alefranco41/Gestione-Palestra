@@ -12,7 +12,8 @@ from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 from django.db import connection
-
+from datetime import timedelta
+import pytz
 
 def homepage(request):
     context = {
@@ -34,11 +35,22 @@ class GymClassesView(View):
         return render(request=request, template_name="classes-schedule.html", context={'schedule': schedule})
 
     def post(self, request, *args, **kwargs):
+        if not request.user.is_authenticated:
+            return render(request=request, template_name="classes-schedule.html", context={'error': 'You need to login first!!'})
+        
+        if request.user.is_manager or request.user.is_instructor:
+            return render(request=request, template_name="classes-schedule.html", context={'error': 'You are a staff member!!'})
+        
+        if not models.UserProfile.objects.get(user=request.user).profileInfo():
+            return render(request=request, template_name="classes-schedule.html", context={'error':' You must complete your profile first!!'})
+        
         class_id = request.POST.get('class_id')
         group_class = models.GroupTraining.objects.get(id=class_id)
             
         if group_class.total_partecipants == group_class.max_participants:
             return render(request=request, template_name="classes-schedule.html", context={'error': 'The class you are trying to access is full!!'})
+        
+        
         
         try:
             subscription = models.Subscription.objects.get(user=request.user)
@@ -76,6 +88,9 @@ class TrainerListView(View):
             trainers.append((trainer_profile,fitness_goals))
             
         return render(request=request, template_name="trainer-list.html", context={'trainers':trainers})
+
+    
+
 
 class SubscriptionPlansView(View):
     def get(self, request):
@@ -321,3 +336,46 @@ class EditGroupTraining(View):
                 form.save()
             
         return redirect('classes-schedule') 
+    
+
+class BookWorkout(View):
+    def get(self, request, pt_id):
+        trainer = models.TrainerProfile.objects.get(id=pt_id)
+
+        today = datetime.now(pytz.timezone('Europe/Rome'))
+        today_day_name = today.strftime("%A")
+        today_hour = today.hour 
+
+        available_days = [context_processors.week_days[i] for i in range(context_processors.week_days.index(today_day_name), len(context_processors.week_days))]
+        available_hours_today = [i for i in range(9,19) if i > today_hour]
+
+        personal_trainings = models.PersonalTraining.objects.filter(trainer_id=pt_id)
+        group_trainings = models.GroupTraining.objects.filter(trainer_id=pt_id)
+
+        availability = {}
+        for day in available_days:
+            if day == today_day_name:
+                availability[day] = available_hours_today
+                continue
+            
+            availability[day] = [i for i in range(9,19)]
+            
+            for group_training in group_trainings:
+                if group_training.day == day:
+                    availability[day].remove(group_training.start_hour)
+            
+            
+            for personal_training in personal_trainings:
+                if personal_training.day == day:
+                    availability[day].remove(personal_training.start_hour)
+     
+        
+        return render(request, template_name="book-workout.html", context={'trainer':trainer, 'availability':availability, 'form':forms.PersonalTrainingForm()})
+    
+    def post(self, request, *args, **kwargs):
+        form = forms.PersonalTrainingForm(data=request.POST)
+
+        if form.is_valid():
+            form.save()
+        
+        return redirect("dashboard")
