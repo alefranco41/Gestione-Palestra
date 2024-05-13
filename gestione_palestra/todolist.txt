@@ -3,3 +3,5 @@ preselezione checkbox pt
 pulire le prenotazioni ogni settimana
 prezzi cambiano dinamicamente quando clicchi su mesi diversi
 controlli su prenotazioni personal training
+no prenotazioni doppie per allenamento pt
+controllare tipo di abbonamento per allenamento pt

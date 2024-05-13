@@ -2,6 +2,10 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from datetime import datetime, date
 from django.utils.translation import gettext_lazy as _
+import json
+from rest_framework import serializers
+from . import validators
+    
 
 class User(AbstractUser):
     is_manager = models.BooleanField(default=False)
@@ -19,11 +23,11 @@ class UserProfile(models.Model):
         ('F', 'Female'),
     ]
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
-    first_name = models.CharField(max_length=100, null=False,blank=True)
-    last_name = models.CharField(max_length=100, null=False,blank=True)
-    date_of_birth = models.DateField(null=False,blank=True,default=date.today)
-    height = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True)  # In centimetri
-    weight = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True)  # In chilogrammi
+    first_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
+    last_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
+    date_of_birth = models.DateField(null=False,blank=True,default=date.today, validators=[validators.validate_age_of_birth])
+    height = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True, validators=[validators.validate_heigth])  # In centimetri
+    weight = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True, validators=[validators.validate_weigth])  # In chilogrammi
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     
     AGE_OF_RETIREMENT = 65  # Età di pensionamento
@@ -37,8 +41,15 @@ class UserProfile(models.Model):
     def profileInfo(self):
         return True if self.first_name and self.last_name and self.date_of_birth else False
 
+
+class UserProfileSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = UserProfile
+        fields = '__all__'
+
+
 class FitnessGoal(models.Model):
-    name = models.CharField(max_length=100)
+    name = models.CharField(max_length=100, validators=[validators.validate_name])
 
 class TrainerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
@@ -47,9 +58,9 @@ class TrainerProfile(models.Model):
         ('F', 'Female'),
     ]
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
-    first_name = models.CharField(max_length=100, null=False,blank=True)
-    last_name = models.CharField(max_length=100, null=False,blank=True)
-    date_of_birth = models.DateField(null=False,blank=True,default=date.today)
+    first_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
+    last_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
+    date_of_birth = models.DateField(null=False,blank=True,default=date.today, validators=[validators.validate_age_of_birth])
     certifications = models.FileField(blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
@@ -128,11 +139,11 @@ class GroupTraining(models.Model):
         (18, '18:00'),
     ]
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
-    duration = models.PositiveIntegerField()  # Durata in minuti
+    duration = models.PositiveIntegerField(validators=[validators.validate_number])  # Durata in minuti
     training_type = models.CharField(max_length=10, choices=[(goal.id, goal.name) for goal in FitnessGoal.objects.all()])
-    max_participants = models.PositiveIntegerField()
+    max_participants = models.PositiveIntegerField(validators=[validators.validate_number])
     total_partecipants = models.PositiveIntegerField(default=0)
-    title = models.TextField()
+    title = models.TextField(validators=[validators.validate_text])
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
 class GroupClassReservation(models.Model):
@@ -168,4 +179,4 @@ class PersonalTraining(models.Model):
     ]
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
     training_type = models.CharField(max_length=10, choices=[(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()])
-    additional_info = models.TextField(blank=True)
+    additional_info = models.TextField(blank=True, validators=[validators.validate_text])

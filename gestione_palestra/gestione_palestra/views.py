@@ -50,7 +50,7 @@ class GymClassesView(View):
         class_id = request.POST.get('class_id')
         group_class = models.GroupTraining.objects.get(id=class_id)
             
-        if group_class.total_partecipants == group_class.max_participants:
+        if group_class.total_partecipants == group_class.max_partecipants:
             return render(request=request, template_name="classes-schedule.html", context={'error': 'The class you are trying to access is full!!'})
         
         
@@ -253,7 +253,7 @@ class UpdateProfile(View):
         else:
             user_profile = models.UserProfile.objects.get(user=request.user)
             form = forms.UserProfileForm(request.POST, instance=user_profile)
-            
+        
         return render(request, 'update_profile.html', {'form': form, 'user_profile':user_profile})
     
     def post(self, request, *args, **kwargs):
@@ -296,12 +296,24 @@ class Dashboard(View):
 
                 booked_group_classes = []
                 for group_class in instructor_group_classes:
-                    booked_group_classes.append(models.GroupClassReservation.objects.filter(group_class=group_class).first())
-                
+                    reservation_objects = models.GroupClassReservation.objects.filter(group_class=group_class)
+                    
+                    if reservation_objects:
+                        participants_ids = reservation_objects.values_list('user_id', flat=True)
+                        participants = []
+                        for partecipant_id in participants_ids:
+                            partecipant = models.UserProfile.objects.get(user_id=partecipant_id)
+                            partecipant = models.UserProfileSerializer(partecipant).data
+                            participants.append(partecipant)
+
+                        reservation_object = reservation_objects.first()
+                        reservation_object.participants = participants
+                        booked_group_classes.append(reservation_object)
+
                 booked_training_sessions = models.PersonalTraining.objects.filter(trainer=trainer)
             else:
                 booked_group_classes = models.GroupClassReservation.objects.filter(user=request.user)
-                booked_training_sessions = models.PersonalTraining.objects.filter(trainer=request.user)
+                booked_training_sessions = models.PersonalTraining.objects.filter(user=request.user)
 
             day_mapping = {
                 'Monday': 0,
@@ -320,6 +332,9 @@ class Dashboard(View):
                     schedule[day][hour] = None
             
             for booked_group_class in booked_group_classes:
+                if not booked_group_class:
+                    continue
+
                 group_class = booked_group_class.group_class
                 if day_mapping[group_class.day] > today.weekday():
                     group_class.expired = False
@@ -330,9 +345,17 @@ class Dashboard(View):
                         group_class.expired = True
                 else:
                     group_class.expired = True
+                
+                if hasattr(group_class, "participants"):
+                    group_class.participants = booked_group_class.participants
+
                 schedule[group_class.day][group_class.start_hour] = group_class
             
             for booked_training_session in booked_training_sessions:
+                if request.user.is_instructor:
+                    user_profile = models.UserProfile.objects.get(user_id=booked_training_session.user_id)
+                    booked_training_session.user_profile = models.UserProfileSerializer(user_profile).data
+
                 booked_training_session.training_type = models.FitnessGoal.objects.get(id=booked_training_session.training_type).name
                 if day_mapping[booked_training_session.day] > today.weekday():
                     booked_training_session.expired = False
@@ -350,8 +373,25 @@ class Dashboard(View):
         return render(request=request, template_name="dashboard.html", context=context)
 
     def post(self, request, *args, **kwargs):
-        pass
+        context = {}
+        if not request.user.is_manager and not request.user.is_instructor:
+            id_gt = request.POST.get('group_training')
+            id_pt = request.POST.get('personal_training')
+            try:
+                if id_gt:
+                    group_training = models.GroupTraining.objects.get(id=id_gt)
+                    models.GroupClassReservation.objects.get(group_class_id=group_training.id, user_id=request.user.id).delete()
+                    group_training.total_partecipants -= 1
+                    context = {'message':'The Group Class reservation has been cancelled'}
+                else:
+                    models.PersonalTraining.objects.get(id=id_pt).delete()
+                    context = {'message':'The training session has been cancelled'}
+            except (models.PersonalTraining.DoesNotExist, models.GroupClassReservation.DoesNotExist):
+                pass
+        
+        
 
+        return render(request=request, template_name="dashboard.html", context=context)
 class NewGroupTraining(View):    
     def get(self, request):
         if not request.user.is_manager:
