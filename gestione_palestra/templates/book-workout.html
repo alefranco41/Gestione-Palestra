@@ -20,7 +20,16 @@
         <option value="{{ hour }}">{{ hour }}</option>
         </select><br>
         <label for="training_type">Training Type:</label><br>
-        {{ form.training_type }}
+        <select name="training_type" id="id_training_type">
+            {% if 'BodyBuilding' in trainer_fitness_goals%} <option value="1"> BodyBuilding</option>{%endif%}
+            {% if 'Strength Training' in trainer_fitness_goals%} <option value="2"> Strength Training</option>{%endif%}
+            {% if 'Weight Loss' in trainer_fitness_goals%} <option value="3"> Weight Loss</option>{%endif%}
+            {% if 'Endurance Training' in trainer_fitness_goals%} <option value="4"> Endurance Training</option>{%endif%}
+            {% if 'Flexibility and Mobility' in trainer_fitness_goals%} <option value="5"> Flexibility and Mobility</option>{%endif%}
+            {% if 'Functional Fitness' in trainer_fitness_goals%} <option value="6"> Functional Fitness</option>{%endif%}
+            {% if 'Sport-Specific Training' in trainer_fitness_goals%} <option value="7"> Sport-Specific Training</option>{%endif%}
+            {% if 'Rehabilitation' in trainer_fitness_goals%} <option value="8"> Rehabilitation</option>{%endif%}
+          </select>
  
         <label for="additional_info">Additional Info:</label><br>
         <textarea name="additional_info" id="additional_info" rows="4" cols="50"></textarea><br>
@@ -31,37 +40,38 @@
 </div>
 
 <script>
+    function updateStartHours() {
+        var selectedDay = daySelect.value;
+        if (availability.hasOwnProperty(selectedDay)) {
+            var availableHours = availability[selectedDay];
+            
+            startHourSelect.innerHTML = ""; 
+            
+            availableHours.forEach(function(hour) {
+                var option = document.createElement("option");
+                option.value = hour;
+                option.textContent = hour;
+                startHourSelect.appendChild(option);
+            });
+        } else {
+            startHourSelect.innerHTML = "<option value='' disabled selected>Nessuna ora disponibile</option>";
+        }
+    }
+
     {% if error %}
         setTimeout(function() {
           alert("{{ error }}");
         }, 100);
-      {% endif %}
+    {% endif %}
 
     var daySelect = document.getElementById("day");
     var startHourSelect = document.getElementById("start_hour");
-    var selectedDay = daySelect.value;
-
-    daySelect.addEventListener("change", function() {
-        var selectedDay = daySelect.value;
-    });
-
     var availability = {{ availability | safe }}
 
-    if (availability.hasOwnProperty(selectedDay)) {
-        var availableHours = availability[selectedDay];
-        
-        startHourSelect.innerHTML = ""; 
-        
-        availableHours.forEach(function(hour) {
-            var option = document.createElement("option");
-            option.value = hour;
-            option.textContent = hour;
-            startHourSelect.appendChild(option);
-        });
-    } else {
-        startHourSelect.innerHTML = "<option value='' disabled selected>Nessuna ora disponibile</option>";
-    }
+    // Esegui la funzione all'inizio
+    updateStartHours();
 
-  </script>
+    daySelect.addEventListener("change", updateStartHours);
+</script>
 {% endblock %}
 

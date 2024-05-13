@@ -4,7 +4,9 @@
 {% block header %} {{ request.user }}'s profile {% endblock header %}
 
 {% block content %}
-<div style="display: flex; justify-content: center;">
+<div class="user-profile-container">
+    <div class="user-profile">
+        <h2> Your Profile Information</h2>
     <table class="user-details">
         <tr>
             <th>First Name:</th>
@@ -51,7 +53,14 @@
         </tr>
         {% endif %}
     </table>
+
+    <div class="edit-profile" style="display: flex; justify-content: center; margin-top:10px">
+        <a class="button" href="{% url 'update-profile' %}">Edit Profile</a>
+    </div>
     
+    </div>
+
+    <div class="user-subscription">
     {% if not request.user.is_instructor and not request.user.is_manager %}
         <h2> Your Subscription Plan: </h2>
         <table class="user-details">
@@ -80,7 +89,10 @@
                 {% endif %}
             </tr>   
         </table>
+    </div>
     {% endif %}
-    <a href="{% url 'update-profile' %}" id="edit-profile-button">Edit Profile</a>
+    
 </div>
+
+
 {% endblock %}

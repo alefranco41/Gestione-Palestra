@@ -24,6 +24,13 @@ def homepage(request):
     }
     return render(request, 'home.html', context=context)
 
+def get_fitness_goals(trainer_profile):
+    fitness_goal_ids = models.TrainerProfile_FitnessGoals.objects.filter(trainerprofile=trainer_profile).values_list('fitnessgoal_id', flat=True)
+    fitness_goals = models.FitnessGoal.objects.filter(id__in=fitness_goal_ids)
+    fitness_goals = [fitness_goal.name for fitness_goal in fitness_goals]
+    return fitness_goals
+
+
 class GymClassesView(View):
     def get(self, request):
         classes = models.GroupTraining.objects.all()
@@ -84,9 +91,8 @@ class TrainerListView(View):
         trainers = []
         for trainer_user in trainers_users:
             trainer_profile = models.TrainerProfile.objects.get(user=trainer_user)
-            with connection.cursor() as cursor:
-                cursor.execute(f"SELECT fg.name FROM gestione_palestra_fitnessgoal AS fg WHERE fg.id IN (SELECT fitnessgoal_id FROM gestione_palestra_trainerprofile_fitness_goals WHERE trainerprofile_id = {trainer_profile.id})")
-                fitness_goals = [row[0] for row in cursor.fetchall()]
+
+            fitness_goals = get_fitness_goals(trainer_profile)
 
             trainers.append((trainer_profile,fitness_goals))
             
@@ -200,9 +206,7 @@ class ProfileView(View):
         if request.user.is_instructor:
             user_profile, created = models.TrainerProfile.objects.get_or_create(user=request.user)
             form = forms.TrainerProfileForm(instance=user_profile)
-            with connection.cursor() as cursor:
-                cursor.execute(f"SELECT fg.name FROM gestione_palestra_fitnessgoal AS fg WHERE fg.id IN (SELECT fitnessgoal_id FROM gestione_palestra_trainerprofile_fitness_goals WHERE trainerprofile_id = {user_profile.id})")
-                fitness_goals = [row[0] for row in cursor.fetchall()]
+            fitness_goals = get_fitness_goals(user_profile)
             context = {'form': form, 'user_profile':user_profile, 'user_fitness_goals':fitness_goals}
         elif request.user.is_manager:
             context = {}
@@ -243,18 +247,19 @@ class ProfileView(View):
 
 class UpdateProfile(View):
     def get(self, request):
+        context = {}
         if request.user.is_instructor:
             user_profile = models.TrainerProfile.objects.get(user=request.user)
-            form = forms.TrainerProfileForm(request.POST, instance=user_profile)
-            
-            
+            fitness_goals = get_fitness_goals(user_profile)
+            context = {'user_profile':user_profile, 'trainer_fitness_goals':fitness_goals}
         elif request.user.is_manager:
             pass
         else:
             user_profile = models.UserProfile.objects.get(user=request.user)
-            form = forms.UserProfileForm(request.POST, instance=user_profile)
+            context = {'user_profile':user_profile}
+            #form = forms.UserProfileForm(request.POST, instance=user_profile)
         
-        return render(request, 'update_profile.html', {'form': form, 'user_profile':user_profile})
+        return render(request, 'update_profile.html', context)
     
     def post(self, request, *args, **kwargs):
         if request.user.is_instructor:
@@ -274,8 +279,11 @@ class UpdateProfile(View):
             if request.user.is_instructor:
                 instance = form.save(commit=False)
                 fitness_goals_ids = request.POST.getlist('fitness_goals')
-                fitness_goals_objects = models.FitnessGoal.objects.filter(pk__in=fitness_goals_ids)
-                instance.fitness_goals.set(fitness_goals_objects)
+                models.TrainerProfile_FitnessGoals.objects.filter(trainerprofile=user_profile).delete()
+                fitness_goals = models.FitnessGoal.objects.filter(pk__in=fitness_goals_ids)
+                for fitness_goal in fitness_goals:
+                    models.TrainerProfile_FitnessGoals(trainerprofile=user_profile, fitnessgoal=fitness_goal).save()
+
                 instance.save()
             else:
                 form.save()
@@ -441,8 +449,13 @@ class EditGroupTraining(View):
 
 class BookWorkout(View):
     def get(self, request, pt_id):
+        if request.user.is_manager or request.user.is_instructor:
+            return redirect("dashboard")
+        
         trainer = models.TrainerProfile.objects.get(id=pt_id)
 
+        trainer_fitness_goals = get_fitness_goals(trainer)
+        
         today_day_name = today.strftime("%A")
         today_hour = today.hour 
 
@@ -470,7 +483,7 @@ class BookWorkout(View):
                     availability[day].remove(personal_training.start_hour)
      
         
-        return render(request, template_name="book-workout.html", context={'trainer':trainer, 'availability':availability, 'form':forms.PersonalTrainingForm()})
+        return render(request, template_name="book-workout.html", context={'trainer':trainer, 'trainer_fitness_goals':trainer_fitness_goals, 'availability':availability, 'form':forms.PersonalTrainingForm()})
     
     def post(self, request, *args, **kwargs):
         form = forms.PersonalTrainingForm(data=request.POST)

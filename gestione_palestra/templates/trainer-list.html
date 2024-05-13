@@ -19,7 +19,9 @@
                 <p><strong>Gender:</strong> {{ trainer.gender|default:"-" }}</p>
                 <p><strong>Date of Birth:</strong> {{ trainer.date_of_birth|default:"-" }}</p>
                 <p><strong>Fitness Goals:</strong> {% for goal in fitness_goals %}<li>{{ goal }}</li>{% endfor %}</p>
+                {% if not request.user.is_instructor and not request.user.is_manager %}
                 <a class="button" href="{% url 'book-workout' trainer.id  %}">Book a workout</a>
+                {% endif %}
             </div>
         </div>
         {% endfor %}

@@ -50,7 +50,7 @@
             <p> <b>fitness goals:</b> </p>
             <div class="checkboxes" style="display:flex;">
                 {% for id,name in fitness_goals %}
-                    <label><input type="checkbox" name="fitness_goals" value="{{ id }}" {% if goal.id in selected_goals %} checked {% endif %}> {{ name }}</label><br>
+                    <label><input type="checkbox" name="fitness_goals" value="{{ id }}" {% if name in trainer_fitness_goals %} checked {% endif %}> {{ name }}</label><br>
                 {% endfor %}
             </div>
         </div>
@@ -66,7 +66,7 @@
             <ul class="error-list">
                 {% for field, errors in form.errors.items %}
                     {% for error in errors %}
-                        <li class="error" style="text-align: left;">{{ error }}</li>
+                        <li class="error" style="text-align: left;">{{field}}: {{ error }}</li>
                     {% endfor %}
                 {% endfor %}
             </ul>
