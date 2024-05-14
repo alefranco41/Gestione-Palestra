@@ -66,6 +66,10 @@ body {
   flex-direction: column;
 }
 
+form.hidden {
+  display: contents;
+}
+
 .user-profile-container {
   display: flex;
   flex-direction: row;
@@ -84,6 +88,7 @@ img {
   height: auto; /* Imposta l'altezza automaticamente per mantenere l'aspetto proporzionato */
 }
 .content {
+  position: relative;
   flex: 1;
   display: flex;
   justify-content: center;
@@ -136,14 +141,33 @@ img {
   border-left: 1px solid #CCCCCC;
 }
 
+.reviews-container {
+  margin-right: 100px;
+  border: 1px solid black;
+  text-align: center;
+  border-radius: 2%;
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 20%;
+}
+
+.reviews-content {
+  border-bottom: 1px solid black;
+}
+.reviews-content p {
+  text-align: left;
+  margin-left: 10px;
+}
 .trainer-card {
-  display: inline-block;
+  display: inherit;
   padding: 20px;
+  text-align-last: left;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f9;
+  /* text-align: left; */
 }
-
 .trainer-card img {
   display: block;
   margin: 0 auto;
@@ -220,6 +244,7 @@ header{
 }
   
 
+
 label,
 input,
 button {
@@ -270,7 +295,7 @@ footer {
 
 button {
   padding: 10px;
-  background-color: #e9e9e9;
+  background-color: #333333;
   color: #fff;
   border: none;
   border-radius: 5px;

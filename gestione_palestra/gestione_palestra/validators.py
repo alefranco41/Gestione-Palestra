@@ -39,15 +39,23 @@ def validate_weigth(value):
         raise ValidationError('Weigth must be an integer value between 50 and 150')
 
 
-def validate_number(value):
+def validate_duration(value):
     try:
         value = int(value)
     except ValueError:
         raise ValidationError('Only integer values are allowed for duration.')
     
-    if value > 150 or value < 50:
-        raise ValidationError('Duration must be an integer value between 0 and 120')
+    if value > 120 or value < 10:
+        raise ValidationError('Duration must be an integer value between 10 and 120')
 
-
+def validate_max_participants(value):
+    try:
+        value = int(value)
+    except ValueError:
+        raise ValidationError('Only integer values are allowed for max participants.')
+    
+    if value > 30 or value < 5:
+        raise ValidationError('Max participants must be an integer value between 5 and 30')
+    
 def validate_text(value):
     pass

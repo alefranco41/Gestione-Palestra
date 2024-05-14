@@ -11,11 +11,20 @@ from django.http import HttpResponseRedirect
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
-from django.db import connection
-from datetime import timedelta
 import pytz
+from datetime import datetime, timedelta
 
 today = datetime.now(pytz.timezone('Europe/Rome'))
+
+day_mapping = {
+                'Monday': 0,
+                'Tuesday': 1,
+                'Wednesday': 2,
+                'Thursday': 3,
+                'Friday': 4,
+                'Saturday': 5,
+                'Sunday': 6
+            }
 
 
 def homepage(request):
@@ -29,6 +38,40 @@ def get_fitness_goals(trainer_profile):
     fitness_goals = models.FitnessGoal.objects.filter(id__in=fitness_goal_ids)
     fitness_goals = [fitness_goal.name for fitness_goal in fitness_goals]
     return fitness_goals
+
+def get_event_date(event):
+    week_day = day_mapping[event.day] 
+    date = today.date() - timedelta(days=today.weekday()) + timedelta(days=week_day)
+    date = datetime.combine(date, datetime.min.time())
+    date = date.replace(hour=event.start_hour) 
+
+    return date
+
+def get_reviews(user):
+    reviews = []
+    if user.is_authenticated:
+        pt_reviews = models.PersonalTrainingReview.objects.all()
+        gc_reviews = models.GroupTrainingReview.objects.all()
+
+        for review in pt_reviews:
+            review.training_type = models.FitnessGoal.objects.get(id=review.event.training_type).name
+        if user.is_manager:
+            reviews.extend(pt_reviews)
+            reviews.extend(gc_reviews)
+        elif user.is_instructor:
+            pt_events = models.PersonalTraining.objects.filter(trainer=user)
+            gc_events = models.GroupTraining.objects.filter(trainer=user)
+
+            for event in pt_events:
+                reviews.extend(pt_reviews.filter(event=event))
+
+            for event in gc_events:
+                reviews.extend(gc_reviews.filter(event=event))
+        else:
+            reviews.extend(pt_reviews.filter(user=user))
+            reviews.extend(gc_reviews.filter(user=user))
+           
+    return reviews
 
 
 class GymClassesView(View):
@@ -57,7 +100,7 @@ class GymClassesView(View):
         class_id = request.POST.get('class_id')
         group_class = models.GroupTraining.objects.get(id=class_id)
             
-        if group_class.total_partecipants == group_class.max_partecipants:
+        if group_class.total_partecipants == group_class.max_participants:
             return render(request=request, template_name="classes-schedule.html", context={'error': 'The class you are trying to access is full!!'})
         
         
@@ -97,7 +140,7 @@ class TrainerListView(View):
             trainers.append((trainer_profile,fitness_goals))
             
         return render(request=request, template_name="trainer-list.html", context={'trainers':trainers})
-
+        
     
 
 
@@ -293,8 +336,9 @@ class UpdateProfile(View):
         return render(request, 'update_profile.html', {'form': form, 'user_profile':user_profile})
     
 class Dashboard(View):
-    def get(self, request):
+    def get_context(self, request):
         context = {}
+        context['reviews'] = get_reviews(request.user)
         if request.user.is_manager:
             pass
         else:
@@ -322,17 +366,10 @@ class Dashboard(View):
             else:
                 booked_group_classes = models.GroupClassReservation.objects.filter(user=request.user)
                 booked_training_sessions = models.PersonalTraining.objects.filter(user=request.user)
+                group_classes_reviews = models.GroupTrainingReview.objects.filter(user=request.user)
+                training_sessions_reviews = models.PersonalTrainingReview.objects.filter(user=request.user)
+                
 
-            day_mapping = {
-                'Monday': 0,
-                'Tuesday': 1,
-                'Wednesday': 2,
-                'Thursday': 3,
-                'Friday': 4,
-                'Saturday': 5,
-                'Sunday': 6
-            }
-            
             schedule = {}
             for day in context_processors.week_days:
                 schedule[day] = {}
@@ -356,7 +393,13 @@ class Dashboard(View):
                 
                 if hasattr(group_class, "participants"):
                     group_class.participants = booked_group_class.participants
+                
+                try:
+                    review = group_classes_reviews.get(event=group_class.id)
+                except Exception:
+                    review = None
 
+                group_class.review = review
                 schedule[group_class.day][group_class.start_hour] = group_class
             
             for booked_training_session in booked_training_sessions:
@@ -374,14 +417,37 @@ class Dashboard(View):
                         booked_training_session.expired = True
                 else:
                     booked_training_session.expired = True
-
+                
+                try:
+                    review = training_sessions_reviews.get(event=booked_training_session.id)
+                except Exception:
+                    review = None
+                booked_training_session.review = review
                 schedule[booked_training_session.day][booked_training_session.start_hour] = booked_training_session
 
-            context = {'schedule':schedule}
+            context['schedule'] = schedule
+        return context
+
+    def get(self, request):
+        
+
+        event_type = request.GET.get('event_type')
+        event_id =  request.GET.get('event_id')
+        if event_id and event_type:
+            if event_type == 'group_training':
+                event = models.GroupTraining.objects.get(id=event_id)
+                review = models.GroupTrainingReview.objects.get(user=request.user, event=event)
+                review.delete()
+            elif event_type == 'personal_training':
+                event = models.PersonalTraining.objects.get(id=event_id)
+                review = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
+                review.delete()
+        
+        context = self.get_context(request)
         return render(request=request, template_name="dashboard.html", context=context)
 
     def post(self, request, *args, **kwargs):
-        context = {}
+        context = self.get_context(request)
         if not request.user.is_manager and not request.user.is_instructor:
             id_gt = request.POST.get('group_training')
             id_pt = request.POST.get('personal_training')
@@ -390,16 +456,15 @@ class Dashboard(View):
                     group_training = models.GroupTraining.objects.get(id=id_gt)
                     models.GroupClassReservation.objects.get(group_class_id=group_training.id, user_id=request.user.id).delete()
                     group_training.total_partecipants -= 1
-                    context = {'message':'The Group Class reservation has been cancelled'}
+                    group_training.save()
+                    context['message'] = 'The Group Class reservation has been cancelled'
                 else:
                     models.PersonalTraining.objects.get(id=id_pt).delete()
-                    context = {'message':'The training session has been cancelled'}
+                    context['message'] = 'The training session has been cancelled'
             except (models.PersonalTraining.DoesNotExist, models.GroupClassReservation.DoesNotExist):
                 pass
-        
-        
-
         return render(request=request, template_name="dashboard.html", context=context)
+    
 class NewGroupTraining(View):    
     def get(self, request):
         if not request.user.is_manager:
@@ -407,6 +472,7 @@ class NewGroupTraining(View):
         
         form = forms.GroupTrainingForm()
         trainers = models.TrainerProfile.objects.all()
+
         return render(request, 'create_group_training.html', {'form': form, 'trainers':trainers})
     
     def post(self, request, *args, **kwargs):
@@ -419,7 +485,8 @@ class NewGroupTraining(View):
                 else:
                     trainers = models.TrainerProfile.objects.all()
                     return render(request, 'create_group_training.html', {'form': form, 'trainers':trainers, 'error':'There is already a group class in that time frame!!'})
-        
+            else:
+                print(form.errors)
         return redirect('dashboard')  
     
 
@@ -433,7 +500,7 @@ class EditGroupTraining(View):
         trainers = models.TrainerProfile.objects.all()
 
         
-        return render(request, 'edit_group_training.html', {'course':class_item, 'form':form, 'trainers':trainers})
+        return render(request, 'edit_group_training.html', {'class':class_item, 'form':form, 'trainers':trainers})
     
     def post(self, request, *args, **kwargs):
         if request.method == 'POST':
@@ -449,8 +516,6 @@ class EditGroupTraining(View):
 
 class BookWorkout(View):
     def get(self, request, pt_id):
-        if request.user.is_manager or request.user.is_instructor:
-            return redirect("dashboard")
         
         trainer = models.TrainerProfile.objects.get(id=pt_id)
 
@@ -481,14 +546,103 @@ class BookWorkout(View):
             for personal_training in personal_trainings:
                 if personal_training.day == day:
                     availability[day].remove(personal_training.start_hour)
-     
-        
-        return render(request, template_name="book-workout.html", context={'trainer':trainer, 'trainer_fitness_goals':trainer_fitness_goals, 'availability':availability, 'form':forms.PersonalTrainingForm()})
+
+        context = {'trainer':trainer, 'trainer_fitness_goals':trainer_fitness_goals, 'availability':availability, 'form':forms.PersonalTrainingForm()}
+
+        if not request.user.is_authenticated:
+            context['error'] = 'You need to login first!!'
+        elif request.user.is_manager or request.user.is_instructor:
+            context['error'] = 'You are a staff member!!'
+
+        return render(request, template_name="book-workout.html", context=context)
     
     def post(self, request, *args, **kwargs):
         form = forms.PersonalTrainingForm(data=request.POST)
-
+        
         if form.is_valid():
             form.save()
         
         return redirect("dashboard")
+    
+
+def get_LeaveReview_context(request=None, event_id=None, event_type=None):
+        context = {}
+        if not event_id or not event_type:
+            event_id = request.GET.get('event_id')
+            event_type = request.GET.get('event_type')
+
+        
+        if event_type == 'group_training':
+            event = models.GroupTraining.objects.get(id=event_id)
+            event.date = get_event_date(event)
+            try:
+                context['review'] = models.GroupTrainingReview.objects.get(user=request.user, event=event)
+            except Exception:
+                pass
+        elif event_type == 'personal_training':
+            event = models.PersonalTraining.objects.get(id=event_id)
+            try:
+                context['review'] = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
+            except Exception:
+                pass
+
+            event.date = get_event_date(event)
+        else:
+            event = None
+
+        context['event'] = event
+        
+        return context
+
+
+class LeaveReview(View):
+    
+    def post(self, request, *args, **kwargs):
+        
+        context = get_LeaveReview_context(request)
+        event_type = request.GET.get('event_type')
+
+        if event_type == 'group_training':
+            form = forms.GroupTrainingReviewForm(request.POST)
+        elif event_type == 'personal_training':
+            form = forms.PersonalTrainingReviewForm(request.POST)
+
+        context['form'] = form
+
+        if form.is_valid():
+            form.save()
+            return redirect("dashboard")
+        else:
+            return render(request=request, template_name="leave-review.html", context=context)
+    
+
+    def get(self, request):
+        context = get_LeaveReview_context(request)
+        return render(request=request, template_name="leave-review.html", context=context)
+    
+class EditReview(View):
+    def get(self, request):
+        context = get_LeaveReview_context(request)
+        return render(request=request, template_name="edit-review.html", context=context)
+
+    def post(self, request, *args, **kwargs):
+        user = request.POST.get('user')
+        event = request.POST.get('event')
+        event_type = request.POST.get('event_type')
+        context = get_LeaveReview_context(request)
+        
+        if event_type == 'personal_training':
+            form = forms.PersonalTrainingReviewForm(request.POST)
+            old_review = models.PersonalTrainingReview.objects.get(user=user, event=event)
+            
+        elif event_type == 'group_training':
+            form = forms.GroupTrainingReviewForm(request.POST)
+            old_review = models.GroupTrainingReview.objects.get(user=user, event=event)
+        
+        if form.is_valid: 
+            form.save()
+            old_review.delete()
+            return redirect("dashboard")
+        
+        context['review'] = old_review
+        return render(request=request, template_name="edit-review.html", context=context)

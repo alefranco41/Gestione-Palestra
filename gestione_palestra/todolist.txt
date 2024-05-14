@@ -1,7 +1,11 @@
-permetti di scaricare il file del pt
-preselezione checkbox pt
-pulire le prenotazioni ogni settimana
+visualizzazione reviews pt (tutte quelle in cui lui è coinvolto) e utenti (tutte quelle lasciate) e manager (tutte)
+
+controlli su tutto
+
+messaggi di conferma prima di redirectare
 prezzi cambiano dinamicamente quando clicchi su mesi diversi
-controlli su prenotazioni personal training
-no prenotazioni doppie per allenamento pt
-controllare tipo di abbonamento per allenamento pt
+permetti di scaricare il file del pt
+
+unit test
+
+grafica

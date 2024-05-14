@@ -5,12 +5,18 @@
 
 {% block content %}
 
-{% if request.user.is_manager %}
-    <h2>Create Group Training</h2>
+{% if not request.user.is_manager %}
+<h2>Your Schedule for this week:</h2>
+{% else %}
+<h2> Create Group Training </h2>
+{% endif %}
+
+<div class="popup-content" style="display: none;"></div>
+<div class="content">
+    {% if request.user.is_manager %}
     <a href="{% url 'create_group_training' %}" class="button">Create Group Training</button>
 {% else %}
-<h2>Your Weekly schedule</h2>
-<div class="popup-content" style="display: none;"></div>
+
 <table border="1" style="margin:auto;">
     <tr>
         <th>Day</th>
@@ -27,10 +33,12 @@
                     <td>
                         {{ event.title }} Group Class with {{ event.trainer.first_name }} {{ event.trainer.last_name }} <br>
                         {% if event.expired %}
-                            <b> ended </b>
+                        
+                        <b>This event has ended.</b> {% if not event.review %} <a class="button" href="{% url 'leave-review' %}?event_type=group_training&amp;event_id={{event.id}}">Leave a Review</a>{% endif %}
+                        
                         {% else %}
                         {% if not request.user.is_instructor %}
-                        <form method="post">{% csrf_token %}<input type="hidden" name="group_training" value="{{event.id}}"><button type="submit">Cancel</button></form>        
+                        <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="group_training" value="{{event.id}}"><button type="submit">Cancel</button></form>        
                         {% else %}
                         <button class="view_participants" data-event="{{ event.participants }}" onclick="handleButtonClick(event)"> View Participants </button>
                         {% endif %}
@@ -40,10 +48,10 @@
                     <td>
                         {{ event.training_type }} Workout with {{ event.trainer.first_name }} {{ event.trainer.last_name }}
                         {% if event.expired %}
-                            <b> ended </b>
+                        <b>This event has ended.</b> {% if not event.review %}<a class="button" href="{% url 'leave-review' %}?event_type=personal_training&amp;event_id={{event.id}}">Leave a Review</a> {% endif %}
                         {% else %}
                         {% if not request.user.is_instructor %}
-                        <form method="post">{% csrf_token %}<input type="hidden" name="personal_training" value="{{event.id}}"><button type="submit">Cancel</button></form>
+                        <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="personal_training" value="{{event.id}}"><button type="submit">Cancel</button></form>
                         {% else %}
                         <button class="view_profile" data-event="{{ event.user_profile }}" onclick="handleButtonClick(event)"> View Profile</button>
 
@@ -61,6 +69,31 @@
     {% endfor %}
 </table>
 {% endif %}
+<div class="reviews-container">
+{% if request.user.is_instructor %}
+    <h3> Reviews about you </h3>
+    {% elif request.user.is_manager %}
+    <h3> All reviews </h3>
+    {% else %}
+    <h3> Your reviews </h3>
+    {% endif %}
+
+    {% for review in reviews %}
+    <div class="reviews-content">
+        <p><b>Review #{{ forloop.counter }} - <b>score:</b>{{ review.stars }}:</b> {% if request.user.is_instructor or request.user.is_manager %} written by {{ review.user }}  on {{ review.date }} {% else %} written on {{ review.date }} {% endif %} </p>
+        <p><b>Event:</b> {% if review.event.max_participants %} {{ review.event.title }} Group Class {% else %} {{ review.event.training_type }} Workout {% endif %} with {{ review.event.trainer.first_name }} {{ review.event.trainer.last_name }}</p>
+        <p><b>Title:</b> {{ review.title }}</p>
+        {% if review.additional_info %} <p><b>Text:</b> {{ review.additional_info }}</p> {% endif %}
+        {% if not request.user.is_instructor and not request.user.is_manager %}
+        {% if review.event.training_type %}<a class="button" href="{% url 'edit-review' %}?event_type=personal_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'dashboard' %}?event_type=personal_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
+        {% if review.event.max_participants %}<a class="button" href="{% url 'edit-review' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'dashboard' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
+        {% endif %}
+    </div>        
+    {% endfor %}
+
+</div>
+</div>
+
 
 
 
@@ -154,4 +187,4 @@ function createEventParticipantsPopupContent(participantsData) {
 
 
 </script>
-{%endblock%}
+{% endblock %}

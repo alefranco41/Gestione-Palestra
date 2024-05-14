@@ -2,10 +2,9 @@ from django.contrib.auth.models import AbstractUser
 from django.db import models
 from datetime import datetime, date
 from django.utils.translation import gettext_lazy as _
-import json
 from rest_framework import serializers
 from . import validators
-    
+from django.utils.timezone import now
 
 class User(AbstractUser):
     is_manager = models.BooleanField(default=False)
@@ -146,9 +145,9 @@ class GroupTraining(models.Model):
         (18, '18:00'),
     ]
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
-    duration = models.PositiveIntegerField(validators=[validators.validate_number])  # Durata in minuti
+    duration = models.PositiveIntegerField(validators=[validators.validate_duration])  # Durata in minuti
     training_type = models.CharField(max_length=10, choices=[(goal.id, goal.name) for goal in FitnessGoal.objects.all()])
-    max_participants = models.PositiveIntegerField(validators=[validators.validate_number])
+    max_participants = models.PositiveIntegerField(validators=[validators.validate_max_participants])
     total_partecipants = models.PositiveIntegerField(default=0)
     title = models.TextField(validators=[validators.validate_text])
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
@@ -156,7 +155,6 @@ class GroupTraining(models.Model):
 class GroupClassReservation(models.Model):
     group_class = models.ForeignKey(GroupTraining, on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-
 
 
 class PersonalTraining(models.Model):
@@ -187,3 +185,20 @@ class PersonalTraining(models.Model):
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
     training_type = models.CharField(max_length=10, choices=[(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()])
     additional_info = models.TextField(blank=True, validators=[validators.validate_text])
+
+
+class TrainingReview(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    stars = models.PositiveSmallIntegerField(choices=[(i,i) for i in range(6)])
+    title = models.TextField(validators=[validators.validate_text])
+    date = models.DateField(default=now)
+    additional_info = models.TextField(blank=True, validators=[validators.validate_text])
+
+    class Meta:
+        abstract = True
+
+class GroupTrainingReview(TrainingReview):
+    event = models.ForeignKey(GroupTraining, on_delete=models.CASCADE)
+
+class PersonalTrainingReview(TrainingReview):
+    event = models.ForeignKey(PersonalTraining, on_delete=models.CASCADE)

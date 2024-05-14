@@ -7,6 +7,9 @@ name = "pypi"
 django = "*"
 django-background-tasks = "*"
 celery = "*"
+six = "*"
+"django.utils" = "*"
+django-hvad = "*"
 
 [dev-packages]
 

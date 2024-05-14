@@ -24,6 +24,7 @@ urlpatterns = [
     re_path(r"^$|^/$|^home/$", views.homepage, name="homepage"),
     path('logout/', views.LogoutView.as_view(), name="logout"),
     path('create_group_training/', views.NewGroupTraining.as_view(), name='create_group_training'),
+    path('edit-review/', views.EditReview.as_view(), name='edit-review'),
     path('edit_group_training/<int:course_id>/', views.EditGroupTraining.as_view(), name='edit_group_training'),
     path('book-workout/<int:pt_id>/', views.BookWorkout.as_view(), name="book-workout"),
     path('profile/', views.ProfileView.as_view(), name='profile'),
@@ -34,5 +35,6 @@ urlpatterns = [
     path('subscription-plans/', views.SubscriptionPlansView.as_view(), name='subscription-plans'),
     path('dashboard/', views.Dashboard.as_view(), name='dashboard'),
     path('classes-schedule/', views.GymClassesView.as_view(), name='classes-schedule'),
+    path('leave-review/', views.LeaveReview.as_view(), name='leave-review'),
     path('admin/', admin.site.urls)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

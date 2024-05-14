@@ -68,3 +68,15 @@ class PersonalTrainingForm(forms.ModelForm):
     class Meta:
         model = models.PersonalTraining
         fields = ['trainer', 'user', 'day', 'start_hour', 'training_type', 'additional_info']
+
+
+
+class GroupTrainingReviewForm(forms.ModelForm):
+    class Meta:
+        model = models.GroupTrainingReview
+        fields = ['user', 'stars', 'title', 'additional_info', 'event']
+
+class PersonalTrainingReviewForm(forms.ModelForm):
+    class Meta:
+        model = models.PersonalTrainingReview
+        fields = ['user', 'stars', 'title', 'additional_info', 'event']
