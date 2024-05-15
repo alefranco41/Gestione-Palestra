@@ -5,6 +5,7 @@ from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from . import validators
 from django.utils.timezone import now
+from . import context_processors
 
 class User(AbstractUser):
     is_manager = models.BooleanField(default=False)
@@ -121,6 +122,25 @@ class DurationDiscount(models.Model):
 
 
 class GroupTraining(models.Model):
+    def ended(self):
+        ended = False
+
+        today_day_index = context_processors.today.weekday()
+        group_training_day_index = context_processors.day_mapping[self.day]
+
+        if today_day_index > group_training_day_index:
+            ended = True
+        elif today_day_index == group_training_day_index:
+            if context_processors.today.hour >= self.start_hour:
+                ended = True
+            else:
+                ended = False
+        else:
+            ended = False
+
+        return ended
+    
+
     trainer = models.ForeignKey(TrainerProfile, on_delete=models.CASCADE)
     DAY_CHOICES = [
         ('Monday', 'Monday'),

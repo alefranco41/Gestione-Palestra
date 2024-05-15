@@ -40,4 +40,12 @@
         <button type="submit">Edit Group Training</button>
     </form>
 </div>
+
+<script>
+    {% if error %}
+        setTimeout(function() {
+          alert("{{ error }}");
+        }, 100);
+      {% endif %}
+</script>
 {% endblock %}

@@ -83,10 +83,7 @@ form.hidden {
 }
 
 
-img {
-  width: 20px; /* Imposta la larghezza desiderata */
-  height: auto; /* Imposta l'altezza automaticamente per mantenere l'aspetto proporzionato */
-}
+
 .content {
   position: relative;
   flex: 1;
@@ -171,7 +168,7 @@ img {
 .trainer-card img {
   display: block;
   margin: 0 auto;
-  border-radius: 50%; /* Per rendere l'immagine rotonda */
+  border-radius: 45%; /* Per rendere l'immagine rotonda */
   max-width: 100%; /* Per far sì che l'immagine non superi la larghezza massima della sua area genitore */
   height: auto; /* Per mantenere l'aspetto corretto dell'immagine */
 }

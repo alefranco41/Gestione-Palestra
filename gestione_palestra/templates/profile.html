@@ -94,5 +94,11 @@
     
 </div>
 
-
+<script>
+    {% if error %}
+        setTimeout(function() {
+          alert("{{ error }}");
+        }, 100);
+      {% endif %}
+    </script>
 {% endblock %}

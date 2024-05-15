@@ -40,6 +40,12 @@
 </div>
 
 <script>
+    {% if error and request.method == 'POST' %}
+        setTimeout(function() {
+          alert("{{ error }}");
+        }, 100);
+      {% endif %}
+
     function updateStartHours() {
         var selectedDay = daySelect.value;
         if (availability.hasOwnProperty(selectedDay)) {

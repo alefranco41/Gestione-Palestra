@@ -22,15 +22,22 @@
                     <td>
                         {% for course in hours_data.values %}
                         <div class="trainer-card">
-                            {% if course.image %} <img  src="{{ course.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
+                            {% if course.image %} <img  src="{{ course.image.url }}" alt="Profile Picture">{% endif %}
                             <div class="trainer-details">
                                 <p><strong>Trainer:</strong> {{ course.trainer.first_name}} {{ course.trainer.last_name}}</p>
                                 <p><strong>Duration:</strong> {{ course.duration }}</p>
                                 <p><strong>Description:</strong> {{ course.title }}</p>
-                                <p><strong>Max Participants:</strong> {{ course.max_participants }}</p>
-                                <p><strong>Remaining Spots:</strong> {{ course.max_participants|subtract:course.total_partecipants }}</p>
+                                {% if not course.ended %}
+                                    <p><strong>Max Participants:</strong> {{ course.max_participants }}</p>
+                                    <p><strong>Remaining Spots:</strong> {{ course.max_participants|subtract:course.total_partecipants }}</p>
+                                    <p><strong>Status:</strong> Available </p>
+                                {% else %}
+                                    <p><strong>Max Participants:</strong> {{ course.max_participants }}</p>
+                                    <p><strong>Remaining Spots:</strong> 0 </p>
+                                    <p><strong>Status:</strong> Ended </p>
+                                {% endif %}
                                 {% if request.user.is_manager %}
-                                 <a href="{%  url 'edit_group_training' course_id=course.id %}">Edit Class</button>
+                                 <a href="{%  url 'edit-group-training' course_id=course.id %}">Edit Class</button>
                                 {% elif not request.user.is_instructor %}
                                     <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="class_id" value="{{ course.id }}"><button type="submit">Join Class</form>
                                 {% endif %}

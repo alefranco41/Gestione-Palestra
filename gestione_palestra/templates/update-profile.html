@@ -73,6 +73,12 @@
         </div>
     {% endif %}
 <script>
+        {% if error %}
+            setTimeout(function() {
+              alert("{{ error }}");
+            }, 100);
+          {% endif %}
+
     document.getElementById('profile-form').addEventListener('submit', function(event) {
         var fileInput = document.getElementById('profile_picture');
         var file = fileInput.files[0];
