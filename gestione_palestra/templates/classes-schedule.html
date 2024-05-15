@@ -7,58 +7,65 @@
 
 {% block content %}
 <div style="margin:auto; max-width:800px;">
+    <form method="get" action="">
+        <label for="day">Select Day:</label>
+        <select name="day" id="day">
+            <option value="">All</option>
+            <option value="Monday">Monday</option>
+            <option value="Tuesday">Tuesday</option>
+            <option value="Wednesday">Wednesday</option>
+            <option value="Thursday">Thursday</option>
+            <option value="Friday">Friday</option>
+            <option value="Saturday">Saturday</option>
+            <option value="Sunday">Sunday</option>
+        </select>
+        <label for="hour">Select Hour:</label>
+        <select name="hour" id="hour">
+            <option value="">All</option>
+            {% for i in 9|custom_range:18 %}
+                <option value="{{ i }}">{{ i }}:00</option>
+            {% endfor %}
+        </select>
+        <label for="available">Available Only:</label>
+        <input type="checkbox" name="available" id="available" {% if request.GET.available == 'on' %}checked{% endif %}>
+        <button type="submit">Apply Filters</button>
+    </form>
     <table border="1" style="margin:auto;">
         <tr>
             <th>Day</th>
-            {% for hour in hours %}
-                <th>{{ hour }}:00</th>
-            {% endfor %}
+            <th>Title</th>
+            <th>Trainer</th>
+            <th>Start Hour</th>
+            <th>Duration</th>
+            <th>Max Participants</th>
+            <th>Remaining Spots</th>
+            <th>Status</th>
+            {% if not request.user.is_instructor %} <th>Actions</th> {% endif %}
         </tr>
         {% for day, hours_data in schedule.items %}
-        <tr>
-            <td>{{ day }}</td>
-            {% for hour in hours %}
-                {% if hour in hours_data.keys %}
-                    <td>
-                        {% for course in hours_data.values %}
-                        <div class="trainer-card">
-                            {% if course.image %} <img  src="{{ course.image.url }}" alt="Profile Picture">{% endif %}
-                            <div class="trainer-details">
-                                <p><strong>Trainer:</strong> {{ course.trainer.first_name}} {{ course.trainer.last_name}}</p>
-                                <p><strong>Duration:</strong> {{ course.duration }}</p>
-                                <p><strong>Description:</strong> {{ course.title }}</p>
-                                {% if not course.ended %}
-                                    <p><strong>Max Participants:</strong> {{ course.max_participants }}</p>
-                                    <p><strong>Remaining Spots:</strong> {{ course.max_participants|subtract:course.total_partecipants }}</p>
-                                    <p><strong>Status:</strong> Available </p>
-                                {% else %}
-                                    <p><strong>Max Participants:</strong> {{ course.max_participants }}</p>
-                                    <p><strong>Remaining Spots:</strong> 0 </p>
-                                    <p><strong>Status:</strong> Ended </p>
-                                {% endif %}
-                                {% if request.user.is_manager %}
-                                 <a href="{%  url 'edit-group-training' course_id=course.id %}">Edit Class</button>
-                                {% elif not request.user.is_instructor %}
-                                    <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="class_id" value="{{ course.id }}"><button type="submit">Join Class</form>
-                                {% endif %}
-                                </div>
-                        </div>
-                        {% endfor %}
-                    </td>
+    {% for hour, course in hours_data.items %}
+        {% if request.GET.day %}
+            {% if request.GET.day == day %}
+                {% if request.GET.hour %}
+                {% if request.GET.hour|default:""|add:"0" == hour %}
+                        {% include "course_row.html" %}
+                    {% endif %}
                 {% else %}
-                    <td> - </td>
+                    {% include "course_row.html" %}
                 {% endif %}
-            {% endfor %}
-        </tr>
-        {% endfor %}
+            {% endif %}
+        {% elif request.GET.hour %}
+        
+        {% if request.GET.hour|default:""|add:"0" == hour %}
+                {% include "course_row.html" %}
+            {% endif %}
+        {% else %}
+            {% include "course_row.html" %}
+        {% endif %}
+    {% endfor %}
+{% endfor %}
+
+
     </table>
 </div>
-
-<script>
-    {% if error %}
-        setTimeout(function() {
-          alert("{{ error }}");
-        }, 100);
-      {% endif %}
-  </script>
 {% endblock %}

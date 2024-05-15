@@ -122,14 +122,19 @@ class GymClassesView(View):
             context['error'] = 'You are not a member!!'
             return render(request=request, template_name="classes-schedule.html", context=context)
         
+        
         try:
             if models.GroupClassReservation.objects.get(user=request.user,group_class=group_class):
                 context['error'] = 'You are already booked in this class!!'
                 return render(request=request, template_name="classes-schedule.html", context=context)
+        except models.GroupClassReservation.DoesNotExist:
+            pass
+
+        try:
             if models.PersonalTraining.objects.get(user=request.user,start_hour=group_class.start_hour, day=group_class.day):
                 context['error'] = f'You have an upcoming personal training session already booked for {group_class.day} at {group_class.start_hour}!!'
                 return render(request=request, template_name="classes-schedule.html", context=context)
-        except (models.GroupClassReservation.DoesNotExist, models.PersonalTraining.DoesNotExist):
+        except (models.PersonalTraining.DoesNotExist):
             pass
         
         reservation = models.GroupClassReservation(user=request.user,group_class=group_class)
@@ -400,9 +405,6 @@ class Dashboard(View):
                     schedule[day][hour] = None
             
             for booked_group_class in booked_group_classes:
-                if not booked_group_class:
-                    continue
-
                 group_class = booked_group_class.group_class
                 if context_processors.day_mapping[group_class.day] > today.weekday():
                     group_class.expired = False

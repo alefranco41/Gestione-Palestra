@@ -1,7 +1,4 @@
-visualizzazione reviews pt (tutte quelle in cui lui è coinvolto) e utenti (tutte quelle lasciate) e manager (tutte)
-
-controlli su tutto
-
+filtro available
 messaggi di conferma prima di redirectare
 prezzi cambiano dinamicamente quando clicchi su mesi diversi
 permetti di scaricare il file del pt

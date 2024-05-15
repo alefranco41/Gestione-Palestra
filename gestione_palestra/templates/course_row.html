@@ -1,0 +1,36 @@
+{% load custom_filters %}
+
+<tr>
+    {% if forloop.first %}
+        <td rowspan="{{ hours_data|length }}">{{ day }}</td>
+    {% endif %}
+    <td>{{ course.title }}</td>
+    <td>{{ course.trainer.first_name }} {{ course.trainer.last_name }}</td>
+    <td>{{ hour }}</td>
+    <td>{{ course.duration }}</td>
+    <td>{{ course.max_participants }}</td>
+    <td>
+        {% if not course.ended %}
+            {{ course.max_participants|subtract:course.total_partecipants }}
+        {% else %}
+            0
+        {% endif %}
+    </td>
+    <td>
+        {% if course.ended %}
+            Ended
+        {% elif course.max_participants|subtract:course.total_partecipants == 0 %}
+            Full
+        {% else %}
+            Available
+        {% endif %}
+    </td>
+    {% if not request.user.is_instructor %}
+        <td>
+            <form class="classes-form" method="post">{% csrf_token %}
+                <input type="hidden" name="class_id" value="{{ course.id }}">
+                <button type="submit">Join Class</button>
+            </form>
+        </td>
+    {% endif %}
+</tr>

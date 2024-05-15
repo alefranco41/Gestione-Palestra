@@ -52,7 +52,6 @@ class FitnessGoal(models.Model):
     name = models.CharField(max_length=100, validators=[validators.validate_name])
 
 
-
 class TrainerProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     gender_choices = [
@@ -67,6 +66,7 @@ class TrainerProfile(models.Model):
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
     pt_photo = models.ImageField(upload_to='pt_images/', null=True, blank=True)
+
 
 
 class TrainerProfile_FitnessGoals(models.Model):

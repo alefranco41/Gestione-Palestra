@@ -182,6 +182,14 @@ form {
   background-color: #f9f9f9;
 }
 
+.classes-form{
+  width: 1000px;
+  padding: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  display: contents;
+}
 .form-group {
   display: flex;
   flex-direction: column;

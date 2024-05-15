@@ -92,16 +92,13 @@
         }, 100);
       {% endif %}
       
-// Select buttons with view classes
-const viewProfileBtns = document.querySelectorAll('.view_profile');
-const viewParticipantsBtns = document.querySelectorAll('.view_participants');
+
 // Function to handle button clicks and create popups
 function handleButtonClick(event) {
     
   const btn = event.target;
   const popup = document.createElement('div');
   popup.classList.add('popup'); // Add a class for styling
-  console.log(btn.dataset.event)
   const dataString = btn.dataset.event.replace(/None/g, 'null').replace(/'/g, '"');
 
   console.log(dataString)
@@ -127,16 +124,6 @@ function handleButtonClick(event) {
 }
 
 
-// Functions to fetch user profile data and event participants (implementation details based on your Django API)
-function fetchUserProfileData(user_profile) {
-  // Replace with your API call to fetch user profile data using userId
-  return user_profile; // Example API endpoint
-}
-
-function fetchEventParticipants(participants) {
-  // Replace with your API call to fetch event participants using eventId
-  return participants; // Example API endpoint
-}
 
 // Functions to create popup content (structure and formatting based on your needs)
 function createUserProfilePopupContent(userData) {
