@@ -57,7 +57,7 @@
 </table>
 {% endif %}
 <div class="reviews-container">
-{% if request.user.is_instructor %}
+    {% if request.user.is_instructor %}
     <h3> Reviews about you </h3>
     {% elif request.user.is_manager %}
     <h3> All reviews </h3>
@@ -68,7 +68,7 @@
     {% for review in reviews %}
     <div class="reviews-content">
         <p><b>Review #{{ forloop.counter }} - <b>score:</b>{{ review.stars }}:</b> {% if request.user.is_instructor or request.user.is_manager %} written by {{ review.user }}  on {{ review.date }} {% else %} written on {{ review.date }} {% endif %} </p>
-        <p><b>Event:</b> {% if review.event.max_participants %} {{ review.event.title }} Group Class {% else %} {{ review.event.training_type }} Workout {% endif %} {% if not request.user.is_instructor %} with {{ review.event.trainer.first_name }} {{ review.event.trainer.last_name }} {% endif %}</p>
+        <p><b>Event:</b> {% if review.event.max_participants %} {{ review.event.title }} Group Class {% else %} {{ review.training_type }} Workout {% endif %} {% if not request.user.is_instructor %} with {{ review.event.trainer.first_name }} {{ review.event.trainer.last_name }} {% endif %}</p>
         <p><b>Title:</b> {{ review.title }}</p>
         {% if review.additional_info %} <p><b>Text:</b> {{ review.additional_info }}</p> {% endif %}
         {% if not request.user.is_instructor and not request.user.is_manager %}

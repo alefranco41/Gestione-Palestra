@@ -38,8 +38,6 @@ def get_reviews(user):
         pt_reviews = models.PersonalTrainingReview.objects.all()
         gc_reviews = models.GroupTrainingReview.objects.all()
 
-        for review in pt_reviews:
-            review.training_type = models.FitnessGoal.objects.get(id=review.event.training_type).name
         if user.is_manager:
             reviews.extend(pt_reviews)
             reviews.extend(gc_reviews)
@@ -59,8 +57,11 @@ def get_reviews(user):
                     reviews.extend(gc_reviews.filter(event=event))
         else:
             reviews.extend(pt_reviews.filter(user=user))
+            for review in reviews:
+                review.training_type = models.FitnessGoal.objects.get(id=review.event.training_type).name
+                
             reviews.extend(gc_reviews.filter(user=user))
-           
+            
     return reviews
 
 
@@ -705,7 +706,7 @@ class BookWorkout(View):
         return redirect(reverse('dashboard'))
     
 
-def get_LeaveReview_context(request=None, event_id=None, event_type=None):
+def get_LeaveReview_context(request=None, event_id=None, event_type=None, edit=False):
         context = {}
         if not event_id or not event_type:
             event_id = request.GET.get('event_id')
@@ -720,25 +721,33 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None):
                 return context
             
             event.date = get_event_date(event)
-            try:
-                context['review'] = models.GroupTrainingReview.objects.get(user=request.user, event=event)
-            except models.GroupTrainingReview.DoesNotExist:
-                messages.error(request, f"Review not found with user: {request.user.username} and group training id: {event.id}")
-                return context
+            
+            if edit:
+                try:
+                    context['review'] = models.GroupTrainingReview.objects.get(user=request.user, event=event)
+                except models.GroupTrainingReview.DoesNotExist:
+                    messages.error(request, f"Group traininig review not found with user: {request.user.username} and group training id: {event.id}")
+                    return context
             
         elif event_type == 'personal_training':
-            event = models.PersonalTraining.objects.get(id=event_id)
             try:
-                context['review'] = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
-            except models.PersonalTrainingReview.DoesNotExist:
-                messages.error(request, f"Personal training review not found with user: {request.user.username}")
+                event = models.PersonalTraining.objects.get(id=event_id)
+            except models.PersonalTraining.DoesNotExist:
+                messages.error(request, f"Personal training session not found with id: {event_id}")
                 return context
+            if edit:
+                try:
+                    context['review'] = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
+                except models.PersonalTrainingReview.DoesNotExist:
+                    messages.error(request, f"Personal training review not found with user: {request.user.username} and id: {event.id}")
+                    return context
             
             event.date = get_event_date(event)
         else:
             messages.error(request, f'invalid event type: {event_type}')
             event = None
 
+        event.training_type = models.FitnessGoal.objects.get(id=event.training_type).name
         context['event'] = event
         
         return context
@@ -746,7 +755,7 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None):
 
 class LeaveReview(View):
     def post(self, request, *args, **kwargs):
-        context = get_LeaveReview_context(request)
+        context = get_LeaveReview_context(request=request)
         event_type = request.GET.get('event_type')
 
         if event_type == 'group_training':
@@ -784,14 +793,14 @@ class LeaveReview(View):
     
 class EditReview(View):
     def get(self, request):
-        context = get_LeaveReview_context(request)
+        context = get_LeaveReview_context(request=request, edit=True)
         return render(request=request, template_name="edit-review.html", context=context)
 
     def post(self, request, *args, **kwargs):
         user = request.POST.get('user')
         event = request.POST.get('event')
         event_type = request.POST.get('event_type')
-        context = get_LeaveReview_context(request)
+        context = get_LeaveReview_context(request=request, edit=True)
         old_review = None
 
         if event_type == 'personal_training':

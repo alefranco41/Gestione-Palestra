@@ -7,8 +7,6 @@
 
 {% block content %}
 <h2>Trainers List</h2>
-<div class="trainer-list">
-    
     <div class="trainers-container">
         {% for trainer, fitness_goals in trainers %}
         <div class="trainer-card">
@@ -19,15 +17,17 @@
                 <p><strong>Gender:</strong> {{ trainer.gender|default:"-" }}</p>
                 <p><strong>Date of Birth:</strong> {{ trainer.date_of_birth|default:"-" }}</p>
                 <p><strong>Fitness Goals:</strong> {% for goal in fitness_goals %}<li>{{ goal }}</li>{% endfor %}</p>
-                {% if not request.user.is_instructor and not request.user.is_manager %}
+            </div>
+            <div class="links">
+            {% if not request.user.is_instructor and not request.user.is_manager %}
                 <a class="button" href="{% url 'book-workout' trainer.id  %}">Book a workout</a>
                 {% endif %}
-                {% if trainer.certifications %} <a class="button" href="{{ trainer.certifications.url }}" download="CV_{{trainer.first_name}}_{{trainer.last_name}}.pdf">Download CV</a> {% endif %}
+                {% if trainer.certifications %} <a class="button download-cv" href="{{ trainer.certifications.url }}" download="CV_{{trainer.first_name}}_{{trainer.last_name}}.pdf">Download CV</a> {% endif %}
             </div>
-        </div>
+            </div>
         {% endfor %}
     </div>
-</div>
+
 <script>
     {% if error %}
         setTimeout(function() {

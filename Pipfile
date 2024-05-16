@@ -10,6 +10,7 @@ celery = "*"
 six = "*"
 "django.utils" = "*"
 django-hvad = "*"
+django-bootstrap4 = "*"
 
 [dev-packages]
 

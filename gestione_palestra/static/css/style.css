@@ -36,7 +36,6 @@
 }
 
 .plan {
-  width: calc(33.33% - 20px); /* Imposta la larghezza dei piani, sottraendo lo spazio per il margine */
   margin: 10px; /* Aggiunge uno spazio tra i piani */
   text-align: center; /* Centra il testo all'interno di ciascun piano */
   border: 1px solid #ccc; /* Aggiunge un bordo intorno ai piani */
@@ -104,7 +103,6 @@ form.hidden {
 
 .purchase-form button {
   padding: 10px; /* Aggiungi il padding solo per il pulsante all'interno del form di acquisto */
-  background-color: #e9e9e9; /* Cambia il colore di sfondo solo per il pulsante all'interno del form di acquisto */
   color: #fff; /* Cambia il colore del testo solo per il pulsante all'interno del form di acquisto */
   border: none; /* Rimuovi il bordo solo per il pulsante all'interno del form di acquisto */
   border-radius: 5px; /* Aggiungi il bordo arrotondato solo per il pulsante all'interno del form di acquisto */
@@ -118,14 +116,25 @@ form.hidden {
 .trainers-container {
   display: flex;
   text-align: left;
+  align-self: center;
 }
 
-.trainer-list {
-  display: flex;
-  justify-content: center;
-  margin-top: 100px;
+.trainer-card {
+  padding: 20px;
+  text-align-last: left;
+  border: 2px solid #333333;
+  border-radius: 5px;
+  background-color: #f9f9f9;
+  margin-left: 20px;
+  /* text-align: left; */
 }
-
+.trainer-card img {
+  display: block;
+  margin: 0 auto;
+  border-radius: 45%; /* Per rendere l'immagine rotonda */
+  max-width: 100%; /* Per far sì che l'immagine non superi la larghezza massima della sua area genitore */
+  height: 180px; /* Per mantenere l'aspetto corretto dell'immagine */
+}
 .button {
   font: bold 11px Arial;
   text-decoration: none;
@@ -138,7 +147,10 @@ form.hidden {
   border-left: 1px solid #CCCCCC;
 }
 
+
 .reviews-container {
+  max-height: 400px;
+  overflow-y: auto;
   margin-right: 100px;
   border: 1px solid black;
   text-align: center;
@@ -149,6 +161,8 @@ form.hidden {
   width: 20%;
 }
 
+
+
 .reviews-content {
   border-bottom: 1px solid black;
 }
@@ -157,12 +171,12 @@ form.hidden {
   margin-left: 10px;
 }
 .trainer-card {
-  display: inherit;
   padding: 20px;
   text-align-last: left;
-  border: 1px solid #ccc;
+  border: 2px solid #333333;
   border-radius: 5px;
   background-color: #f9f9f9;
+  margin-left: 20px;
   /* text-align: left; */
 }
 .trainer-card img {
@@ -170,7 +184,7 @@ form.hidden {
   margin: 0 auto;
   border-radius: 45%; /* Per rendere l'immagine rotonda */
   max-width: 100%; /* Per far sì che l'immagine non superi la larghezza massima della sua area genitore */
-  height: auto; /* Per mantenere l'aspetto corretto dell'immagine */
+  height: 180px; /* Per mantenere l'aspetto corretto dell'immagine */
 }
 
 
