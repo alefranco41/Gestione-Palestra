@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import authenticate, login, logout
+from django.contrib import messages
 from django.shortcuts import render
 from django.urls import reverse
 from . import forms
@@ -85,55 +86,54 @@ class GymClassesView(View):
         return render(request=request, template_name="classes-schedule.html", context=context)
 
     def post(self, request, *args, **kwargs):
-        context = self.get_context(request)
 
         if not request.user.is_authenticated:
-            context['error'] = 'You need to login first!!'
-            return render(request=request, template_name="classes-schedule.html", context=context)
+            messages.error(request, 'You must login first')
+            return redirect(reverse('classes-schedule'))
         
         if request.user.is_manager or request.user.is_instructor:
-            context['error'] = 'You are a staff member!!'
-            return render(request=request, template_name="classes-schedule.html", context=context)
+            messages.error(request, 'You are a staff member')
+            return redirect(reverse('classes-schedule'))
         
         if not models.UserProfile.objects.get(user=request.user).profileInfo():
-            context['error'] = 'You must complete your profile first!!'
-            return render(request=request, template_name="classes-schedule.html", context=context)
+            messages.error(request, 'You must complete your profile first')
+            return redirect(reverse('classes-schedule'))
         
         class_id = request.POST.get('class_id')
         group_class = models.GroupTraining.objects.get(id=class_id)
         
         if group_class.ended():
-            context['error'] = 'This group class has ended, come back the next week!!'
-            return render(request=request, template_name="classes-schedule.html", context=context)
+            messages.error(request, 'This group class has ended, come back the next week')
+            return redirect(reverse('classes-schedule'))
         
         if group_class.total_partecipants == group_class.max_participants:
-            context['error'] = 'The class you are trying to access is full!!'
-            return render(request=request, template_name="classes-schedule.html", context=context)
+            messages.error(request, 'The group class you are trying to join is full')
+            return redirect(reverse('classes-schedule'))
         
         try:
             subscription = models.Subscription.objects.get(user=request.user)
             if subscription.expired():
-                context['error'] = 'Your subscription has expired!!'
-                return render(request=request, template_name="classes-schedule.html", context=context)
+                messages.error(request, 'Your subscription has expired')
+                return redirect(reverse('classes-schedule'))
             if subscription.plan.name == 'Gym Access Only':
-                context['errror'] = f'Your subscription plan ({subscription.plan.name}) does not allow that!!'
-                return render(request=request, template_name="classes-schedule.html", context=context)
+                messages.error(request, f'Your subscription plan ({subscription.plan.name}) does not allow that')
+                return redirect(reverse('classes-schedule'))
         except models.Subscription.DoesNotExist:
-            context['error'] = 'You are not a member!!'
-            return render(request=request, template_name="classes-schedule.html", context=context)
+            messages.error(request, 'You are not a member')
+            return redirect(reverse('classes-schedule'))
         
         
         try:
             if models.GroupClassReservation.objects.get(user=request.user,group_class=group_class):
-                context['error'] = 'You are already booked in this class!!'
-                return render(request=request, template_name="classes-schedule.html", context=context)
+                messages.error(request, 'You are already booked in this class')
+                return redirect(reverse('classes-schedule'))
         except models.GroupClassReservation.DoesNotExist:
             pass
 
         try:
             if models.PersonalTraining.objects.get(user=request.user,start_hour=group_class.start_hour, day=group_class.day):
-                context['error'] = f'You have an upcoming personal training session already booked for {group_class.day} at {group_class.start_hour}!!'
-                return render(request=request, template_name="classes-schedule.html", context=context)
+                messages.error(request, f'You have an upcoming personal training session already booked for {group_class.day} at {group_class.start_hour}')
+                return redirect(reverse('classes-schedule'))
         except (models.PersonalTraining.DoesNotExist):
             pass
         
@@ -142,6 +142,7 @@ class GymClassesView(View):
         group_class.total_partecipants += 1
         group_class.save()
         reservation.save()
+        messages.success(request, 'Review submitted successfully')
         return redirect(reverse("dashboard"))
 
 class TrainerListView(View):
@@ -167,10 +168,12 @@ class SubscriptionPlansView(View):
     
     def post(self, request, *args, **kwargs):
         if not request.user.is_authenticated:
-            return render(request=request, template_name="subscription-plans.html", context={'error':' You need to login first!!'})
+            messages.error(request, 'You must login first')
+            return redirect(reverse('subscription-plans'))
         
         if request.user.is_instructor or request.user.is_manager:
-            return render(request=request, template_name="subscription-plans.html", context={'error':' You are a staff member!!'})
+            messages.error(request, 'You are a staff member')
+            return redirect(reverse('subscription-plans'))
             
         old_subscription = None
         try:
@@ -179,22 +182,26 @@ class SubscriptionPlansView(View):
             pass
         else:
             if not subscription.expired():
-                return render(request=request, template_name="subscription-plans.html", context={'error':' You already have a plan that is still valid!!'})
+                messages.error(request, 'You already own a plan that is not expired')
+                return redirect(reverse('subscription-plans'))
             else:
                 old_subscription = subscription 
 
         try:
             user = models.UserProfile.objects.get(user=request.user)
         except models.UserProfile.DoesNotExist:
-            return render(request=request, template_name="subscription-plans.html", context={'error':' You must complete your profile first!!'})
+            messages.error(request, 'You must complete your profile first')
+            return redirect(reverse('subscription-plans'))
         
         if not user.profileInfo():
-            return render(request=request, template_name="subscription-plans.html", context={'error':' You must complete your profile first!!'})
+            messages.error(request, 'You must complete your profile first')
+            return redirect(reverse('subscription-plans'))
         
         try:
             plan = models.SubscriptionPlan.objects.get(id=request.POST.get('plan_id'))
         except models.SubscriptionPlan.DoesNotExist:
-            return render(request=request, template_name="subscription-plans.html", context={'error':' The plan that you selected is currently unavailable!!'})
+            messages.error(request, 'The plan that you selected is currently unavailable')
+            return redirect(reverse('subscription-plans'))
         
         duration = int(request.POST.get('duration_selected'))
         
@@ -226,10 +233,13 @@ class SubscriptionPlansView(View):
             old_subscription.end_date = end_date
             old_subscription.age_reduction = age_reduction
             old_subscription.save()
+            message = "Your subscription has been successfully renewed"
         else:
+            message = "You have successfully subscribed"
             sub = models.Subscription(user=request.user, plan=plan, monthly_price=price, start_date=start_date, end_date=end_date, age_reduction=age_reduction)
             sub.save()
 
+        messages.success(request, message)
         return redirect(reverse('profile'))
 
 
@@ -245,17 +255,20 @@ class LoginView(View):
         user = authenticate(username=username, password=password)
         if user:
             login(request, user)
+            messages.success(request, f"Welcome to Fit4All, {user}")
             if user.is_manager:
                 return redirect(reverse('dashboard'))
             else:
                 return redirect(reverse('profile'))
         else:
-            return render(request=request, template_name="login.html", context={'error_message': 'Username or password is incorrect.'})
+            messages.error(request, 'Username or password is incorrect')
+            return redirect(reverse('login'))
         
     
 class LogoutView(View):
     def get(self, request):
         logout(request)
+        messages.success(request, "You have successfully logged out")
         return redirect(reverse('homepage'))
     
 
@@ -268,8 +281,8 @@ class RegistrationView(View):
         if form.is_valid():
             user = form.save()  # Salva l'utente nel database
             login(request, user)
-            # Qui puoi fare altre operazioni, come login automatico o reindirizzamento a una pagina di successo
-            return HttpResponseRedirect(reverse('profile'))
+            messages.success(request, f"Welcome to Fit4All, {user}")
+            return redirect(reverse('profile'))
         else:
             return render(request, 'registration.html', {'form': form})
     
@@ -277,6 +290,7 @@ class RegistrationView(View):
 class ProfileView(View):
     def get(self, request):
         if not request.user.is_authenticated:
+            messages.error(request, "You have to login first")
             return redirect(reverse('login'))
         
         if request.user.is_instructor:
@@ -285,6 +299,7 @@ class ProfileView(View):
             fitness_goals = get_fitness_goals(user_profile)
             context = {'form': form, 'user_profile':user_profile, 'user_fitness_goals':fitness_goals}
         elif request.user.is_manager:
+            messages.success(request, f"Welcome to Fit4All, {request.user}")
             return redirect(reverse('dashboard'))
         else:
             user_profile, created = models.UserProfile.objects.get_or_create(user=request.user)
@@ -308,6 +323,7 @@ class UpdateProfile(View):
     def get(self, request):
         context = {}
         if not request.user.is_authenticated:
+            messages.error(request, "You have to login first")
             return redirect(reverse('login'))
         
         if request.user.is_instructor:
@@ -315,6 +331,7 @@ class UpdateProfile(View):
             fitness_goals = get_fitness_goals(user_profile)
             context = {'user_profile':user_profile, 'trainer_fitness_goals':fitness_goals}
         elif request.user.is_manager:
+            messages.success(request, f"Welcome to Fit4All, {request.user}")
             return redirect(reverse('dashboard'))
         else:
             user_profile = models.UserProfile.objects.get(user=request.user)
@@ -347,6 +364,7 @@ class UpdateProfile(View):
             else:
                 form.save()
 
+            messages.success(request, "Your profile has been updated")
             return redirect(reverse('profile'))  # Reindirizza alla pagina del profilo
         
         return render(request, 'update-profile.html', {'form': form, 'user_profile':user_profile})
@@ -365,7 +383,7 @@ class Dashboard(View):
                 try:
                     trainer = models.TrainerProfile.objects.get(user=request.user)
                 except models.TrainerProfile.DoesNotExist:
-                    context['error'] = f"personal trainer not found: {request.user.username}"
+                    messages.error(request, f"personal trainer not found: {request.user.username}")
                     return context
                 
 
@@ -468,6 +486,7 @@ class Dashboard(View):
     def get(self, request):
         context = {}
         if not request.user.is_authenticated:
+            messages.error(request, "You have to login first")
             return redirect(reverse('login'))
         
         event_type = request.GET.get('event_type')
@@ -479,20 +498,19 @@ class Dashboard(View):
                     review = models.GroupTrainingReview.objects.get(user=request.user, event=event)
                     review.delete()
                 except (models.GroupTraining.DoesNotExist, models.GroupTrainingReview.DoesNotExist):
-                    context['error'] = f'Group training review not found with user: {request.user}'
+                    messages.error(request, f'Group training review not found with user: {request.user}')
             elif event_type == 'personal_training':
                 try:
                     event = models.PersonalTraining.objects.get(id=event_id)
                     review = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
                     review.delete()
                 except (models.PersonalTraining.DoesNotExist, models.PersonalTrainingReview.DoesNotExist):
-                    context['error'] = f'Personal training review not found with user: {request.user}'
+                    messages.error(request, f'Personal training review not found with user: {request.user}')
         
         context.update(self.get_context(request))
         return render(request=request, template_name="dashboard.html", context=context)
 
     def post(self, request, *args, **kwargs):
-        context = {}
         if not request.user.is_manager and not request.user.is_instructor:
             id_gt = request.POST.get('group_training')
             id_pt = request.POST.get('personal_training')
@@ -502,18 +520,19 @@ class Dashboard(View):
                     models.GroupClassReservation.objects.get(group_class_id=group_training.id, user_id=request.user.id).delete()
                     group_training.total_partecipants -= 1
                     group_training.save()
-                    context['error'] = 'The Group Class reservation has been cancelled'
+                    messages.success(request, 'The Group Class reservation has been cancelled')
                 else:
                     models.PersonalTraining.objects.get(id=id_pt).delete()
-                    context['error'] = 'The training session has been cancelled'
+                    messages.success(request, 'The training session has been cancelled')
             except (models.PersonalTraining.DoesNotExist, models.GroupClassReservation.DoesNotExist, models.GroupTraining.DoesNotExist):
-                context['error'] = 'Event not found'
-        context.update(self.get_context(request))
-        return render(request=request, template_name="dashboard.html", context=context)
+                pass
+        
+        return redirect(reverse('dashboard'))
     
 class NewGroupTraining(View):    
     def get(self, request):
         if not request.user.is_authenticated or not request.user.is_manager:
+            messages.error(request, "You don't have the permission to do that")
             return redirect(reverse('login'))  
         
         form = forms.GroupTrainingForm()
@@ -529,11 +548,13 @@ class NewGroupTraining(View):
                 existing_courses = models.GroupTraining.objects.filter(day=form.cleaned_data.get('day'), start_hour=form.cleaned_data.get('start_hour'))
                 if not existing_courses:
                     form.save()
-                else:   
-                    return render(request, 'create-group-training.html', {'form': form, 'trainers':trainers, 'error':'There is already a group class in that time frame!!'})
+                else:
+                    messages.error(request, 'There is already a group class in that time frame')
+                    return render(request, 'create-group-training.html', {'form': form, 'trainers':trainers})
             else:
                 return render(request, 'create-group-training.html', {'form': form, 'trainers':trainers})
-            
+        
+        messages.success(request, "Group training created successfully")
         return redirect(reverse('dashboard'))  
     
 
@@ -547,11 +568,12 @@ class EditGroupTraining(View):
         context['trainers'] = trainers
 
         if not request.user.is_authenticated or not request.user.is_manager:
-            return redirect(reverse('dashboard'))  
+            messages.error(request, "You don't have the permission to do that")
+            return redirect(reverse('login'))  
         try:
             class_item = models.GroupTraining.objects.get(id=course_id)
         except models.GroupTraining.DoesNotExist:
-            context['error'] = f"The group training that you are trying to edit (id = {course_id}) doesn't exist"
+            messages.error(request, f"The group training that you are trying to edit (id = {course_id}) doesn't exist")
             return context
         else:
             context['class'] = class_item
@@ -565,7 +587,8 @@ class EditGroupTraining(View):
             try:
                 class_item = models.GroupTraining.objects.get(id=class_id)
             except models.GroupTraining.DoesNotExist:
-                return render(request, 'edit-group-training.html', {'class':None, 'form':form, 'trainers':trainers, 'error':'The class you are trying to edit does not exist!!'})
+                messages.error(request, 'The class you are trying to edit does not exist')
+                return render(request, 'edit-group-training.html', {'class':None, 'form':form, 'trainers':trainers})
             else:
                 form = forms.GroupTrainingForm(request.POST, request.FILES, instance=class_item)
                 if form.is_valid():
@@ -573,9 +596,10 @@ class EditGroupTraining(View):
                 else:
                     return render(request, 'edit-group-training.html', {'class':class_item, 'form':form, 'trainers':trainers})
         else:
-            return render(request, 'edit-group-training.html', {'class': None, 'form': form, 'trainers': trainers, 'error': "You need to specify the 'course_id' parameter."})
+            messages.error(request, "You must specify the 'course_id' parameter")
+            return render(request, 'edit-group-training.html', {'class': None, 'form': form, 'trainers': trainers})
 
-        
+        messages.success(request, f"Group training successfully edited")
         return redirect(reverse('classes-schedule'))  
     
 
@@ -585,7 +609,7 @@ class BookWorkout(View):
         try:
             trainer = models.TrainerProfile.objects.get(id=pt_id)
         except models.TrainerProfile.DoesNotExist:
-            context['error'] = "The selected personal trainer couldn't be found"
+            messages.error(request, "The selected personal trainer couldn't be found")
             return context
         
         trainer_fitness_goals = get_fitness_goals(trainer)
@@ -626,22 +650,23 @@ class BookWorkout(View):
 
         if request.method == 'POST':
             if not request.user.is_authenticated:
-                context['error'] = 'You need to login first!!'
+                messages.error(request, 'You must login first')
                 return context
             elif request.user.is_manager or request.user.is_instructor:
-                context['error'] = 'You are a staff member!!'
+                messages.error(request, 'You are a staff member')
                 return context
             
         if request.method == 'POST':
             try:
                 day = request.POST.get('day')
-                if day not in models.PersonalTraining.DAY_CHOICES:
-                    context['error'] = f"{day} is an invalid day choice!!"
+
+                if day not in [day for day,day in models.PersonalTraining.DAY_CHOICES]:
+                    messages.error(request, f"{day} is an invalid day choice")
                     return context
                 
                 hour = request.POST.get('start_hour')
-                if hour not in models.PersonalTraining.START_HOUR_CHOICES:
-                    context['error'] = f"{hour} is an invalid hour choice!!"
+                if int(hour) not in [hour for hour,hour_str in models.PersonalTraining.START_HOUR_CHOICES]:
+                    messages.error(request, f"{hour} is an invalid hour choice")
                     return context
                 
                 user = request.POST.get('user')
@@ -649,10 +674,10 @@ class BookWorkout(View):
                 for group_class in group_classes:
                     if not group_class.ended():
                         if models.GroupClassReservation.objects.get(user=user, group_class=group_class):
-                            context['error'] = f'You have an upcoming group class training session already booked for {group_class.day} at {group_class.start_hour}!!'
+                            messages.error(request, f'You have an upcoming group class training session already booked for {group_class.day} at {group_class.start_hour}')
                             return context
             except (models.GroupClassReservation.DoesNotExist, models.GroupTraining.DoesNotExist):
-                context['error'] = f"Group class reservation not found for user: {user}!!"
+                messages.error(request, f"Group class reservation not found for user: {user}")
                 return context
                 
         return context
@@ -665,13 +690,18 @@ class BookWorkout(View):
         form = forms.PersonalTrainingForm(data=request.POST)
         context = self.get_context(request, request.POST.get('trainer'))
 
-        if context.get('error'):
-            return render(request, template_name="book-workout.html", context=context)
+        all_messages = messages.get_messages(request)
+        if all_messages:
+            for message in all_messages:
+                if message.level == messages.ERROR:
+                    return render(request, template_name="book-workout.html", context=context)
+        
         if form.is_valid():
             form.save()
         else:
             return render(request, template_name="book-workout.html", context=context)
         
+        messages.success(request, f"Workout session booked successfully")
         return redirect(reverse('dashboard'))
     
 
@@ -693,7 +723,7 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None):
             try:
                 context['review'] = models.GroupTrainingReview.objects.get(user=request.user, event=event)
             except models.GroupTrainingReview.DoesNotExist:
-                context['error'] = f"Review not found with user: {request.user.username} and group training id: {event.id}"
+                messages.error(request, f"Review not found with user: {request.user.username} and group training id: {event.id}")
                 return context
             
         elif event_type == 'personal_training':
@@ -701,12 +731,12 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None):
             try:
                 context['review'] = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
             except models.PersonalTrainingReview.DoesNotExist:
-                context['error'] = f"Personal training review not found with user: {request.user.username}"
+                messages.error(request, f"Personal training review not found with user: {request.user.username}")
                 return context
             
             event.date = get_event_date(event)
         else:
-            context['error'] = f'invalid event type: {event_type}'
+            messages.error(request, f'invalid event type: {event_type}')
             event = None
 
         context['event'] = event
@@ -726,19 +756,23 @@ class LeaveReview(View):
             form = forms.PersonalTrainingReviewForm(request.POST)
             context['form'] = form
         else:
-            context['error'] = f'invalid event type: {event_type}'
+            messages.error(request, f'invalid event type: {event_type}')
         
         if not request.user.is_authenticated:
-            context['error'] = 'You need to login first'
+            messages.error(request, 'You must login first')
         
         if request.user.is_manager or request.user.is_instructor:
-            context['error'] = 'You are a staff member'
-
-        if context['error']:
-            return render(request=request, template_name="leave-review.html", context=context)
+            messages.error(request, 'You are a staff member')
         
+        all_messages = messages.get_messages(request)
+        if all_messages:
+            for message in all_messages:
+                if message.level == messages.ERROR:
+                    return render(request=request, template_name="leave-review.html", context=context)
+                
         if form.is_valid():
             form.save()
+            messages.success(request, "Thank you for your review")
             return redirect(reverse('dashboard'))
         else:
             return render(request=request, template_name="leave-review.html", context=context)
@@ -765,21 +799,22 @@ class EditReview(View):
             try:
                 old_review = models.PersonalTrainingReview.objects.get(user=user, event=event)
             except models.PersonalTrainingReview.DoesNotExist:
-                context['error'] = f"Couldn't edit the review!!"
+                messages.error(request, f"Couldn't edit the review")
             
         elif event_type == 'group_training':
             form = forms.GroupTrainingReviewForm(request.POST)
             try:
                 old_review = models.GroupTrainingReview.objects.get(user=user, event=event)
             except models.GroupTrainingReview.DoesNotExist:
-                context['error'] = f"Couldn't edit the review!!"
+                messages.error(request, f"Couldn't edit the review")
 
         else:
-            context['error'] = f"Invalid choice for event_type: {event_type}"
+            messages.error(request, f"Invalid choice for event_type: {event_type}")
 
         if form.is_valid and old_review: 
             form.save()
             old_review.delete()
+            messages.success(request, "Your review has been successfully edited")
             return redirect(reverse("dashboard"))
         
         context['review'] = old_review

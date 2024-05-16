@@ -16,11 +16,18 @@ today = datetime.now(pytz.timezone('Europe/Rome'))
 
 def global_context(request):
     plans = models.SubscriptionPlan.objects.all()
+    for plan in plans:
+        plan.discount_percentage = {}
+        plan.full_price = plan.monthly_price
+        plan.discounted_price = plan.monthly_price - plan.age_discount
+        plan.full_discounted_price = plan.discounted_price
+        for duration, label in plan.DURATION_CHOICES:
+            plan.discount_percentage[duration] = models.DurationDiscount.objects.get(duration=duration, subscription_plan=plan).discount_percentage
+
     fitness_goals_choices = models.FitnessGoal.objects.all()
 
     fitness_goals = [(goal.id, goal.name) for goal in fitness_goals_choices]
-    for plan in plans:
-        plan.discounted_price = plan.monthly_price - plan.age_discount
+        
 
     context =   {
                     'gym_name': 'Fit4All',

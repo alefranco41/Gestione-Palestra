@@ -12,13 +12,21 @@
     <h3>{{ plan.name }}</h3>
     <table class="user-details">
         <tr>
-            <th>Full price:</th>
+            <th>Monthly price:</th>
             <td>{{ plan.monthly_price }} $</td>
         </tr>
         <tr>
-            <th>Age discounted price (U18/O65):</th>
-            <td>{{ plan.discounted_price|floatformat:2 }} $</td>
+            <th>Monthly price with age discount (U18/O65):</th>
+            <td>{{ plan.discounted_price }} $</td>
         </tr>
+        <tr>
+          <th>Full price:</th>
+          <td>{{ plan.full_price }} $</td>
+      </tr>
+      <tr>
+          <th>Full price with age discount (U18/O65):</th>
+          <td>{{ plan.full_discounted_price }} $</td>
+      </tr>
         <tr>
             <th>Duration:</th>
             <td>
@@ -50,6 +58,31 @@
         var selectedDuration = this.value;
         var planId = this.getAttribute('name').split('_')[0];
         document.getElementById('duration_selected_' + planId).value = selectedDuration;
+        var tdElements = this.closest('table').querySelectorAll('td');
+
+        
+        {% for plan in subscription_plans %}
+          if( planId == {{ plan.id }}){
+                if (selectedDuration == 1){
+                  discount = {{ plan.discount_percentage.1 }};
+                }else if(selectedDuration == 3){
+                  discount = {{ plan.discount_percentage.3 }};
+                }else if(selectedDuration == 6){
+                  discount = {{ plan.discount_percentage.6 }};
+                }else{
+                  discount = {{ plan.discount_percentage.12 }};
+                }
+
+                full_price = {{ plan.monthly_price }} * (1 - discount / 100);
+                discounted_price = full_price - {{ plan.age_discount }};
+                tdElements[0].textContent = full_price.toFixed(2) + " $";
+                tdElements[1].textContent = discounted_price.toFixed(2) + " $";
+                tdElements[2].textContent = selectedDuration * full_price.toFixed(2) + " $";
+                tdElements[3].textContent = selectedDuration * discounted_price.toFixed(2) + " $";
+          }
+        {% endfor %}
+       
+          
       });
     });
 

@@ -62,7 +62,7 @@ class TrainerProfile(models.Model):
     first_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
     last_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
     date_of_birth = models.DateField(null=False,blank=True,default=date.today, validators=[validators.validate_age_of_birth])
-    certifications = models.FileField(blank=True)
+    certifications = models.FileField(upload_to='pt_CVs/', blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
     pt_photo = models.ImageField(upload_to='pt_images/', null=True, blank=True)

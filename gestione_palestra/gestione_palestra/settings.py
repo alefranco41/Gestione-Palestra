@@ -137,11 +137,11 @@ CELERY_IMPORTS = ('gestione_palestra.tasks',)
 
 CELERY_BEAT_SCHEDULE = {
     'delete_entries_every_sunday_at_6pm': {
-        'task': 'gestione_palestra.tasks.DeleteReservations',  # Sostituisci con il percorso della tua funzione delete_entries
+        'task': 'gestione_palestra.tasks.delete_reservations',  # Sostituisci con il percorso della tua funzione delete_entries
         'schedule': crontab(hour=18, minute=0, day_of_week=0),  # Ogni domenica alle 18:00
     },
     'reset_group_training_info': {
-        'task': 'gestione_palestra.tasks.ResetTrainingInfo',  # Sostituisci con il percorso della tua funzione delete_entries
+        'task': 'gestione_palestra.tasks.reset_training_info',  # Sostituisci con il percorso della tua funzione delete_entries
         'schedule': crontab(minute=0),  # Ogni ora
     },
 }

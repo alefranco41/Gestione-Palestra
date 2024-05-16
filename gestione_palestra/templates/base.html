@@ -18,10 +18,21 @@
 
 {% include "navbar.html" %}
 
-{% block content %}
-  
-{% endblock content %} 
+{% if messages %}
+    <ul class="messages">
+        {% for message in messages %}
+            {% if message.tags == 'success' %}
+                <li class="success">{{ message }}</li>
+            {% elif message.tags == 'error' %}
+                <li class="error">{{ message }}</li>
+            {% endif %}
+        {% endfor %}
+    </ul>
+{% endif %}
 
+{% block content %}
+
+{% endblock content %} 
 
 {% include "footer.html" %}
 

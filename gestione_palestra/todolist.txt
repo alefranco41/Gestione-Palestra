@@ -1,8 +1,3 @@
-filtro available
-messaggi di conferma prima di redirectare
-prezzi cambiano dinamicamente quando clicchi su mesi diversi
-permetti di scaricare il file del pt
-
 unit test
 
 grafica
