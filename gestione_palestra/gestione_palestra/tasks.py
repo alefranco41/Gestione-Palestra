@@ -1,7 +1,6 @@
 # In tasks.py della tua app Django
-from celery import shared_task
 from . import models
-import datetime
+from datetime import datetime
 import pytz
 from .celery import app
 
