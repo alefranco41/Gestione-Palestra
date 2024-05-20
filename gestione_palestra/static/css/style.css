@@ -16,7 +16,9 @@
   border-collapse: collapse;
 }
 
-
+table{
+  text-align: center;
+}
 
 .user-details th,
 .user-details td {

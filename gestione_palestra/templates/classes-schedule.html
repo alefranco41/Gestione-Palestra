@@ -8,7 +8,7 @@
 {% block content %}
 <div style="margin:auto; max-width:800px;">
     
-    <form method="get" action="" class="filter-form">
+    <form method="get" action="" class="filter-form" id="filter-form">
         <label> <strong> Filter the group classes </strong> </label>
         <label for="day">Day:</label>
         <select name="day" id="day">
@@ -30,9 +30,8 @@
         </select>
         <label for="available">Available:</label>
         <input type="checkbox" name="available" id="available" {% if request.GET.available == 'on' %}checked{% endif %}>
-        <button type="submit">Apply Filters</button>
     </form>
-    <table border="1" style="margin:auto;">
+    <table border="1" style="margin:auto;" id="schedule-table">
         <tr>
             <th>Day</th>
             <th>Title</th>
@@ -45,6 +44,7 @@
             {% if not request.user.is_instructor %} <th>Actions</th> {% endif %}
         </tr>
         <script> console.log(" available={{ request.GET.available }}, day={{ request.GET.day }}, hour={{ request.GET.hour}} ") </script>
+        <tbody id="courses-body">
         {% for day, hours_data in schedule.items %}
             {% for hour, course in hours_data.items %}
                 {% if request.GET.day %}
@@ -88,8 +88,39 @@
                 {% endif %}
             {% endfor %}
         {% endfor %}
-
-
+        </tbody>
     </table>
 </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const daySelect = document.getElementById('day');
+    const hourSelect = document.getElementById('hour');
+    const availableCheckbox = document.getElementById('available');
+    
+    function fetchFilteredData() {
+        const day = daySelect.value;
+        const hour = hourSelect.value;
+        const available = availableCheckbox.checked ? 'on' : '';
+
+        fetch(`?day=${day}&hour=${hour}&available=${available}`, {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.text())
+        .then(data => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(data, 'text/html');
+            const newTableBody = doc.getElementById('courses-body');
+            document.getElementById('courses-body').innerHTML = newTableBody.innerHTML;
+        });
+    }
+
+    daySelect.addEventListener('change', fetchFilteredData);
+    hourSelect.addEventListener('change', fetchFilteredData);
+    availableCheckbox.addEventListener('change', fetchFilteredData);
+});
+</script>
+
 {% endblock %}
