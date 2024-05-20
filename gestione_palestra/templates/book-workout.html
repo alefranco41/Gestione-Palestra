@@ -40,11 +40,6 @@
 </div>
 
 <script>
-    {% if error and request.method == 'POST' %}
-        setTimeout(function() {
-          alert("{{ error }}");
-        }, 100);
-      {% endif %}
 
     function updateStartHours() {
         var selectedDay = daySelect.value;
@@ -64,11 +59,6 @@
         }
     }
 
-    {% if error %}
-        setTimeout(function() {
-          alert("{{ error }}");
-        }, 100);
-    {% endif %}
 
     var daySelect = document.getElementById("day");
     var startHourSelect = document.getElementById("start_hour");

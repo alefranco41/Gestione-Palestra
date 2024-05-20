@@ -88,13 +88,6 @@ class SubscriptionPlan(models.Model):
         ('BOTH', 'Group Classes + Gym Access'),
     ]
 
-    DURATION_CHOICES = [
-        (1, '1 Month'),
-        (3, '3 Months'),
-        (6, '6 Months'),
-        (12, '12 Months'),
-    ]
-
     name = models.CharField(max_length=100)
     plan_type = models.CharField(max_length=10, choices=PLAN_CHOICES)
     monthly_price = models.DecimalField(max_digits=10, decimal_places=2)
@@ -111,8 +104,15 @@ class SubscriptionPlan(models.Model):
 
 
 class DurationDiscount(models.Model):
-    duration = models.IntegerField()
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
+    DURATION_CHOICES = [
+        (1, '1 Month'),
+        (3, '3 Months'),
+        (6, '6 Months'),
+        (12, '12 Months'),
+    ]
+
+    duration = models.IntegerField(choices=DURATION_CHOICES)
+    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     subscription_plan = models.ForeignKey('gestione_palestra.SubscriptionPlan', on_delete=models.CASCADE)
 
 

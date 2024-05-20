@@ -1,4 +1,5 @@
 {% extends "base.html" %}
+{% load custom_filters %}
 {% block title %} {{ gym_name }} - Your Dashboard {% endblock title %}
 
 {% block header %} {{ request.user }}'s Dashboard {% endblock header %}
@@ -13,22 +14,79 @@
 <div class="popup-content" style="display: none;"></div>
 <div class="content">
     {% if request.user.is_manager %}
-    <div class="classes-container">
-        {% for group_class in group_classes %}
-            <div class="display-class">
-                <p><strong> {{ group_class.title }} </strong> </p>
-                <a href="{% url 'edit-group-training' group_class.id  %}" class="button"> Edit Class </a>
-                
+    <div class="manager-content">
+        <div class="manager-container">
+            {% for group_class in group_classes %}
+                <div class="display-class">
+                    <p><strong> {{ group_class.title }} </strong> </p>
+                    <a href="{% url 'edit-group-training' group_class.id  %}" class="button"> Edit Class </a>
+                    
+                    <form style="display:contents;" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="class_id" value="{{group_class.id}}">
+                        <button type="submit" class="button"> Delete Class </a>
+                    </form>                
+                </div>
+            {% endfor %}
+            <a href="{% url 'create-group-training' %}" class="button">Create new group training</a>
+        </div>
+    
+    <div class="plans">
+        {% for plan in subscription_plans %}
+            <div class="plan-dashboard">
+                <h3>Plan #{{ forloop.counter }}</h3>
+                <table class="user-details-dashboard">
+                    <tr>
+                        <th>Plan Name</th>
+                        <td>{{ plan.name }}</td>
+                    </tr>
+                    <tr>
+                        <th>Full 1 Month Price</th>
+                        <td>{{ plan.monthly_price }} $</td>
+                    </tr>
+                    <tr>
+                        <th>Reduced 1 Month Price</th>
+                        <td>{{ plan.discounted_price }} $</td>
+                    </tr>
+                    <tr>
+                        <th>Full 3 Month Price</th>
+                        <td> {{ plan.full_3 }} $</td>
+
+                    </tr>
+                    <tr>
+                        <th>Reduced 3 Month Price</th>
+                        <td> {{ plan.reduced_3 }} $</td>
+                    </tr>
+                    <tr>
+                        <th>Full 6 Month Price</th>
+                        <td>{{ plan.full_6 }} $</td>
+                    </tr>
+                    <tr>
+                        <th>Reduced 6 Month Price</th>
+                        <td>{{ plan.reduced_6 }} $</td>
+                    </tr>
+                    <tr>
+                        <th>Full 1 Year Price</th>
+                        <td>{{ plan.full_12 }} $</td>
+                    </tr>
+                    <tr>
+                        <th>Reduced 1 Year Price</th>
+                        <td>{{ plan.reduced_12 }} $</td>
+                    </tr>
+                </table>
+                <a href="{% url 'edit-plan' plan.id %}" class="button">Edit Plan</a>
+                <a href="{% url 'edit-discounts' plan.id %}" class="button">Edit Discounts </a>
                 <form style="display:contents;" method="post">
                     {% csrf_token %}
-                    <input type="hidden" name="class_id" value="{{group_class.id}}">
-                    <button type="submit" class="button"> Delete Class </a>
-                </form>                
+                    <input type="hidden" name="plan_id" value="{{plan.id}}">
+                    <button type="submit" class="button"> Delete Plan </a>
+                </form> 
             </div>
         {% endfor %}
-        <a href="{% url 'create-group-training' %}" class="button">Create new group training</a>
     </div>
-    {% else %}
+    <a href="{% url 'create-plan' %}" class="button">Create new Subscription Plan</a>
+</div>
+{% else %}
 
 <table border="1" style="margin:auto;">
     {% for day, daily_schedule in schedule.items %}

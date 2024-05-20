@@ -17,7 +17,7 @@ class UserRegistrationForm(forms.ModelForm):
         password2 = cleaned_data.get('password2')
 
         if password1 != password2:
-            raise forms.ValidationError("Passwords do not match.")
+            raise forms.ValidationError(message="Passwords do not match.", code="password")
         
         return cleaned_data
 
@@ -79,3 +79,22 @@ class PersonalTrainingReviewForm(forms.ModelForm):
     class Meta:
         model = models.PersonalTrainingReview
         fields = ['user', 'stars', 'title', 'additional_info', 'event']
+
+
+
+class SubscriptionPlanForm(forms.ModelForm):
+    class Meta:
+        model = models.SubscriptionPlan
+        fields = ['name', 'plan_type', 'monthly_price', 'age_discount']
+        widgets = {
+            'name': forms.TextInput(attrs={'class': 'form-control'}),
+            'plan_type': forms.Select(attrs={'class': 'form-control'}),
+            'monthly_price': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+            'age_discount': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+class DurationDiscountForm(forms.Form):
+    discount_1 = forms.DecimalField(max_digits=5, decimal_places=2, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    discount_3 = forms.DecimalField(max_digits=5, decimal_places=2, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    discount_6 = forms.DecimalField(max_digits=5, decimal_places=2, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))
+    discount_12 = forms.DecimalField(max_digits=5, decimal_places=2, widget=forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}))

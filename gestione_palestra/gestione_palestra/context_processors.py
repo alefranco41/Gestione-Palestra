@@ -1,5 +1,6 @@
 from datetime import datetime, date
 from . import models
+import decimal
 import pytz
 
 week_days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
@@ -20,9 +21,24 @@ def global_context(request):
         plan.discount_percentage = {}
         plan.full_price = plan.monthly_price
         plan.discounted_price = plan.monthly_price - plan.age_discount
-        plan.full_discounted_price = plan.discounted_price
-        for duration, label in plan.DURATION_CHOICES:
-            plan.discount_percentage[duration] = models.DurationDiscount.objects.get(duration=duration, subscription_plan=plan).discount_percentage
+        plan.full_discounted_price = plan.discounted_price   
+        plan.DURATION_CHOICES = models.DurationDiscount.DURATION_CHOICES     
+        for duration, label in models.DurationDiscount.DURATION_CHOICES:
+            try:
+                plan.discount_percentage[duration] = models.DurationDiscount.objects.get(duration=duration, subscription_plan=plan).discount_percentage
+            except models.DurationDiscount.DoesNotExist:
+                plan.discount_percentage[duration] = decimal.Decimal(0)
+
+        plan.full_3 =  round(3 * plan.monthly_price * (1 - plan.discount_percentage[3] / 100), 2)
+        plan.reduced_3 = round(3 * (plan.monthly_price * (1 - plan.discount_percentage[3] / 100) - plan.age_discount), 2)
+
+        plan.full_6 =  round(6 * plan.monthly_price * (1 - plan.discount_percentage[6] / 100), 2)
+        plan.reduced_6 = round(6 * (plan.monthly_price * (1 - plan.discount_percentage[6] / 100) - plan.age_discount), 2)
+
+        plan.full_12 =  round(12 * plan.monthly_price * (1 - plan.discount_percentage[12] / 100), 2)
+        plan.reduced_12 = round(12 * (plan.monthly_price * (1 - plan.discount_percentage[12] / 100) - plan.age_discount), 2)
+
+
 
     fitness_goals_choices = models.FitnessGoal.objects.all()
 

@@ -10,20 +10,23 @@
   height: auto; /* Altezza del menu */
 }
 
-.user-details {
+.user-details, .user-details-dashboard {
   width: 100%;
   margin: 50px auto 0;
   border-collapse: collapse;
 }
 
-.classes-container{
+.manager-container{
   border: 1px solid black;
   border-radius: 5px;
+  display: inline-flex;
 }
 
 table{
   text-align: center;
 }
+
+
 
 .user-details th,
 .user-details td {
@@ -36,12 +39,22 @@ table{
   background-color: #f2f2f2;
 }
 
+.user-details-dashboard th,
+.user-details-dashboard td {
+  border: 1px solid #ccc;
+  text-align: left;
+  font-size: 15px;
+}
+
 .subscription-plans {
   display: flex; /* Utilizza il layout flessibile */
   flex-wrap: wrap; /* Avvolgi i piani su una nuova riga quando necessario */
   justify-content: space-around; /* Distribuisci uniformemente i piani lungo il contenitore */
 }
 
+.display-class{
+  border:  1px solid black;
+}
 .plan {
   margin: 10px; /* Aggiunge uno spazio tra i piani */
   text-align: center; /* Centra il testo all'interno di ciascun piano */
@@ -54,6 +67,16 @@ table{
   align-items: center; /* Centra orizzontalmente il contenuto */
 }
 
+.plan-dashboard {
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.plans{
+  display: flex;
+}
 
 .profile-container {
   position: relative; /* Per consentire il posizionamento assoluto del menu rispetto ad esso */

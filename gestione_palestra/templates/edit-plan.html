@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block title %} {{ gym_name }} - Edit Subscription Plan {% endblock title %}
+
+
+{% block header %} Edit Subscription Plan {% endblock %}
+
+
+{% block content %}
+<div style="margin:auto;">
+    <h2>Edit Subscription Plan </h2>
+    <form method="post" enctype="multipart/form-data" style="margin:auto; width:400px">
+        {% csrf_token %}
+        <p>
+            <label for="id_name">Name:</label>
+            <input type="text" name="name" value="{{ plan.name }}" class="form-control" maxlength="100" required id="id_name">
+        </p>
+        <p>
+            <label for="id_plan_type">Plan type:</label>
+            <select name="plan_type" class="form-control" required id="id_plan_type">
+
+        <option value="GROUP" {% if plan.plan_type == GROUP %} selected {% endif %} >Group Classes Only</option>
+        <option value="WEIGHTS" {% if plan.plan_type == WEIGHTS %} selected {% endif %}>Gym Access Only</option>
+        <option value="BOTH" {% if plan.plan_type == BOTH %} selected {% endif %}>Group Classes + Gym Access</option>
+
+        </select>
+        </p>
+        <p>
+            <label for="id_monthly_price">Monthly price:</label>
+            <input type="number" value={{ plan.monthly_price }} name="monthly_price" class="form-control" step="0.01" required id="id_monthly_price">
+        </p>
+        <p>
+            <label for="id_age_discount">Age discount:</label>
+            <input type="number" value={{ plan.age_discount }} name="age_discount"  class="form-control" step="0.01" required id="id_age_discount">
+        </p>
+        <input type="hidden" name="plan_id" value="{{ plan.id }}">
+        <button type="submit"> Edit Plan </button>
+    </form>
+
+</div>
+
+{% endblock %}

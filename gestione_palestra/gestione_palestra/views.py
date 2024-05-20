@@ -1,22 +1,22 @@
+from . import forms
+from . import models
+from . import context_processors
 from django.shortcuts import render, redirect
 from django.views import View
 from django.contrib.auth import authenticate, login, logout
 from django.contrib import messages
 from django.shortcuts import render
 from django.urls import reverse
-from . import forms
-from . import models
-from . import context_processors
-from django.shortcuts import get_object_or_404
-from django.http import HttpResponseRedirect
-from datetime import datetime
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
 from datetime import datetime, timedelta
 from gestione_palestra.context_processors import today
 
-def homepage(request):
-    return render(request, 'home.html', context={})
+
+def print_errors(form, request):
+    for field, errors in form.errors.items():
+        for error in errors:
+            messages.error(request, f"{field}: {error}")
 
 def get_fitness_goals(trainer_profile):
     fitness_goals = trainer_profile.fitness_goals.all()
@@ -63,6 +63,14 @@ def get_reviews(user):
             
     return reviews
 
+
+
+class HomePage(View):
+    def get(self, request):
+        return render(request, 'home.html', context={})
+
+    def post(self, request, *args, **kwargs):
+        pass
 
 class GymClassesView(View):
     def get_context(self, request):
@@ -284,6 +292,7 @@ class RegistrationView(View):
             messages.success(request, f"Welcome to Fit4All, {user}")
             return redirect(reverse('profile'))
         else:
+            print_errors(form, request)
             return render(request, 'registration.html', {'form': form})
     
 
@@ -367,6 +376,7 @@ class UpdateProfile(View):
             messages.success(request, "Your profile has been updated")
             return redirect(reverse('profile'))  # Reindirizza alla pagina del profilo
         
+        print_errors(form, request)
         return render(request, 'update-profile.html', {'form': form, 'user_profile':user_profile})
     
 class Dashboard(View):
@@ -528,12 +538,20 @@ class Dashboard(View):
                 pass
         
         class_id = request.POST.get('class_id')
-        if request.user.is_manager and class_id:
-            try:
-                models.GroupTraining.objects.get(id=class_id).delete()
-                messages.success(request=request, message=f"Successfully deleted the group training with id = {class_id}")
-            except models.GroupTraining.DoesNotExist:
-                messages.error(request=request, message=f"Couldn't delete group training with id = {class_id}")
+        plan_id = request.POST.get('plan_id')
+        if request.user.is_manager:
+            if class_id:
+                try:
+                    models.GroupTraining.objects.get(id=class_id).delete()
+                    messages.success(request=request, message=f"Successfully deleted the group training with id = {class_id}")
+                except models.GroupTraining.DoesNotExist:
+                    messages.error(request=request, message=f"Couldn't delete group training with id = {class_id}")
+            if plan_id:
+                try:
+                    models.SubscriptionPlan.objects.get(id=plan_id).delete()
+                    messages.success(request=request, message=f"Successfully deleted the subscription plan with id = {plan_id}")
+                except models.SubscriptionPlan.DoesNotExist:
+                    messages.error(request=request, message=f"Couldn't delete the subscription plan with id = {plan_id}")
 
 
 
@@ -562,6 +580,7 @@ class NewGroupTraining(View):
                     messages.error(request, 'There is already a group class in that time frame')
                     return render(request, 'create-group-training.html', {'form': form, 'trainers':trainers})
             else:
+                print_errors(form, request)
                 return render(request, 'create-group-training.html', {'form': form, 'trainers':trainers})
         
         messages.success(request, "Group training created successfully")
@@ -613,10 +632,7 @@ class EditGroupTraining(View):
                         
                     form.save()
                 else:
-                    for field, errors in form.errors.items():
-                        for error in errors:
-                            messages.error(request, f"{field}: {error}")
-
+                    print_errors(form, request)
                     return render(request, 'edit-group-training.html', {'class':class_item, 'form':form, 'trainers':trainers})
         else:
             messages.error(request, "You must specify the 'course_id' parameter")
@@ -722,6 +738,7 @@ class BookWorkout(View):
         if form.is_valid():
             form.save()
         else:
+            print_errors(form, request)
             return render(request, template_name="book-workout.html", context=context)
         
         messages.success(request, f"Workout session booked successfully")
@@ -806,6 +823,7 @@ class LeaveReview(View):
             messages.success(request, "Thank you for your review")
             return redirect(reverse('dashboard'))
         else:
+            print_errors(form, request)
             return render(request=request, template_name="leave-review.html", context=context)
     
 
@@ -847,6 +865,158 @@ class EditReview(View):
             old_review.delete()
             messages.success(request, "Your review has been successfully edited")
             return redirect(reverse("dashboard"))
-        
+        else:
+            print_errors(form, request)
+
         context['review'] = old_review
         return render(request=request, template_name="edit-review.html", context=context)
+    
+
+class EditPlan(View):
+    def get_context(self, request, plan_id):
+        context = {}
+
+        try:
+            plan = models.SubscriptionPlan.objects.get(id=plan_id)
+        except models.SubscriptionPlan.DoesNotExist:
+            messages.error(request=request, message=f"Couldn't find a subscription plan with id = {plan_id}")
+            return redirect(reverse("dashboard"))
+        
+
+        if request.method == 'POST':
+            sub_form = forms.SubscriptionPlanForm(request.POST)
+        else:
+            sub_form = forms.SubscriptionPlanForm()
+
+        context['plan'] = plan
+        context['sub_form'] = sub_form
+
+        return context
+    
+    def get(self, request, plan_id):
+        if not request.user.is_authenticated or not request.user.is_manager:
+            messages.error(request=request, message="You do not have the permission to do that")
+            return redirect(reverse("home"))
+        
+        
+        return render(request=request, template_name="edit-plan.html", context=self.get_context(request,plan_id))
+
+    def post(self, request, *args, **kwargs):
+        sub_form = forms.SubscriptionPlanForm(request.POST)
+
+        plan_id = request.POST.get('plan_id')
+        context = self.get_context(request, plan_id)
+
+
+        if not sub_form.is_valid():
+            print_errors(sub_form, request) 
+            return render(request=request, template_name='edit-plan.html', context=context)
+
+
+        print(sub_form.fields.get('monthly_price'), type(sub_form.fields.get('monthly_price')))
+        plan = context['plan']
+        plan.name = sub_form.cleaned_data['name']
+        plan.plan_type = sub_form.cleaned_data['plan_type']
+        plan.monthly_price = sub_form.cleaned_data['monthly_price']
+        plan.age_discount = sub_form.cleaned_data['age_discount']
+        plan.save()
+
+        messages.success(request=request, message="Subscription Plan edited successfully")
+        return redirect(reverse("dashboard"))
+
+
+
+class EditDiscounts(View):
+    def get_context(self, request, plan_id):
+        context = {}
+        
+        if request.method == 'POST':
+            form = forms.DurationDiscountForm(request.POST)
+        else:
+            form = forms.DurationDiscountForm()
+
+
+        try:
+            plan = models.SubscriptionPlan.objects.get(id=plan_id)
+        except models.SubscriptionPlan.DoesNotExist:
+            messages.error(request=request, message=f"Couldn't find a subscription plan with id = {plan_id}")
+            return redirect(reverse("dashboard"))
+        
+        discount = {}
+        for discount_object in models.DurationDiscount.objects.filter(subscription_plan=plan_id):
+            duration_discount = discount_object.duration
+            for duration, name in discount_object.DURATION_CHOICES:
+                if duration_discount == duration:
+                    discount[duration_discount] = discount_object.discount_percentage
+                    break
+        
+        context['discount'] = discount
+        context['plan'] = plan
+
+
+        context['form'] = form
+
+        return context
+
+    def get(self, request, plan_id):
+        if not request.user.is_authenticated or not request.user.is_manager:
+            messages.error(request=request, message="You do not have the permission to do that")
+            return redirect(reverse("home"))
+        
+        
+        return render(request=request, template_name="edit-discounts.html", context=self.get_context(request,plan_id))
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context(request, request.POST.get('plan_id'))
+
+        form = context['form']
+        plan = context['plan']
+
+        form=forms.DurationDiscountForm(request.POST)
+        if form.is_valid():
+            for duration, label in models.DurationDiscount.DURATION_CHOICES:
+                obj, _ = models.DurationDiscount.objects.get_or_create(subscription_plan=plan, duration=duration)
+                new_discount = form.cleaned_data[f'discount_{duration}']
+                obj.discount_percentage = new_discount
+                obj.save()
+        else:
+            print_errors(form, request)
+            
+            return render(request=request, template_name="edit-discounts.html", context=self.get_context(request,request.POST.get('plan_id')))
+        
+        messages.success(request=request, message="Subscription Discounts edited successfully")
+        return redirect(reverse("dashboard"))
+
+
+class CreatePlan(View):
+    def get_context(self, request):
+        context = {}
+
+        if request.method == 'POST':
+            form = forms.SubscriptionPlanForm(request.POST)
+        else:
+            form = forms.SubscriptionPlanForm()
+
+        context['form'] = form
+
+        return context
+
+    def get(self, request):
+        if not request.user.is_authenticated or not request.user.is_manager:
+            messages.error(request=request, message="You do not have the permission to do that")
+            return redirect(reverse("home"))
+
+        return render(request=request, template_name="create-plan.html", context=self.get_context(request))
+
+    def post(self, request, *args, **kwargs):
+        context = self.get_context(request)
+        form = context['form']
+        if form.is_valid():
+            form.save()
+        else:
+            print_errors(form, request)
+
+            return render(request=request, template_name="create-plan.html", context=self.get_context(request))
+
+        messages.success(request=request, message="Subscription Plan created successfully")
+        return redirect(reverse("dashboard"))

@@ -21,7 +21,7 @@ from . import settings
 from django.conf.urls.static import static
 
 urlpatterns = [
-    re_path(r"^$|^/$|^home/$", views.homepage, name="homepage"),
+    re_path(r"^$|^/$|^home/$", views.HomePage.as_view(), name="homepage"),
     path('logout/', views.LogoutView.as_view(), name="logout"),
     path('create-group-training/', views.NewGroupTraining.as_view(), name='create-group-training'),
     path('edit-review/', views.EditReview.as_view(), name='edit-review'),
@@ -36,6 +36,9 @@ urlpatterns = [
     path('dashboard/', views.Dashboard.as_view(), name='dashboard'),
     path('classes-schedule/', views.GymClassesView.as_view(), name='classes-schedule'),
     path('leave-review/', views.LeaveReview.as_view(), name='leave-review'),
+    path('edit-plan/<int:plan_id>/', views.EditPlan.as_view(), name="edit-plan"),
+    path('edit-discounts/<int:plan_id>/', views.EditDiscounts.as_view(), name="edit-discounts"),
+    path('create-plan/', views.CreatePlan.as_view(), name='create-plan'),
     path('admin/', admin.site.urls)
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 

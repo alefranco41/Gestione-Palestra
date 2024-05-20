@@ -31,31 +31,10 @@
             <input type="password" id="password2" name="password2" required>
         </div>
 
-        <!-- Non-Field Errors -->
-        {% if form.errors %}
-        <div class="form-group">
-            <ul class="error-list">
-                {% for field, errors in form.errors.items %}
-                    {% for error in errors %}
-                        <li class="error" style="text-align: left;">{{ error }}</li>
-                    {% endfor %}
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
-    
-
-
         <button type="submit">Register</button>
     </form>
 
     <p>Are you a member? <a href="{% url 'login' %}">Login here</a>.</p>
 </div>
-<script>
-    {% if error %}
-        setTimeout(function() {
-          alert("{{ error }}");
-        }, 100);
-      {% endif %}
-    </script>
+
 {% endblock %}

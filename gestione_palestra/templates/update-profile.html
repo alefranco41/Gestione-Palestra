@@ -61,24 +61,7 @@
     </form>
     
 </div>
-{% if form.errors %}
-        <div class="form-group" style="display: flex; justify-content: center; margin-top:50px;">
-            <ul class="error-list">
-                {% for field, errors in form.errors.items %}
-                    {% for error in errors %}
-                        <li class="error" style="text-align: left;">{{field}}: {{ error }}</li>
-                    {% endfor %}
-                {% endfor %}
-            </ul>
-        </div>
-    {% endif %}
 <script>
-        {% if error %}
-            setTimeout(function() {
-              alert("{{ error }}");
-            }, 100);
-          {% endif %}
-
     document.getElementById('profile-form').addEventListener('submit', function(event) {
         var fileInput = document.getElementById('profile_picture');
         var file = fileInput.files[0];
