@@ -34,16 +34,16 @@ class UserProfileForm(forms.ModelForm):
         fields = ['first_name', 'last_name', 'gender', 'date_of_birth', 'height', 'weight', 'profile_picture']
 
 class TrainerProfileForm(forms.ModelForm):
-    
-    fitness_goals_choices = models.FitnessGoal.objects.all()
-
-    choices = [(goal.id, goal.name) for goal in fitness_goals_choices]
-
-    fitness_goals = forms.MultipleChoiceField(choices=choices, widget=forms.CheckboxSelectMultiple)
-
     class Meta:
         model = models.TrainerProfile
-        fields = ['first_name', 'last_name', 'gender', 'date_of_birth', 'profile_picture', 'pt_photo', 'certifications']
+        fields = ['first_name', 'last_name', 'gender', 'date_of_birth', 'profile_picture', 'pt_photo', 'certifications', 'fitness_goals']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Ottieni le scelte dinamicamente
+        fitness_goals_choices = [(goal.id, goal.name) for goal in models.FitnessGoal.objects.all()]
+        self.fields['fitness_goals'].choices = fitness_goals_choices
+        self.fields['fitness_goals'].widget = forms.CheckboxSelectMultiple()
 
 
 
@@ -53,21 +53,27 @@ class GroupTrainingForm(forms.ModelForm):
 
     class Meta:
         model = models.GroupTraining
-        fields = ['trainer', 'day', 'start_hour', 'duration', 'max_participants', 'title']
+        fields = ['trainer', 'day', 'start_hour', 'duration', 'max_participants', 'title', 'training_type', 'image']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'instance' in kwargs:
+            self.fields['training_type'].choices = kwargs['instance'].training_type_choices
+        else:
+            self.fields['training_type'].choices = models.GroupTraining().training_type_choices
 
 
 class PersonalTrainingForm(forms.ModelForm):
-    day = forms.ChoiceField(choices=models.GroupTraining.DAY_CHOICES)
-    start_hour = forms.ChoiceField(choices=models.GroupTraining.START_HOUR_CHOICES)
-    fitness_goals_choices = models.FitnessGoal.objects.all()
-
-    choices = [(str(goal.id), goal.name) for goal in fitness_goals_choices]
-    
-    training_type = forms.ChoiceField(choices=choices)
-
     class Meta:
         model = models.PersonalTraining
-        fields = ['trainer', 'user', 'day', 'start_hour', 'training_type', 'additional_info']
+        fields = '__all__'
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if 'instance' in kwargs:
+            self.fields['training_type'].choices = kwargs['instance'].training_type_choices
+        else:
+            self.fields['training_type'].choices = models.PersonalTraining().training_type_choices
 
 
 

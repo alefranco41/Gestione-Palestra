@@ -11,6 +11,9 @@ six = "*"
 "django.utils" = "*"
 django-hvad = "*"
 django-bootstrap4 = "*"
+djangorestframework = "*"
+pytz = "*"
+pillow = "*"
 
 [dev-packages]
 

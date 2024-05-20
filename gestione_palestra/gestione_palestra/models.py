@@ -16,7 +16,7 @@ class User(AbstractUser):
         verbose_name_plural = _('users')
 
 class UserProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField('gestione_palestra.User', on_delete=models.CASCADE)
     # Attributi personalizzati
     gender_choices = [
         ('M', 'Male'),
@@ -44,7 +44,7 @@ class UserProfile(models.Model):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = UserProfile
+        model = 'gestione_palestra.UserProfile'
         fields = '__all__'
 
 
@@ -53,29 +53,29 @@ class FitnessGoal(models.Model):
 
 
 class TrainerProfile(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    user = models.OneToOneField('gestione_palestra.User', on_delete=models.CASCADE)
     gender_choices = [
         ('M', 'Male'),
         ('F', 'Female'),
     ]
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
-    first_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
-    last_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
-    date_of_birth = models.DateField(null=False,blank=True,default=date.today, validators=[validators.validate_age_of_birth])
+    first_name = models.CharField(max_length=100, null=False, blank=True, validators=[validators.validate_name])
+    last_name = models.CharField(max_length=100, null=False, blank=True, validators=[validators.validate_name])
+    date_of_birth = models.DateField(null=False, blank=True, default=date.today, validators=[validators.validate_age_of_birth])
     certifications = models.FileField(upload_to='pt_CVs/', blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-    fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
+    fitness_goals = models.ManyToManyField('gestione_palestra.FitnessGoal', blank=True)  # Cambio qui
     pt_photo = models.ImageField(upload_to='pt_images/', null=True, blank=True)
 
 
 
 class TrainerProfile_FitnessGoals(models.Model):
-    trainerprofile = models.ForeignKey(TrainerProfile, on_delete=models.CASCADE)
-    fitnessgoal = models.ForeignKey(FitnessGoal, on_delete=models.CASCADE)
+    trainerprofile = models.ForeignKey('gestione_palestra.TrainerProfile', on_delete=models.CASCADE)
+    fitnessgoal = models.ForeignKey('gestione_palestra.FitnessGoal', on_delete=models.CASCADE)
 
 class Subscription(models.Model):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
-    plan = models.ForeignKey('SubscriptionPlan', on_delete=models.CASCADE)
+    user = models.OneToOneField('gestione_palestra.User', on_delete=models.CASCADE, unique=True)
+    plan = models.ForeignKey('gestione_palestra.SubscriptionPlan', on_delete=models.CASCADE)
     monthly_price = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -117,11 +117,49 @@ class SubscriptionPlan(models.Model):
 class DurationDiscount(models.Model):
     duration = models.IntegerField()
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2)
-    subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE)
+    subscription_plan = models.ForeignKey('gestione_palestra.SubscriptionPlan', on_delete=models.CASCADE)
 
 
 
 class GroupTraining(models.Model):
+    trainer = models.ForeignKey('TrainerProfile', on_delete=models.CASCADE)
+    
+    DAY_CHOICES = [
+        ('Monday', 'Monday'),
+        ('Tuesday', 'Tuesday'),
+        ('Wednesday', 'Wednesday'),
+        ('Thursday', 'Thursday'),
+        ('Friday', 'Friday'),
+        ('Saturday', 'Saturday'),
+        ('Sunday', 'Sunday'),
+    ]
+    day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    
+    START_HOUR_CHOICES = [
+        (9, '9:00'),
+        (10, '10:00'),
+        (11, '11:00'),
+        (12, '12:00'),
+        (13, '13:00'),
+        (14, '14:00'),
+        (15, '15:00'),
+        (16, '16:00'),
+        (17, '17:00'),
+        (18, '18:00'),
+    ]
+    start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
+    duration = models.PositiveIntegerField(validators=[validators.validate_duration])  # Durata in minuti
+    
+    training_type = models.CharField(max_length=10)
+    max_participants = models.PositiveIntegerField(validators=[validators.validate_max_participants])
+    total_partecipants = models.PositiveIntegerField(default=0)
+    title = models.TextField()
+    image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
+
+    @property
+    def training_type_choices(self):
+        return [(goal.id, goal.name) for goal in FitnessGoal.objects.all()]
+
     def ended(self):
         ended = False
 
@@ -139,47 +177,16 @@ class GroupTraining(models.Model):
             ended = False
 
         return ended
-    
-
-    trainer = models.ForeignKey(TrainerProfile, on_delete=models.CASCADE)
-    DAY_CHOICES = [
-        ('Monday', 'Monday'),
-        ('Tuesday', 'Tuesday'),
-        ('Wednesday', 'Wednesday'),
-        ('Thursday', 'Thursday'),
-        ('Friday', 'Friday'),
-        ('Saturday', 'Saturday'),
-        ('Sunday', 'Sunday'),
-    ]
-    day = models.CharField(max_length=10, choices=DAY_CHOICES)
-    START_HOUR_CHOICES = [
-        (9, '9:00'),
-        (10, '10:00'),
-        (11, '11:00'),
-        (12, '12:00'),
-        (13, '13:00'),
-        (14, '14:00'),
-        (15, '15:00'),
-        (16, '16:00'),
-        (17, '17:00'),
-        (18, '18:00'),
-    ]
-    start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
-    duration = models.PositiveIntegerField(validators=[validators.validate_duration])  # Durata in minuti
-    training_type = models.CharField(max_length=10, choices=[(goal.id, goal.name) for goal in FitnessGoal.objects.all()])
-    max_participants = models.PositiveIntegerField(validators=[validators.validate_max_participants])
-    total_partecipants = models.PositiveIntegerField(default=0)
-    title = models.TextField(validators=[validators.validate_text])
-    image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
 class GroupClassReservation(models.Model):
-    group_class = models.ForeignKey(GroupTraining, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    group_class = models.ForeignKey('gestione_palestra.GroupTraining', on_delete=models.CASCADE)
+    user = models.ForeignKey('gestione_palestra.User', on_delete=models.CASCADE)
 
 
 class PersonalTraining(models.Model):
-    trainer = models.ForeignKey(TrainerProfile, on_delete=models.CASCADE)
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    trainer = models.ForeignKey('TrainerProfile', on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    
     DAY_CHOICES = [
         ('Monday', 'Monday'),
         ('Tuesday', 'Tuesday'),
@@ -190,6 +197,7 @@ class PersonalTraining(models.Model):
         ('Sunday', 'Sunday'),
     ]
     day = models.CharField(max_length=10, choices=DAY_CHOICES)
+    
     START_HOUR_CHOICES = [
         (9, '9:00'),
         (10, '10:00'),
@@ -203,22 +211,28 @@ class PersonalTraining(models.Model):
         (18, '18:00'),
     ]
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
-    training_type = models.CharField(max_length=10, choices=[(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()])
-    additional_info = models.TextField(blank=True, validators=[validators.validate_text])
+
+    training_type = models.CharField(max_length=10)
+    additional_info = models.TextField(blank=True)
+
+    @property
+    def training_type_choices(self):
+        return [(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()]
+
 
 
 class TrainingReview(models.Model):
-    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    user = models.ForeignKey('gestione_palestra.User', on_delete=models.CASCADE)
     stars = models.PositiveSmallIntegerField(choices=[(i,i) for i in range(6)])
-    title = models.TextField(validators=[validators.validate_text])
+    title = models.TextField()
     date = models.DateField(default=now)
-    additional_info = models.TextField(blank=True, validators=[validators.validate_text])
+    additional_info = models.TextField(blank=True)
 
     class Meta:
         abstract = True
 
 class GroupTrainingReview(TrainingReview):
-    event = models.ForeignKey(GroupTraining, on_delete=models.CASCADE)
+    event = models.ForeignKey('gestione_palestra.GroupTraining', on_delete=models.CASCADE)
 
 class PersonalTrainingReview(TrainingReview):
-    event = models.ForeignKey(PersonalTraining, on_delete=models.CASCADE)
+    event = models.ForeignKey('gestione_palestra.PersonalTraining', on_delete=models.CASCADE)
