@@ -90,7 +90,7 @@ DATABASES = {
     }
 }
 
-LOGGING = {
+"""LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
     'handlers': {
@@ -105,7 +105,7 @@ LOGGING = {
             'handlers': ['console'],
         },
     },
-}
+}"""
 
 
 MEDIA_URL = '/media/'
