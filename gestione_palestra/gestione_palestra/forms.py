@@ -53,14 +53,7 @@ class GroupTrainingForm(forms.ModelForm):
 
     class Meta:
         model = models.GroupTraining
-        fields = ['trainer', 'day', 'start_hour', 'duration', 'max_participants', 'title', 'training_type', 'image']
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        if 'instance' in kwargs:
-            self.fields['training_type'].choices = kwargs['instance'].training_type_choices
-        else:
-            self.fields['training_type'].choices = models.GroupTraining().training_type_choices
+        fields = ['trainer', 'day', 'start_hour', 'duration', 'max_participants', 'title', 'image']
 
 
 class PersonalTrainingForm(forms.ModelForm):

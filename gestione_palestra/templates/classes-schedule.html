@@ -41,7 +41,7 @@
             <th>Max Participants</th>
             <th>Remaining Spots</th>
             <th>Status</th>
-            {% if not request.user.is_instructor %} <th>Actions</th> {% endif %}
+            {% if not request.user.is_instructor and not request.user.is_manager %} <th>Actions</th> {% endif %}
         </tr>
         <script> console.log(" available={{ request.GET.available }}, day={{ request.GET.day }}, hour={{ request.GET.hour}} ") </script>
         <tbody id="courses-body">

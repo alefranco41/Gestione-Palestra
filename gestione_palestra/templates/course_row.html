@@ -25,7 +25,7 @@
             Available
         {% endif %}
     </td>
-    {% if not request.user.is_instructor %}
+    {% if not request.user.is_instructor and not request.user.is_manager%}
         <td>
             <form class="classes-form" method="post">{% csrf_token %}
                 <input type="hidden" name="class_id" value="{{ course.id }}">
@@ -33,4 +33,5 @@
             </form>
         </td>
     {% endif %}
+        
 </tr>

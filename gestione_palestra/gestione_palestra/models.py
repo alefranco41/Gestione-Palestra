@@ -64,14 +64,10 @@ class TrainerProfile(models.Model):
     date_of_birth = models.DateField(null=False, blank=True, default=date.today, validators=[validators.validate_age_of_birth])
     certifications = models.FileField(upload_to='pt_CVs/', blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-    fitness_goals = models.ManyToManyField('gestione_palestra.FitnessGoal', blank=True)  # Cambio qui
+    fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
     pt_photo = models.ImageField(upload_to='pt_images/', null=True, blank=True)
 
 
-
-class TrainerProfile_FitnessGoals(models.Model):
-    trainerprofile = models.ForeignKey('gestione_palestra.TrainerProfile', on_delete=models.CASCADE)
-    fitnessgoal = models.ForeignKey('gestione_palestra.FitnessGoal', on_delete=models.CASCADE)
 
 class Subscription(models.Model):
     user = models.OneToOneField('gestione_palestra.User', on_delete=models.CASCADE, unique=True)
@@ -150,15 +146,11 @@ class GroupTraining(models.Model):
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
     duration = models.PositiveIntegerField(validators=[validators.validate_duration])  # Durata in minuti
     
-    training_type = models.CharField(max_length=10)
     max_participants = models.PositiveIntegerField(validators=[validators.validate_max_participants])
     total_partecipants = models.PositiveIntegerField(default=0)
     title = models.TextField()
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
-    @property
-    def training_type_choices(self):
-        return [(goal.id, goal.name) for goal in FitnessGoal.objects.all()]
 
     def ended(self):
         ended = False

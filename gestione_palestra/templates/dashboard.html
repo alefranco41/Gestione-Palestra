@@ -7,15 +7,23 @@
 
 {% if not request.user.is_manager %}
 <h2>Your Schedule for this week:</h2>
-{% else %}
-<h2> Create Group Training </h2>
+
 {% endif %}
 
 <div class="popup-content" style="display: none;"></div>
 <div class="content">
     {% if request.user.is_manager %}
-    <a href="{% url 'create-group-training' %}" class="button">Create Group Training</a>
-{% else %}
+    <div class="classes-container">
+        {% for group_class in group_classes %}
+            <div class="display-class">
+                <p><strong> {{ group_class.title }} </strong> </p>
+                <a href="{% url 'edit-group-training' group_class.id  %}" class="button"> Edit Class </a>
+                <a href="" class="button"> Delete Class </a>
+            </div>
+        {% endfor %}
+        <a href="{% url 'create-group-training' %}" class="button">Create new group training</a>
+    </div>
+    {% else %}
 
 <table border="1" style="margin:auto;">
     {% for day, daily_schedule in schedule.items %}

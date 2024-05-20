@@ -19,10 +19,9 @@ def homepage(request):
     return render(request, 'home.html', context={})
 
 def get_fitness_goals(trainer_profile):
-    fitness_goal_ids = models.TrainerProfile_FitnessGoals.objects.filter(trainerprofile=trainer_profile).values_list('fitnessgoal_id', flat=True)
-    fitness_goals = models.FitnessGoal.objects.filter(id__in=fitness_goal_ids)
-    fitness_goals = [fitness_goal.name for fitness_goal in fitness_goals]
-    return fitness_goals
+    fitness_goals = trainer_profile.fitness_goals.all()
+    fitness_goal_names = [fitness_goal.name for fitness_goal in fitness_goals]
+    return fitness_goal_names
 
 def get_event_date(event):
     week_day = context_processors.day_mapping[event.day] 
@@ -378,7 +377,7 @@ class Dashboard(View):
 
         context['reviews'] = get_reviews(request.user)
         if request.user.is_manager:
-            pass
+            context['group_classes'] = models.GroupTraining.objects.all()
         else:
             if request.user.is_instructor:
                 try:
@@ -593,8 +592,21 @@ class EditGroupTraining(View):
             else:
                 form = forms.GroupTrainingForm(request.POST, request.FILES, instance=class_item)
                 if form.is_valid():
+                    existing_courses = models.GroupTraining.objects.filter(day=form.cleaned_data.get('day'), start_hour=form.cleaned_data.get('start_hour'))
+                    if not existing_courses:
+                        form.save()
+                    else:
+                        course = existing_courses.first()
+                        if course.id != class_id:
+                            messages.error(request, 'There is already a group class in that time frame')
+                            return render(request, 'edit-group-training.html', {'class':class_item, 'form': form, 'trainers':trainers})
+                        
                     form.save()
                 else:
+                    for field, errors in form.errors.items():
+                        for error in errors:
+                            messages.error(request, f"{field}: {error}")
+
                     return render(request, 'edit-group-training.html', {'class':class_item, 'form':form, 'trainers':trainers})
         else:
             messages.error(request, "You must specify the 'course_id' parameter")
