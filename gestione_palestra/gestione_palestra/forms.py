@@ -11,15 +11,14 @@ class UserRegistrationForm(forms.ModelForm):
         model = models.User
         fields = ['username', 'email', 'password', 'password2']
 
-    def clean(self):
-        cleaned_data = super().clean()
-        password1 = cleaned_data.get('password')
-        password2 = cleaned_data.get('password2')
+    def clean_password2(self):
+        password1 = self.cleaned_data.get('password')
+        password2 = self.cleaned_data.get('password2')
 
-        if password1 != password2:
-            raise forms.ValidationError(message="Passwords do not match.", code="password")
-        
-        return cleaned_data
+        if password1 and password2 and password1 != password2:
+            raise forms.ValidationError("Passwords do not match.", code="password_mismatch")
+
+        return password2
 
     def save(self, commit=True):
         user = super().save(commit=False)

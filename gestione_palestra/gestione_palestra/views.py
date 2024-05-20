@@ -539,6 +539,7 @@ class Dashboard(View):
         
         class_id = request.POST.get('class_id')
         plan_id = request.POST.get('plan_id')
+        fg_name = request.POST.get('fitness_goal_delete')
         if request.user.is_manager:
             if class_id:
                 try:
@@ -553,7 +554,14 @@ class Dashboard(View):
                 except models.SubscriptionPlan.DoesNotExist:
                     messages.error(request=request, message=f"Couldn't delete the subscription plan with id = {plan_id}")
 
-
+            if fg_name:
+                try:
+                    fg = models.FitnessGoal.objects.get(name=fg_name)
+                except models.FitnessGoal.DoesNotExist:
+                    messages.error(request=request, message=f"Couldn't delete the fitness goal with name = {fg_name}")
+                else:
+                    fg.delete()
+                    messages.success(request=request, message=f"Successfully deleted the fitness goalwith name = {fg_name}")
 
         return redirect(reverse('dashboard'))
     
@@ -860,7 +868,7 @@ class EditReview(View):
         else:
             messages.error(request, f"Invalid choice for event_type: {event_type}")
 
-        if form.is_valid and old_review: 
+        if form.is_valid() and old_review: 
             form.save()
             old_review.delete()
             messages.success(request, "Your review has been successfully edited")

@@ -14,23 +14,24 @@
 <div class="popup-content" style="display: none;"></div>
 <div class="content">
     {% if request.user.is_manager %}
-    <div class="manager-content">
-        <div class="manager-container">
-            {% for group_class in group_classes %}
-                <div class="display-class">
-                    <p><strong> {{ group_class.title }} </strong> </p>
+    <div class="manager-container">
+        {% for group_class in group_classes %}
+            <div class="display-class">
+                <p><strong> {{ group_class.title }} </strong> </p>
+                <div class="buttons">
                     <a href="{% url 'edit-group-training' group_class.id  %}" class="button"> Edit Class </a>
-                    
                     <form style="display:contents;" method="post">
                         {% csrf_token %}
                         <input type="hidden" name="class_id" value="{{group_class.id}}">
                         <button type="submit" class="button"> Delete Class </a>
-                    </form>                
-                </div>
-            {% endfor %}
-            <a href="{% url 'create-group-training' %}" class="button">Create new group training</a>
-        </div>
+                    </form> 
+                </div>              
+            </div>
+        {% endfor %}
+        <a href="{% url 'create-group-training' %}" class="button">Create new group training</a>
+    </div>
     
+    <div class="manager-content">
     <div class="plans">
         {% for plan in subscription_plans %}
             <div class="plan-dashboard">
@@ -148,15 +149,47 @@
         {% endif %}
     </div>        
     {% endfor %}
-
-</div>
 </div>
 
+{% if request.user.is_manager %}
+        <div class="fitness-goals-container">
+            {% for fitness_goal_id, fitness_goal_name in fitness_goals %}
+                <div class="fitness-goal">
+                    <p> <strong> {{ fitness_goal_name }} </strong></p>
+                    <form method="post" style="display:contents">
+                        {% csrf_token %}
+                        <input type="text" id="name_{{fitness_goal_id}}" style="display:none;"></input>
+                        <div class="buttons">
+                            <button name="rename" onclick="display_rename_input({{fitness_goal_id}})"> Rename </button>
+                            <input type="hidden" name="fitness_goal_delete" value="{{fitness_goal_name}}">
+                            <button name="delete"> Delete </button>
+                        </div>
+                    </form>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+</div>
 
 
 
 
-<script>  
+
+<script> 
+    function display_rename_input(fitnessGoalId) {
+        var inputField = document.getElementById('name_' + fitnessGoalId);
+        inputField.style.display = 'block';
+        inputField.focus();
+
+        inputField.addEventListener('keydown', function(event) {
+            if (event.key === 'Enter') {
+                event.preventDefault(); // Previene il comportamento predefinito del "Enter"
+                document.getElementById('form_' + fitnessGoalId).submit(); // Invia il modulo
+            }
+        });
+    }
+
     // Function to handle button clicks and create popups
     function handleButtonClick(event) {
 

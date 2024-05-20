@@ -16,16 +16,29 @@
   border-collapse: collapse;
 }
 
+
+.manager-content{
+  position: absolute;
+  margin-bottom: 100px;
+}
+
 .manager-container{
   border: 1px solid black;
   border-radius: 5px;
   display: inline-flex;
+  flex-direction: column;
+  float: left;
 }
 
 table{
   text-align: center;
 }
 
+.fitness-goals-container {
+  align-self: end;
+  display: flex;
+  margin-bottom: 100px;
+}
 
 
 .user-details th,
@@ -220,6 +233,7 @@ form.hidden {
 
 form {
   width: 1000px;
+  display: grid;
   padding: 20px;
   border: 1px solid #ccc;
   border-radius: 5px;
@@ -270,6 +284,10 @@ form {
   width: 250px; /* Imposta la larghezza desiderata */
 }
 
+.fitness-goal{
+  border: 1px solid black;
+}
+
 .filter-form {
   display: flex;
   align-items: center;
@@ -308,10 +326,11 @@ header{
 }
 
 
-
+.buttons{
+  display: ruby;
+}
 .footer {
   position: fixed;
-  z-index: 1;
   bottom: 0;
   left: 0; /* Se vuoi che il footer sia allineato a sinistra */
   width: 100%; /* Se vuoi che il footer si estenda per tutta la larghezza */

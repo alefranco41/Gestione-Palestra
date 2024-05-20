@@ -1,11 +1,13 @@
 from django.contrib.auth.models import AbstractUser
+from django.core.exceptions import ValidationError
 from django.db import models
 from datetime import datetime, date
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
-from . import validators
 from django.utils.timezone import now
+import re
 from . import context_processors
+
 
 class User(AbstractUser):
     is_manager = models.BooleanField(default=False)
@@ -23,13 +25,37 @@ class UserProfile(models.Model):
         ('F', 'Female'),
     ]
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
-    first_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
-    last_name = models.CharField(max_length=100, null=False,blank=True, validators=[validators.validate_name])
-    date_of_birth = models.DateField(null=False,blank=True,default=date.today, validators=[validators.validate_age_of_birth])
-    height = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True, validators=[validators.validate_heigth])  # In centimetri
-    weight = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True, validators=[validators.validate_weigth])  # In chilogrammi
+    first_name = models.CharField(max_length=100, null=False,blank=True)
+    last_name = models.CharField(max_length=100, null=False,blank=True)
+    date_of_birth = models.DateField(null=False,blank=True,default=date.today)
+    height = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True)  # In centimetri
+    weight = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True)  # In chilogrammi
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     
+    def clean(self):
+        super().clean()
+        if self.date_of_birth > context_processors.today.date():
+            raise ValidationError({'date_of_birth': 'The date you inserted is in the future.'})
+        
+        age = context_processors.today.year - self.date_of_birth.year - ((context_processors.today.month, context_processors.today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+        if age > 100 or age < 14:
+            raise ValidationError({'date_of_birth': 'Age must be an integer between 14 and 100.'})
+        
+        if not re.match("^[a-zA-Z0-9]*$", self.name):
+            raise ValidationError({'name': 'Only alphanumeric characters are allowed for first and last names.'})
+        
+        if not 55 <= self.height <= 230:
+            raise ValidationError({'height': 'Height must be an integer between 55 and 230.'})
+        
+        if not 50 <= self.weight <= 150:
+            raise ValidationError({'weight': 'Weight must be an integer between 50 and 150.'})
+        
+        if not 10 <= self.duration <= 120:
+            raise ValidationError({'duration': 'Duration must be an integer between 10 and 120.'})
+        
+        if not 5 <= self.max_participants <= 30:
+            raise ValidationError({'max_participants': 'Max participants must be an integer between 5 and 30.'})
+        
     AGE_OF_RETIREMENT = 65  # Età di pensionamento
     LEGAL_ADULT_AGE = 18  # Età maggiore
 
@@ -49,7 +75,7 @@ class UserProfileSerializer(serializers.ModelSerializer):
 
 
 class FitnessGoal(models.Model):
-    name = models.CharField(max_length=100, validators=[validators.validate_name])
+    name = models.CharField(max_length=100)
 
 
 class TrainerProfile(models.Model):
@@ -59,14 +85,29 @@ class TrainerProfile(models.Model):
         ('F', 'Female'),
     ]
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
-    first_name = models.CharField(max_length=100, null=False, blank=True, validators=[validators.validate_name])
-    last_name = models.CharField(max_length=100, null=False, blank=True, validators=[validators.validate_name])
-    date_of_birth = models.DateField(null=False, blank=True, default=date.today, validators=[validators.validate_age_of_birth])
+    first_name = models.CharField(max_length=100, null=False, blank=True)
+    last_name = models.CharField(max_length=100, null=False, blank=True)
+    date_of_birth = models.DateField(null=False, blank=True, default=date.today)
     certifications = models.FileField(upload_to='pt_CVs/', blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
     pt_photo = models.ImageField(upload_to='pt_images/', null=True, blank=True)
 
+    def clean(self):
+        super().clean()
+        
+        if not re.match("^[a-zA-Z0-9]*$", self.first_name):
+            raise ValidationError({'name': 'Only alphanumeric characters are allowed for first and last names.'})
+        
+        if not re.match("^[a-zA-Z0-9]*$", self.last_name):
+            raise ValidationError({'name': 'Only alphanumeric characters are allowed for first and last names.'})
+        
+        if self.date_of_birth > context_processors.today.date():
+            raise ValidationError({'date_of_birth': 'The date you inserted is in the future.'})
+        
+        age = context_processors.today.year - self.date_of_birth.year - ((context_processors.today.month, context_processors.today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+        if age > 100 or age < 14:
+            raise ValidationError({'date_of_birth': 'Age must be an integer between 14 and 100.'})
 
 
 class Subscription(models.Model):
@@ -93,6 +134,12 @@ class SubscriptionPlan(models.Model):
     monthly_price = models.DecimalField(max_digits=10, decimal_places=2)
     age_discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
 
+    def clean(self):
+        super().clean()
+
+        if self.age_discount < 0 or self.age_discount > 100:
+            raise ValidationError({'age_discount': 'The age discount must be between 0 an 100.'})
+        
     def calculate_total_price(self, user_age):
         if user_age < 18 or user_age >= 65:
             return self.monthly_price - self.age_discount
@@ -115,6 +162,11 @@ class DurationDiscount(models.Model):
     discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
     subscription_plan = models.ForeignKey('gestione_palestra.SubscriptionPlan', on_delete=models.CASCADE)
 
+    def clean(self):
+        super().clean()
+
+        if self.discount_percentage < 0 or self.discount_percentage > 100:
+            raise ValidationError({'age_discount': 'The discount percentage must be between 0 an 100.'})
 
 
 class GroupTraining(models.Model):
@@ -144,13 +196,18 @@ class GroupTraining(models.Model):
         (18, '18:00'),
     ]
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
-    duration = models.PositiveIntegerField(validators=[validators.validate_duration])  # Durata in minuti
+    duration = models.PositiveIntegerField()  # Durata in minuti
     
-    max_participants = models.PositiveIntegerField(validators=[validators.validate_max_participants])
+    max_participants = models.PositiveIntegerField()
     total_partecipants = models.PositiveIntegerField(default=0)
     title = models.TextField()
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
+    def clean(self):
+        super().clean()
+
+        if not re.match("^[a-zA-Z0-9]*$", self.title):
+            raise ValidationError({'name': 'Only alphanumeric characters are allowed for titles.'})
 
     def ended(self):
         ended = False
@@ -210,6 +267,7 @@ class PersonalTraining(models.Model):
     @property
     def training_type_choices(self):
         return [(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()]
+    
 
 
 
