@@ -18,7 +18,12 @@
             <div class="display-class">
                 <p><strong> {{ group_class.title }} </strong> </p>
                 <a href="{% url 'edit-group-training' group_class.id  %}" class="button"> Edit Class </a>
-                <a href="" class="button"> Delete Class </a>
+                
+                <form style="display:contents;" method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="class_id" value="{{group_class.id}}">
+                    <button type="submit" class="button"> Delete Class </a>
+                </form>                
             </div>
         {% endfor %}
         <a href="{% url 'create-group-training' %}" class="button">Create new group training</a>
@@ -93,85 +98,78 @@
 
 
 
-<script>
-    {% if error %}
-        setTimeout(function() {
-          alert("{{ error }}");
-        }, 100);
-      {% endif %}
-      
+<script>  
+    // Function to handle button clicks and create popups
+    function handleButtonClick(event) {
 
-// Function to handle button clicks and create popups
-function handleButtonClick(event) {
-    
-  const btn = event.target;
-  const popup = document.createElement('div');
-  popup.classList.add('popup'); // Add a class for styling
-  const dataString = btn.dataset.event.replace(/None/g, 'null').replace(/'/g, '"');
+        const btn = event.target;
+        const popup = document.createElement('div');
+        popup.classList.add('popup'); // Add a class for styling
+        const dataString = btn.dataset.event.replace(/None/g, 'null').replace(/'/g, '"');
 
-  console.log(dataString)
-  const data = JSON.parse(dataString);
+        console.log(dataString)
+        const data = JSON.parse(dataString);
 
-  // Fetch data based on button type
-  if (btn.classList.contains('view_profile')) {
-    popup.innerHTML = createUserProfilePopupContent(data);
-  } else if (btn.classList.contains('view_participants')) {
-    popup.innerHTML = createEventParticipantsPopupContent(data);
-  }
+        // Fetch data based on button type
+        if (btn.classList.contains('view_profile')) {
+        popup.innerHTML = createUserProfilePopupContent(data);
+        } else if (btn.classList.contains('view_participants')) {
+        popup.innerHTML = createEventParticipantsPopupContent(data);
+        }
 
-  // Add a close button to the popup
-  const closeBtn = document.createElement('button');
-  closeBtn.textContent = 'Close';
-  closeBtn.addEventListener('click', () => {
-    popup.remove();
-  });
-  popup.appendChild(closeBtn);
-
-  // Append the popup to the body
-  document.body.appendChild(popup);
-}
-
-
-
-// Functions to create popup content (structure and formatting based on your needs)
-function createUserProfilePopupContent(userData) {
-  const { id, first_name, last_name, date_of_birth, height, weight, profile_picture } = userData;
-  let content = `<h2>User Profile</h2>`;
-  content += `<p>ID: ${id}</p>`;
-  content += `<p>Name: ${first_name} ${last_name}</p>`;
-  content += `<p>Date of Birth: ${date_of_birth}</p>`;
-  content += `<p>Height: ${height}</p>`;
-  content += `<p>Weight: ${weight}</p>`;
-  if (profile_picture) {
-    content += `<img src="<span class="math-inline">\{profile\_picture\}" alt\="</span>{first_name} ${last_name}'s profile picture">`;
-  }
-  return content;
-}
-
-function createEventParticipantsPopupContent(participantsData) {
-    let content = '<h2>Event Participants</h2>';
-    if (participantsData.length === 0) {
-        content += '<p>No participants</p>';
-    } else {
-        content += '<ul>';
-        participantsData.forEach(participant => {
-            content += '<li>';
-            content += `<p>Name: ${participant.first_name} ${participant.last_name}</p>`;
-            content += `<p>Date of Birth: ${participant.date_of_birth}</p>`;
-            content += `<p>Gender: ${participant.gender}</p>`;
-            content += `<p>Height: ${participant.height}</p>`;
-            content += `<p>Weight: ${participant.weight}</p>`;
-            if (participant.profile_picture) {
-                content += `<img src="${participant.profile_picture}" alt="${participant.first_name} ${participant.last_name}'s profile picture">`;
-            } else {
-                content += '<p>No profile picture available</p>';
-            }
-            content += '</li>';
+        // Add a close button to the popup
+        const closeBtn = document.createElement('button');
+        closeBtn.textContent = 'Close';
+        closeBtn.addEventListener('click', () => {
+        popup.remove();
         });
-        content += '</ul>';
+        popup.appendChild(closeBtn);
+
+        // Append the popup to the body
+        document.body.appendChild(popup);
     }
+
+
+
+    // Functions to create popup content (structure and formatting based on your needs)
+    function createUserProfilePopupContent(userData) {
+        const { id, first_name, last_name, date_of_birth, height, weight, profile_picture } = userData;
+        let content = `<h2>User Profile</h2>`;
+        content += `<p>ID: ${id}</p>`;
+        content += `<p>Name: ${first_name} ${last_name}</p>`;
+        content += `<p>Date of Birth: ${date_of_birth}</p>`;
+        content += `<p>Height: ${height}</p>`;
+        content += `<p>Weight: ${weight}</p>`;
+        if (profile_picture) {
+        content += `<img src="<span class="math-inline">\{profile\_picture\}" alt\="</span>{first_name} ${last_name}'s profile picture">`;
+        }
+        return content;
+    }
+
+    function createEventParticipantsPopupContent(participantsData) {
+        let content = '<h2>Event Participants</h2>';
+        if (participantsData.length === 0) {
+            content += '<p>No participants</p>';
+        } else {
+            content += '<ul>';
+            participantsData.forEach(participant => {
+                content += '<li>';
+                content += `<p>Name: ${participant.first_name} ${participant.last_name}</p>`;
+                content += `<p>Date of Birth: ${participant.date_of_birth}</p>`;
+                content += `<p>Gender: ${participant.gender}</p>`;
+                content += `<p>Height: ${participant.height}</p>`;
+                content += `<p>Weight: ${participant.weight}</p>`;
+                if (participant.profile_picture) {
+                    content += `<img src="${participant.profile_picture}" alt="${participant.first_name} ${participant.last_name}'s profile picture">`;
+                } else {
+                    content += '<p>No profile picture available</p>';
+                }
+                content += '</li>';
+            });
+            content += '</ul>';
+        }
     return content;
-}
+    }
 
 
 </script>

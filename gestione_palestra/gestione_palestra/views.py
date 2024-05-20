@@ -527,6 +527,16 @@ class Dashboard(View):
             except (models.PersonalTraining.DoesNotExist, models.GroupClassReservation.DoesNotExist, models.GroupTraining.DoesNotExist):
                 pass
         
+        class_id = request.POST.get('class_id')
+        if request.user.is_manager and class_id:
+            try:
+                models.GroupTraining.objects.get(id=class_id).delete()
+                messages.success(request=request, message=f"Successfully deleted the group training with id = {class_id}")
+            except models.GroupTraining.DoesNotExist:
+                messages.error(request=request, message=f"Couldn't delete group training with id = {class_id}")
+
+
+
         return redirect(reverse('dashboard'))
     
 class NewGroupTraining(View):    
