@@ -364,11 +364,9 @@ class UpdateProfile(View):
             if request.user.is_instructor:
                 instance = form.save(commit=False)
                 fitness_goals_ids = request.POST.getlist('fitness_goals')
-                models.TrainerProfile_FitnessGoals.objects.filter(trainerprofile=user_profile).delete()
                 fitness_goals = models.FitnessGoal.objects.filter(pk__in=fitness_goals_ids)
-                for fitness_goal in fitness_goals:
-                    models.TrainerProfile_FitnessGoals(trainerprofile=user_profile, fitnessgoal=fitness_goal).save()
-
+                user_profile.fitness_goals.set(fitness_goals)
+                user_profile.save()
                 instance.save()
             else:
                 form.save()
@@ -401,23 +399,25 @@ class Dashboard(View):
 
                 booked_group_classes = []
                 for group_class in instructor_group_classes:
+                    
                     reservation_objects = models.GroupClassReservation.objects.filter(group_class=group_class)
                     
+                    participants = []
                     if reservation_objects:
                         participants_ids = reservation_objects.values_list('user_id', flat=True)
-                        participants = []
+                        
                         for partecipant_id in participants_ids:
                             try:
                                 partecipant = models.UserProfile.objects.get(user_id=partecipant_id)
                             except models.UserProfile.DoesNotExist:
                                 continue
+                            
                             partecipant = models.UserProfileSerializer(partecipant).data
                             participants.append(partecipant)
 
-                        reservation_object = reservation_objects.first()
-                        reservation_object.participants = participants
-                        booked_group_classes.append(reservation_object)
-
+                    group_class.participants = participants
+                    booked_group_classes.append(group_class)
+                    
                 booked_training_sessions = models.PersonalTraining.objects.filter(trainer=trainer)
             else:
                 booked_group_classes = models.GroupClassReservation.objects.filter(user=request.user)
@@ -432,8 +432,13 @@ class Dashboard(View):
                 for hour in range(9,19):
                     schedule[day][hour] = None
             
-            for booked_group_class in booked_group_classes:
-                group_class = booked_group_class.group_class
+            for group_class in booked_group_classes:
+                if isinstance(group_class, models.GroupClassReservation):
+                    try:
+                        group_class = models.GroupTraining.objects.get(id=group_class.group_class.id)
+                    except models.GroupTraining.DoesNotExist:
+                        continue
+
                 if context_processors.day_mapping[group_class.day] > today.weekday():
                     group_class.expired = False
                 elif context_processors.day_mapping[group_class.day] == today.weekday():
@@ -443,10 +448,8 @@ class Dashboard(View):
                         group_class.expired = True
                 else:
                     group_class.expired = True
-                
-                if hasattr(group_class, "participants"):
-                    group_class.participants = booked_group_class.participants
-                
+
+
                 review = None
                 if group_classes_reviews:
                     try:
@@ -455,6 +458,7 @@ class Dashboard(View):
                         review = None
 
                 group_class.review = review
+                
                 schedule[group_class.day][group_class.start_hour] = group_class
             
             for booked_training_session in booked_training_sessions:
@@ -489,7 +493,7 @@ class Dashboard(View):
                         review = None
                 booked_training_session.review = review
                 schedule[booked_training_session.day][booked_training_session.start_hour] = booked_training_session
-
+            
             context['schedule'] = schedule
         return context
 
@@ -539,7 +543,9 @@ class Dashboard(View):
         
         class_id = request.POST.get('class_id')
         plan_id = request.POST.get('plan_id')
-        fg_name = request.POST.get('fitness_goal_delete')
+        fg_delete = request.POST.get('fitness_goal_delete')
+        fg_rename = request.POST.get('fitness_goal_rename')
+        new_fg = request.POST.get('new_fitness_goal')
         if request.user.is_manager:
             if class_id:
                 try:
@@ -554,14 +560,34 @@ class Dashboard(View):
                 except models.SubscriptionPlan.DoesNotExist:
                     messages.error(request=request, message=f"Couldn't delete the subscription plan with id = {plan_id}")
 
-            if fg_name:
+            if fg_delete:
                 try:
-                    fg = models.FitnessGoal.objects.get(name=fg_name)
+                    fg = models.FitnessGoal.objects.get(name=fg_delete)
                 except models.FitnessGoal.DoesNotExist:
-                    messages.error(request=request, message=f"Couldn't delete the fitness goal with name = {fg_name}")
+                    messages.error(request=request, message=f"Couldn't delete the fitness goal with name = {fg_delete}")
                 else:
                     fg.delete()
-                    messages.success(request=request, message=f"Successfully deleted the fitness goalwith name = {fg_name}")
+                    messages.success(request=request, message=f"Successfully deleted the fitness goal with name = {fg_delete}")
+            
+            if fg_rename is not None:
+                try:
+                    fg = models.FitnessGoal.objects.get(name=fg_rename)
+                except models.FitnessGoal.DoesNotExist:
+                    messages.error(request=request, message=f"Couldn't rename the fitness goal with name = {fg_rename}")
+                else:
+                    fg.name = request.POST.get('new_name')
+                    fg.save()
+                    messages.success(request=request, message=f"Successfully renamed the fitness goal with name = {fg_rename}")
+            
+            if new_fg:
+                try:
+                    fg = models.FitnessGoal.objects.get(name=new_fg)
+                except models.FitnessGoal.DoesNotExist:
+                    fg = models.FitnessGoal(name=new_fg)
+                    fg.save()
+                    messages.success(request=request, message=f"Successfully added the fitness goal with name = {new_fg}")
+                else:
+                    messages.error(request=request, message=f"An existing fitness goal with name = {new_fg} has been found")
 
         return redirect(reverse('dashboard'))
     
@@ -921,7 +947,6 @@ class EditPlan(View):
             return render(request=request, template_name='edit-plan.html', context=context)
 
 
-        print(sub_form.fields.get('monthly_price'), type(sub_form.fields.get('monthly_price')))
         plan = context['plan']
         plan.name = sub_form.cleaned_data['name']
         plan.plan_type = sub_form.cleaned_data['plan_type']

@@ -70,7 +70,7 @@ class UserProfile(models.Model):
 
 class UserProfileSerializer(serializers.ModelSerializer):
     class Meta:
-        model = 'gestione_palestra.UserProfile'
+        model = UserProfile
         fields = '__all__'
 
 
@@ -203,11 +203,6 @@ class GroupTraining(models.Model):
     title = models.TextField()
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
-    def clean(self):
-        super().clean()
-
-        if not re.match("^[a-zA-Z0-9]*$", self.title):
-            raise ValidationError({'name': 'Only alphanumeric characters are allowed for titles.'})
 
     def ended(self):
         ended = False

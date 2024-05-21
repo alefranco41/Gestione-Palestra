@@ -11,10 +11,17 @@
 
 {% endif %}
 
-<div class="popup-content" style="display: none;"></div>
+
+
 <div class="content">
+    <div class="popup-content" style="display: none;">
+
+    </div>
     {% if request.user.is_manager %}
+    
     <div class="manager-container">
+        <h3> all group classes </h3>
+        <div class="classes">
         {% for group_class in group_classes %}
             <div class="display-class">
                 <p><strong> {{ group_class.title }} </strong> </p>
@@ -23,15 +30,18 @@
                     <form style="display:contents;" method="post">
                         {% csrf_token %}
                         <input type="hidden" name="class_id" value="{{group_class.id}}">
-                        <button type="submit" class="button"> Delete Class </a>
+                        <button type="submit" class="button" style="border-radius: 5px;"> Delete Class </a>
                     </form> 
                 </div>              
             </div>
         {% endfor %}
         <a href="{% url 'create-group-training' %}" class="button">Create new group training</a>
+        </div>
     </div>
     
     <div class="manager-content">
+    <div class="plans-container">
+        <h2> All Subscription Plans </h2>
     <div class="plans">
         {% for plan in subscription_plans %}
             <div class="plan-dashboard">
@@ -75,17 +85,21 @@
                         <td>{{ plan.reduced_12 }} $</td>
                     </tr>
                 </table>
-                <a href="{% url 'edit-plan' plan.id %}" class="button">Edit Plan</a>
-                <a href="{% url 'edit-discounts' plan.id %}" class="button">Edit Discounts </a>
+                <div class="buttons">
+                    <a href="{% url 'edit-plan' plan.id %}" class="button">Edit Plan</a>
+                    <a href="{% url 'edit-discounts' plan.id %}" class="button">Edit Discounts </a>
+                
                 <form style="display:contents;" method="post">
                     {% csrf_token %}
                     <input type="hidden" name="plan_id" value="{{plan.id}}">
-                    <button type="submit" class="button"> Delete Plan </a>
-                </form> 
+                    <button type="submit" style="border-radius: 5px; margin:10px;"> Delete Plan </a>
+                </form>
+            </div>
             </div>
         {% endfor %}
     </div>
     <a href="{% url 'create-plan' %}" class="button">Create new Subscription Plan</a>
+</div>
 </div>
 {% else %}
 
@@ -104,9 +118,9 @@
                                 <b>This event has ended.</b> {% if not request.user.is_instructor %} {% if not event.review %} <a class="button" href="{% url 'leave-review' %}?event_type=group_training&amp;event_id={{event.id}}">Leave a Review</a>{% endif %} {% endif %}
                             {% else %}
                                 {% if not request.user.is_instructor %}
-                                    <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="group_training" value="{{event.id}}"><button type="submit">Cancel</button></form>        
+                                    <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="group_training" value="{{event.id}}"><button type="submit" style="border-radius: 5px;">Cancel</button></form>        
                                 {% else %}
-                                    <button class="view_participants" data-event="{{ event.participants }}" onclick="handleButtonClick(event)"> View Participants </button>
+                                    <button class="view_participants" data-event="{{ event.participants }}" onclick="handleButtonClick(event)" style="border-radius: 5px;"> View Participants </button>
                                 {% endif %}
                             {% endif %}
                         {% else %}
@@ -115,9 +129,9 @@
                                 <b>This event has ended.</b> {% if not event.review %}<a class="button" href="{% url 'leave-review' %}?event_type=personal_training&amp;event_id={{event.id}}">Leave a Review</a> {% endif %}
                             {% else %}
                                 {% if not request.user.is_instructor %}
-                                    <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="personal_training" value="{{event.id}}"><button type="submit">Cancel</button></form>
+                                    <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="personal_training" value="{{event.id}}"><button type="submit" style="border-radius: 5px;">Cancel</button></form>
                                 {% else %}
-                                    <button class="view_profile" data-event="{{ event.user_profile }}" onclick="handleButtonClick(event)"> View Profile</button>
+                                    <button style="border-radius: 5px;" class="view_profile" data-event="{{ event.user_profile }}" onclick="handleButtonClick(event)"> View Profile</button>
                                 {% endif %}
                             {% endif %}
                         {% endif %}
@@ -153,19 +167,41 @@
 
 {% if request.user.is_manager %}
         <div class="fitness-goals-container">
+            <h2> All Fitness Goals </h2>
             {% for fitness_goal_id, fitness_goal_name in fitness_goals %}
                 <div class="fitness-goal">
                     <p> <strong> {{ fitness_goal_name }} </strong></p>
-                    <form method="post" style="display:contents">
-                        {% csrf_token %}
-                        <input type="text" id="name_{{fitness_goal_id}}" style="display:none;"></input>
+                        
                         <div class="buttons">
-                            <button name="rename" onclick="display_rename_input({{fitness_goal_id}})"> Rename </button>
-                            <input type="hidden" name="fitness_goal_delete" value="{{fitness_goal_name}}">
-                            <button name="delete"> Delete </button>
+                            <form method="post" style="display:contents">
+                                {% csrf_token %}
+                                <input type="hidden" name="fitness_goal_delete" value="{{fitness_goal_name}}">
+                                <button type="submit" style="border-radius: 5px;"> Delete </button>
+                            </form>
+
+                            <form method="post" id="form_{{fitness_goal_id}}" style="display:contents">
+                                {% csrf_token %}
+                                <input type="text" name="new_name" id="name_{{fitness_goal_id}}" style="display:none;"></input>
+                                <input type="hidden" name="fitness_goal_rename" value="{{fitness_goal_name}}">
+                                <button type="button" onclick="display_rename_input({{fitness_goal_id}})" style="border-radius: 5px;"> Rename </button>
+                            </form>
                         </div>
-                    </form>
+                    
                 </div>
+
+                {% if forloop.last %}
+                <div class="fitness-goal">
+                    <p> <strong> Add new Fitness Goal </strong></p>
+                        <div class="buttons">
+                            <form method="post" style="display:contents">
+                                {% csrf_token %}
+                                <input type="text" name="new_fitness_goal" placeholder="Type the name here"></input>
+                                <button type="submit" style="border-radius: 5px;"> Add </button>
+                            </form>
+                        </div>
+                    
+                </div>
+                {% endif %}
             {% endfor %}
         </div>
     {% endif %}
@@ -179,88 +215,94 @@
 <script> 
     function display_rename_input(fitnessGoalId) {
         var inputField = document.getElementById('name_' + fitnessGoalId);
+        var form = document.getElementById('form_' + fitnessGoalId);
+    
         inputField.style.display = 'block';
         inputField.focus();
-
+    
         inputField.addEventListener('keydown', function(event) {
             if (event.key === 'Enter') {
                 event.preventDefault(); // Previene il comportamento predefinito del "Enter"
-                document.getElementById('form_' + fitnessGoalId).submit(); // Invia il modulo
+                form.submit(); // Invia il modulo
             }
         });
     }
 
     // Function to handle button clicks and create popups
     function handleButtonClick(event) {
+    const btn = event.target;
+    const popupContainer = document.querySelector('.popup-content'); // Cerca il contenitore popup-content
 
-        const btn = event.target;
-        const popup = document.createElement('div');
-        popup.classList.add('popup'); // Add a class for styling
-        const dataString = btn.dataset.event.replace(/None/g, 'null').replace(/'/g, '"');
+    // Svuota il contenitore popup-content
+    popupContainer.innerHTML = '';
 
-        console.log(dataString)
-        const data = JSON.parse(dataString);
+    const popup = document.createElement('div');
+    popup.classList.add('popup'); // Aggiungi una classe per lo stile
+    const dataString = btn.dataset.event.replace(/None/g, 'null').replace(/'/g, '"');
 
-        // Fetch data based on button type
-        if (btn.classList.contains('view_profile')) {
+    console.log(dataString);
+    const data = JSON.parse(dataString);
+
+    // Ottieni i dati in base al tipo di pulsante
+    if (btn.classList.contains('view_profile')) {
         popup.innerHTML = createUserProfilePopupContent(data);
-        } else if (btn.classList.contains('view_participants')) {
+    } else if (btn.classList.contains('view_participants')) {
         popup.innerHTML = createEventParticipantsPopupContent(data);
-        }
-
-        // Add a close button to the popup
-        const closeBtn = document.createElement('button');
-        closeBtn.textContent = 'Close';
-        closeBtn.addEventListener('click', () => {
-        popup.remove();
-        });
-        popup.appendChild(closeBtn);
-
-        // Append the popup to the body
-        document.body.appendChild(popup);
     }
 
+    // Aggiungi un pulsante di chiusura al popup
+    const closeBtn = document.createElement('button');
+    closeBtn.textContent = 'Close';
+    closeBtn.addEventListener('click', () => {
+        popupContainer.style.display = 'none'; // Nasconde il contenitore popup-content
+        popupContainer.innerHTML = ''; // Svuota il contenitore popup-content
+    });
+    popup.appendChild(closeBtn);
 
+    // Aggiungi il popup al contenitore popup-content
+    popupContainer.appendChild(popup);
+    popupContainer.style.display = 'block'; // Mostra il contenitore popup-content
+}
 
-    // Functions to create popup content (structure and formatting based on your needs)
-    function createUserProfilePopupContent(userData) {
-        const { id, first_name, last_name, date_of_birth, height, weight, profile_picture } = userData;
-        let content = `<h2>User Profile</h2>`;
-        content += `<p>ID: ${id}</p>`;
-        content += `<p>Name: ${first_name} ${last_name}</p>`;
-        content += `<p>Date of Birth: ${date_of_birth}</p>`;
-        content += `<p>Height: ${height}</p>`;
-        content += `<p>Weight: ${weight}</p>`;
-        if (profile_picture) {
-        content += `<img src="<span class="math-inline">\{profile\_picture\}" alt\="</span>{first_name} ${last_name}'s profile picture">`;
-        }
-        return content;
+// Funzioni per creare il contenuto del popup
+function createUserProfilePopupContent(userData) {
+    const { id, first_name, last_name, date_of_birth, height, weight, profile_picture } = userData;
+    let content = `<h2>User Profile</h2>`;
+    content += `<table class="user-details">`;
+    content += `<tr><th>ID</th><td>${id}</td></tr>`;
+    content += `<tr><th>Name</th><td>${first_name} ${last_name}</td></tr>`;
+    content += `<tr><th>Date of Birth</th><td>${date_of_birth}</td></tr>`;
+    content += `<tr><th>Height</th><td>${height} cm</td></tr>`;
+    content += `<tr><th>Weight</th><td>${weight} kg</td></tr>`;
+    if (profile_picture) {
+        content += `<tr><th>Profile Picture</th><td><img src="${profile_picture}" alt="${first_name} ${last_name}'s profile picture"></td></tr>`;
     }
-
-    function createEventParticipantsPopupContent(participantsData) {
-        let content = '<h2>Event Participants</h2>';
-        if (participantsData.length === 0) {
-            content += '<p>No participants</p>';
-        } else {
-            content += '<ul>';
-            participantsData.forEach(participant => {
-                content += '<li>';
-                content += `<p>Name: ${participant.first_name} ${participant.last_name}</p>`;
-                content += `<p>Date of Birth: ${participant.date_of_birth}</p>`;
-                content += `<p>Gender: ${participant.gender}</p>`;
-                content += `<p>Height: ${participant.height}</p>`;
-                content += `<p>Weight: ${participant.weight}</p>`;
-                if (participant.profile_picture) {
-                    content += `<img src="${participant.profile_picture}" alt="${participant.first_name} ${participant.last_name}'s profile picture">`;
-                } else {
-                    content += '<p>No profile picture available</p>';
-                }
-                content += '</li>';
-            });
-            content += '</ul>';
-        }
+    content += `</table>`;
     return content;
+}
+
+function createEventParticipantsPopupContent(participantsData) {
+    let content = '<h2>Event Participants</h2>';
+    if (participantsData.length === 0) {
+        content += '<p>No participants</p>';
+    } else {
+        participantsData.forEach(participant => {
+            content += `<table class="user-details">`;
+            content += `<tr><th>Name</th><td>${participant.first_name} ${participant.last_name}</td></tr>`;
+            content += `<tr><th>Date of Birth</th><td>${participant.date_of_birth}</td></tr>`;
+            content += `<tr><th>Gender</th><td>${participant.gender}</td></tr>`;
+            content += `<tr><th>Height</th><td>${participant.height} cm</td></tr>`;
+            content += `<tr><th>Weight</th><td>${participant.weight} kg</td></tr>`;
+            if (participant.profile_picture) {
+                content += `<tr><th>Profile Picture</th><td><img src="${participant.profile_picture}" style="max-width: 80px; max-height: 80px;" alt="${participant.first_name} ${participant.last_name}'s profile picture"></td></tr>`;
+            } else {
+                content += `<tr><th>Profile Picture</th><td>No profile picture available</td></tr>`;
+            }
+            content += `</table><br>`; // Adding a line break between tables for better readability
+        });
     }
+    return content;
+}
 
 
 </script>

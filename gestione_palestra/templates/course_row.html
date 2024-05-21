@@ -1,9 +1,14 @@
 {% load custom_filters %}
 
 <tr>
-    {% if forloop.first %}
-        <td rowspan="{{ hours_data|length }}">{{ day }}</td>
+    {% if request.GET.day or request.GET.hour or request.GET.available or request.GET.trainer %}
+        <td> {{ day }} </td>
+    {% else %}
+        {% if forloop.first %}
+            <td rowspan="{{ hours_data|length }}">{{ day }}</td>
+        {% endif %}
     {% endif %}
+
     <td>{{ course.title }}</td>
     <td>{{ course.trainer.first_name }} {{ course.trainer.last_name }}</td>
     <td>{{ hour }}</td>

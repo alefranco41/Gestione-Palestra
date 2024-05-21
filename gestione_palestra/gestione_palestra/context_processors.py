@@ -43,7 +43,8 @@ def global_context(request):
     fitness_goals_choices = models.FitnessGoal.objects.all()
 
     fitness_goals = [(goal.id, goal.name) for goal in fitness_goals_choices]
-        
+    
+    trainers = models.TrainerProfile.objects.all()
 
     context =   {
                     'gym_name': 'Fit4All',
@@ -51,7 +52,8 @@ def global_context(request):
                     'subscription_plans':plans,
                     'fitness_goals':fitness_goals,
                     'days':week_days,
-                    'hours':range(9,19)
+                    'hours':range(9,19),
+                    'trainers':trainers
                 }
     
     return context

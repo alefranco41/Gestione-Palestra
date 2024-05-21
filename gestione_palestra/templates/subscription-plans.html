@@ -77,12 +77,11 @@
                 discounted_price = full_price - {{ plan.age_discount }};
                 tdElements[0].textContent = full_price.toFixed(2) + " $";
                 tdElements[1].textContent = discounted_price.toFixed(2) + " $";
-                tdElements[2].textContent = selectedDuration * full_price.toFixed(2) + " $";
-                tdElements[3].textContent = selectedDuration * discounted_price.toFixed(2) + " $";
+                tdElements[2].textContent = (selectedDuration * full_price).toFixed(2) + " $";
+                tdElements[3].textContent = (selectedDuration * discounted_price).toFixed(2) + " $";
           }
         {% endfor %}
-       
-          
+
       });
     });
 

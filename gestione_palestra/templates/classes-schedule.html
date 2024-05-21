@@ -28,6 +28,13 @@
                 <option value="{{ i }}" {% if request.GET.hour|default:""|add:"0" == i %}selected{% endif %}>{{ i }}:00</option>
             {% endfor %}
         </select>
+        <label for="trainer">Trainer:</label>
+        <select name="trainer" id="trainer">
+            <option value="" {% if request.GET.trainer == '' %}selected{% endif %}>All</option>
+            {% for trainer in trainers %}
+                <option value="{{ trainer.id }}" {% if request.GET.trainer|default:""|add:"0" == trainer.id %}selected{% endif %}>{{ trainer.first_name }} {{ trainer.last_name }}</option>
+            {% endfor %}
+        </select>
         <label for="available">Available:</label>
         <input type="checkbox" name="available" id="available" {% if request.GET.available == 'on' %}checked{% endif %}>
     </form>
@@ -43,7 +50,6 @@
             <th>Status</th>
             {% if not request.user.is_instructor and not request.user.is_manager %} <th>Actions</th> {% endif %}
         </tr>
-        <script> console.log(" available={{ request.GET.available }}, day={{ request.GET.day }}, hour={{ request.GET.hour}} ") </script>
         <tbody id="courses-body">
         {% for day, hours_data in schedule.items %}
             {% for hour, course in hours_data.items %}
@@ -51,6 +57,52 @@
                     {% if request.GET.day == day %}
                         {% if request.GET.hour %}
                             {% if request.GET.hour|default:""|add:"0" == hour %}
+                                {% if request.GET.trainer %}
+                                    {% if request.GET.trainer == course.trainer.id|stringformat:"s" %}
+                                        {% if request.GET.available == "on" %}
+                                            {% if not course.ended and course.max_participants|subtract:course.total_partecipants != 0 %}
+                                                {% include "course_row.html" %}
+                                            {% endif %}
+                                        {% else %}
+                                            {% include "course_row.html" %}
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    {% if request.GET.available == "on" %}
+                                        {% if not course.ended and course.max_participants|subtract:course.total_partecipants != 0 %}
+                                            {% include "course_row.html" %}
+                                        {% endif %}
+                                    {% else %}
+                                        {% include "course_row.html" %}
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            {% if request.GET.trainer %}
+                                {% if request.GET.trainer == course.trainer.id|stringformat:"s" %}
+                                    {% if request.GET.available == "on" %}
+                                        {% if not course.ended and course.max_participants|subtract:course.total_partecipants != 0 %}
+                                            {% include "course_row.html" %}
+                                        {% endif %}
+                                    {% else %}
+                                        {% include "course_row.html" %}
+                                    {% endif %}
+                                {% endif %}
+                            {% else %}
+                                {% if request.GET.available == "on" %}
+                                    {% if not course.ended and course.max_participants|subtract:course.total_partecipants != 0 %}
+                                        {% include "course_row.html" %}
+                                    {% endif %}
+                                {% else %}
+                                    {% include "course_row.html" %}
+                                {% endif %}
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                {% elif request.GET.hour %}
+                    {% if request.GET.hour|default:""|add:"0" == hour %}
+                        {% if request.GET.trainer %}
+                            {% if request.GET.trainer == course.trainer.id|stringformat:"s" %}
                                 {% if request.GET.available == "on" %}
                                     {% if not course.ended and course.max_participants|subtract:course.total_partecipants != 0 %}
                                         {% include "course_row.html" %}
@@ -64,20 +116,20 @@
                                 {% if not course.ended and course.max_participants|subtract:course.total_partecipants != 0 %}
                                     {% include "course_row.html" %}
                                 {% endif %}
-                            {% else %}  
+                            {% else %}
                                 {% include "course_row.html" %}
                             {% endif %}
                         {% endif %}
                     {% endif %}
-                {% elif request.GET.hour %}
-                    {% if request.GET.hour|default:""|add:"0" == hour %}
+                {% elif request.GET.trainer %}
+                    {% if request.GET.trainer == course.trainer.id|stringformat:"s" %}
                         {% if request.GET.available == "on" %}
                             {% if not course.ended and course.max_participants|subtract:course.total_partecipants != 0 %}
                                 {% include "course_row.html" %}
                             {% endif %}
                         {% else %}
                             {% include "course_row.html" %}
-                        {% endif %}  
+                        {% endif %}
                     {% endif %}
                 {% elif request.GET.available == "on" %}
                     {% if not course.ended and course.max_participants|subtract:course.total_partecipants != 0 %}
@@ -96,14 +148,16 @@
 document.addEventListener('DOMContentLoaded', function() {
     const daySelect = document.getElementById('day');
     const hourSelect = document.getElementById('hour');
+    const trainerSelect = document.getElementById('trainer');
     const availableCheckbox = document.getElementById('available');
     
     function fetchFilteredData() {
         const day = daySelect.value;
         const hour = hourSelect.value;
+        const trainer = trainerSelect.value;
         const available = availableCheckbox.checked ? 'on' : '';
 
-        fetch(`?day=${day}&hour=${hour}&available=${available}`, {
+        fetch(`?day=${day}&hour=${hour}&trainer=${trainer}&available=${available}`, {
             headers: {
                 'X-Requested-With': 'XMLHttpRequest'
             }
@@ -119,6 +173,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     daySelect.addEventListener('change', fetchFilteredData);
     hourSelect.addEventListener('change', fetchFilteredData);
+    trainerSelect.addEventListener('change', fetchFilteredData);
     availableCheckbox.addEventListener('change', fetchFilteredData);
 });
 </script>

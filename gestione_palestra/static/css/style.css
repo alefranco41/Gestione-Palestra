@@ -17,17 +17,31 @@
 }
 
 
+.popup-content {
+  border: 1px solid #ccc;
+  display: block;
+  border-radius: 5px;
+  height: fit-content;
+  overflow-y: auto;
+  text-align: center;
+  margin-left: 50px;
+  max-height: 450px;
+}
+
 .manager-content{
   position: absolute;
   margin-bottom: 100px;
 }
 
 .manager-container{
-  border: 1px solid black;
+  border: 1px solid #ccc;
   border-radius: 5px;
   display: inline-flex;
   flex-direction: column;
   float: left;
+  padding: 15px;
+  max-height: 500px;
+  overflow-y: auto;
 }
 
 table{
@@ -38,6 +52,8 @@ table{
   align-self: end;
   display: flex;
   margin-bottom: 100px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
 }
 
 
@@ -66,7 +82,11 @@ table{
 }
 
 .display-class{
-  border:  1px solid black;
+  text-align: center;
+}
+
+.classes{
+  text-align: center;
 }
 .plan {
   margin: 10px; /* Aggiunge uno spazio tra i piani */
@@ -131,9 +151,8 @@ form.hidden {
   flex: 1;
   display: flex;
   justify-content: center;
-  align-items: center;
   height: 100vh;
-  margin: 0;
+  margin-top: 100px;
 }
 
 .purchase-form {
@@ -195,7 +214,7 @@ form.hidden {
   max-height: 400px;
   overflow-y: auto;
   margin-right: 100px;
-  border: 1px solid black;
+  border: 1px solid #ccc;
   text-align: center;
   border-radius: 2%;
   position: absolute;
@@ -207,7 +226,7 @@ form.hidden {
 
 
 .reviews-content {
-  border-bottom: 1px solid black;
+  border-bottom: 1px solid #ccc;
 }
 .reviews-content p {
   text-align: left;
@@ -285,7 +304,7 @@ form {
 }
 
 .fitness-goal{
-  border: 1px solid black;
+  border: 1px solid #ccc;
 }
 
 .filter-form {
@@ -346,6 +365,7 @@ label,
 input,
 button {
   display: block;
+  border-radius: 5px;
   margin-bottom: 10px;
   margin-top: 10px;
 }
@@ -391,11 +411,10 @@ footer {
 }
 
 button {
+  border-radius: 5px;
   padding: 10px;
   background-color: #333333;
   color: #fff;
-  border: none;
-  border-radius: 5px;
   cursor: pointer;
 }
 
@@ -437,3 +456,10 @@ p {
   margin-top: 20px;
 }
 
+.plans-container{
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    display: block;
+    text-align: center;
+    padding: 10px;
+}
