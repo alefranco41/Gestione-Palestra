@@ -60,6 +60,12 @@ def get_reviews(user):
                 review.training_type = models.FitnessGoal.objects.get(id=review.event.training_type).name
                 
             reviews.extend(gc_reviews.filter(user=user))
+        
+        for review in reviews:
+            if isinstance(review, models.GroupTrainingReview):
+                review.event_type = "group_training"
+            else:
+                review.event_type = "personal_training"
             
     return reviews
 
@@ -526,13 +532,18 @@ class Dashboard(View):
                     event = models.GroupTraining.objects.get(id=event_id)
                     review = models.GroupTrainingReview.objects.get(user=request.user, event=event)
                     review.delete()
+                    messages.success(request=request, message="Review deleted successfully")
+                    return redirect(reverse('dashboard'))
                 except (models.GroupTraining.DoesNotExist, models.GroupTrainingReview.DoesNotExist):
+                    print(f"{request.user}, {event}")
                     messages.error(request, f'Group training review not found with user: {request.user}')
             elif event_type == 'personal_training':
                 try:
                     event = models.PersonalTraining.objects.get(id=event_id)
                     review = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
                     review.delete()
+                    messages.success(request=request, message="Review deleted successfully")
+                    return redirect(reverse('dashboard'))
                 except (models.PersonalTraining.DoesNotExist, models.PersonalTrainingReview.DoesNotExist):
                     messages.error(request, f'Personal training review not found with user: {request.user}')
         
@@ -808,6 +819,8 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None, edit=F
         context = {}
         if not event_id or not event_type:
             event_id = request.GET.get('event_id')
+        
+        if not event_type:
             event_type = request.GET.get('event_type')
 
         
@@ -841,11 +854,12 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None, edit=F
                     return context
             
             event.date = get_event_date(event)
+            event.training_type = models.FitnessGoal.objects.get(id=event.training_type).name
         else:
             messages.error(request, f'invalid event type: {event_type}')
             event = None
 
-        event.training_type = models.FitnessGoal.objects.get(id=event.training_type).name
+        
         context['event'] = event
         
         return context
@@ -899,33 +913,38 @@ class EditReview(View):
         user = request.POST.get('user')
         event = request.POST.get('event')
         event_type = request.POST.get('event_type')
-        context = get_LeaveReview_context(request=request, edit=True)
+        context = get_LeaveReview_context(request=request, event_type=event_type, event_id=event, edit=True)
         old_review = None
 
         if event_type == 'personal_training':
-            form = forms.PersonalTrainingReviewForm(request.POST)
             try:
                 old_review = models.PersonalTrainingReview.objects.get(user=user, event=event)
             except models.PersonalTrainingReview.DoesNotExist:
                 messages.error(request, f"Couldn't edit the review")
-            
+            else:
+                form = forms.PersonalTrainingReviewForm(request.POST, instance=old_review)
         elif event_type == 'group_training':
-            form = forms.GroupTrainingReviewForm(request.POST)
+            
             try:
                 old_review = models.GroupTrainingReview.objects.get(user=user, event=event)
             except models.GroupTrainingReview.DoesNotExist:
                 messages.error(request, f"Couldn't edit the review")
+            else:
+                form = forms.GroupTrainingReviewForm(request.POST, instance=old_review)
 
         else:
             messages.error(request, f"Invalid choice for event_type: {event_type}")
 
-        if form.is_valid() and old_review: 
+        if form.is_valid(): 
             form.save()
-            old_review.delete()
             messages.success(request, "Your review has been successfully edited")
             return redirect(reverse("dashboard"))
         else:
             print_errors(form, request)
+
+        
+        for message in messages.get_messages(request):
+            print(message)
 
         context['review'] = old_review
         return render(request=request, template_name="edit-review.html", context=context)

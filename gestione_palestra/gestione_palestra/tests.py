@@ -1,10 +1,29 @@
 from django.test import TestCase
 from datetime import datetime
 from django.urls import reverse
+from django.contrib.auth.models import AnonymousUser
+import random
+import math
+from . import views
 from . import models
 
 
 class GroupClassReservationTestCase(TestCase):
+
+    """
+        Test prenotazione corsi di gruppo
+        1)  Utente non autenticato
+        2)  Utente membro dello staff
+        3)  Utente con abbonamento sbagliato
+        4)  Utente con abbonamento scaduto
+        5)  Corso di gruppo pieno
+        6)  Corso di gruppo terminato per questa settimnana
+        7)  Utente ha già un allenamento prenotato allo stesso orario dello stesso giorno
+        8)  Utente ha già un corso di gruppo prenotato allo stesso orario dello stesso giorno
+        9)  Utente cancella prenotazione
+        10) Caso OK
+    """
+
     def setUp(self):
         self.test_trainer = models.User.objects.create(email="a.b@c.d", password="123", is_instructor=True)
         self.test_trainer_profile = models.TrainerProfile.objects.create(user=self.test_trainer, gender='M', first_name="Lorem", last_name="Ipsum", date_of_birth=datetime(year=2000, month=10, day=10))
@@ -183,3 +202,288 @@ class GroupClassReservationTestCase(TestCase):
         self.assertEqual(len(messages), 1)
         self.assertEqual(messages[0].tags, "success")
         self.assertTrue("Group class joined successfully" in messages[0].message)
+
+
+
+class GetReviewsTestCase(TestCase):
+    """
+        Test funzione che mostra le recensioni nella dashboard in base al tipo di utente
+        1)  Utente non autenticato -> verificare che non vengano mostrate recensioni
+        2)  Utente autenticato -> verificare che vengano mostrate tutte le recensioni che ha scritto
+        2)  Utente Istruttore -> verificare che venagno mostrate solo le recensioni su di lui
+        3)  Utente Manager -> verificare che vengano mostrate tutte le recensioni
+        6)  Dopo cancellazione -> verificare che vengano mostrate tutte le recensioni tranne quella cancellata per ogni tipo di utente
+        7)  Dopo modifica -> verificare che la recensione modificata venga visualizzata correttamente per ogni tipo di utente
+    """
+    def setUp(self):
+
+        self.manager = models.User.objects.create(username=f"manager", email=f"manager@gmail.com", password="123", is_manager=True)
+
+        normal_users = []
+        for i in range(100):
+            random_user = models.User.objects.create(username=f"user_{i}", email=f"email_user_{i}@gmail.com", password="123")
+            random_user.save()
+            random_user_profile = models.UserProfile.objects.create(user_id=random_user.id, user=random_user, first_name=f"first name {i}", last_name=f"last name {i}", date_of_birth=datetime(1999, 10, 10), height=189, weight=100)
+            random_user_profile.save()
+            normal_users.append(random_user)
+        
+        self.normal_users = normal_users
+
+        random_trainers = []
+        for i in range(10):
+            random_trainer = models.User.objects.create(username=f"trainer_{i}", email=f"email_{i}@gmail.com", password="123", is_instructor=True)
+            random_trainer.save()
+            random_trainer_profile = models.TrainerProfile.objects.create(user_id=random_trainer.id, user=random_trainer, first_name=f"first name {i}", last_name=f"last name {i}", date_of_birth=datetime(1999, 10, 10))
+            random_trainer_profile.save()
+            random_trainers.append(random_trainer_profile)
+
+        self.trainers = random_trainers
+
+        reviews = []
+        for i in range(500):
+            random_fitness_goal = models.FitnessGoal.objects.create(name=f"Fitness Goal {i}")
+            random_fitness_goal.save()
+            trainer=random.choice(random_trainers)
+            user = random.choice(self.normal_users)
+
+            if i % 2:
+                pt_event = models.PersonalTraining.objects.create(trainer=trainer,
+                                                                  user=user,
+                                                                  day=random.choice(models.PersonalTraining.DAY_CHOICES)[0],
+                                                                  start_hour=random.choice(models.PersonalTraining.START_HOUR_CHOICES)[0],
+                                                                  training_type=random_fitness_goal.id)
+                pt_event.save()
+
+                review = models.PersonalTrainingReview.objects.create(event=pt_event, trainer=trainer, user=user, stars=math.floor(i/2), title=f"Title_{i}")
+                review.event_type = "personal_training"
+                review.save()
+            else:
+                gt_event = models.GroupTraining.objects.create(trainer=trainer, max_participants=30, duration=30, title=f"title{i}",
+                                                               day=random.choice(models.PersonalTraining.DAY_CHOICES)[0],
+                                                               start_hour=random.choice(models.PersonalTraining.START_HOUR_CHOICES)[0])
+                gt_event.save()
+                review = models.GroupTrainingReview.objects.create(event=gt_event, user=user, stars=math.floor(i/2), title=f"Title_{i}")
+                review.trainer = trainer
+                review.event_type = "group_training"
+                review.save()
+            
+            reviews.append(review)
+        
+        self.reviews = reviews
+
+                
+    def test_user_not_authenticated(self):
+        reviews = views.get_reviews(AnonymousUser())
+        #l'utente anonimo non vede recensioni
+        self.assertListEqual(reviews, [])
+    
+    #All'inizio
+    def test_user_authenticated(self):
+        random_user = random.choice(self.normal_users)
+        self.client.force_login(random_user)
+        reviews = views.get_reviews(random_user)
+        
+        filtered_reviews = set()
+        for review in self.reviews:
+            if review.user == random_user:
+                filtered_reviews.add(review)
+        #l'utente vede tutte le sue recensioni
+        self.assertSetEqual(set(reviews),  filtered_reviews)
+
+    #Dopo la modifica
+    def test_user_authenticated_after_edit(self):
+        random_user = random.choice(self.normal_users)
+        self.client.force_login(random_user)
+        review_to_edit = random.choice([review for review in self.reviews if review.user == random_user])
+
+        data = {
+                'user': random_user.id,
+                'event':review_to_edit.event.id,
+                'event_type':review_to_edit.event_type,
+                'stars':3,
+                'title':"NEW TITLE",
+                'additional_info':"NEW ADDITIONAL INFO",
+                'trainer':review_to_edit.event.trainer.id,
+                }
+        
+        response = self.client.post(path=reverse('edit-review'), data=data, follow=False)
+        self.assertEqual(response.status_code, 302)  
+        follow_response = self.client.get(response.url)
+
+        messages = list(follow_response.context['messages'])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].tags, "success")
+        self.assertTrue("Your review has been successfully edited" in messages[0].message)
+        
+        review_to_edit.refresh_from_db()
+        #l'utente vede la recensione modificata
+
+        for review in views.get_reviews(random_user):
+            if review.id == review_to_edit.id:
+                new_review = review
+                break
+
+        self.assertEqual(new_review.title, "NEW TITLE")
+        self.assertEqual(new_review.additional_info, "NEW ADDITIONAL INFO")
+
+    #Dopo la cancellazione
+    def test_user_authenticated_after_deletion(self):
+        random_user = random.choice(self.normal_users)
+        self.client.force_login(random_user)
+        filtered_reviews = [review for review in self.reviews if review.user == random_user]
+        review_to_delete = random.choice(filtered_reviews)
+        data = {
+                'event_id':review_to_delete.event.id,
+                'event_type':review_to_delete.event_type,
+                }
+
+        response = self.client.get(path=reverse('dashboard'), data=data, follow=False)
+        self.assertEqual(response.status_code, 302)  
+        follow_response = self.client.get(response.url)
+
+        messages = list(follow_response.context['messages'])
+        self.assertEqual(len(messages), 1)
+        self.assertEqual(messages[0].tags, "success")
+        self.assertTrue("Review deleted successfully" in messages[0].message)
+        #La recensione non c'è più
+        
+        if isinstance(review_to_delete, models.GroupTrainingReview):
+            with self.assertRaises(models.GroupTrainingReview.DoesNotExist):
+                review_to_delete.refresh_from_db()
+        else:
+            with self.assertRaises(models.PersonalTrainingReview.DoesNotExist):
+                review_to_delete.refresh_from_db()
+
+        #l'utente vede una recensione in meno dopom la cancellazione
+        self.assertEqual(len(filtered_reviews) - 1, len(views.get_reviews(random_user)))
+
+    def test_trainer(self):
+        random_trainer_profile = random.choice(self.trainers)
+        random_trainer = models.User.objects.get(username=random_trainer_profile.user)
+        self.client.force_login(random_trainer)
+        reviews = views.get_reviews(random_trainer)
+        
+        
+        filtered_reviews = set([review for review in self.reviews if review.trainer.user == random_trainer])
+        
+        #Il personal trainer vede tutte le sue recensioni
+        self.assertSetEqual(set(reviews),  filtered_reviews)
+
+    def test_trainer_after_edit(self):
+        random_user = random.choice(self.normal_users)
+        self.client.force_login(random_user)
+        review_to_edit = random.choice([review for review in self.reviews if review.user == random_user])
+
+        data = {
+                'user': review_to_edit.user.id,
+                'event':review_to_edit.event.id,
+                'event_type':review_to_edit.event_type,
+                'stars':3,
+                'title':"NEW TITLE",
+                'additional_info':"NEW ADDITIONAL INFO",
+                'trainer':review_to_edit.event.trainer.id,
+                }
+        
+
+        response = self.client.post(path=reverse('edit-review'), data=data, follow=False)
+        review_to_edit.refresh_from_db()
+
+        
+        random_trainer = models.User.objects.get(username=review_to_edit.event.trainer.user)
+        self.client.force_login(random_trainer)
+        for review in views.get_reviews(random_trainer):  
+            if review.id == review_to_edit.id and review.event_type == review_to_edit.event_type:
+                new_review = review
+                break
+
+        #il Personal trainer vede la recensione modificata
+        self.assertEqual(new_review.title, "NEW TITLE")
+        self.assertEqual(new_review.additional_info, "NEW ADDITIONAL INFO")
+
+    def test_trainer_after_deletion(self):
+        random_user = random.choice(self.normal_users)
+        self.client.force_login(random_user)
+        review_to_delete = random.choice([review for review in self.reviews if review.user == random_user])
+
+        data = {
+                'event_id':review_to_delete.event.id,
+                'event_type':review_to_delete.event_type,
+                }
+        
+
+        
+
+        response = self.client.get(path=reverse('dashboard'), data=data, follow=False)
+        
+        random_trainer = models.User.objects.get(username=review_to_delete.event.trainer.user)
+        self.client.force_login(random_trainer)
+        if isinstance(review_to_delete, models.GroupTrainingReview):
+            with self.assertRaises(models.GroupTrainingReview.DoesNotExist):
+                review_to_delete.refresh_from_db()
+        else:
+            with self.assertRaises(models.PersonalTrainingReview.DoesNotExist):
+                review_to_delete.refresh_from_db()
+
+        
+        self.assertEqual(len([review for review in self.reviews if review.trainer.user == random_trainer]) - 1, len(views.get_reviews(random_trainer)))
+        
+
+
+    def test_manager(self):
+        self.client.force_login(self.manager)
+        #Il manager vede tutte le recensioni
+        self.assertTrue(len(self.reviews), len(views.get_reviews(self.manager)))
+
+    def test_manager_after_edit(self):
+        random_user = random.choice(self.normal_users)
+        self.client.force_login(random_user)
+        review_to_edit = random.choice([review for review in self.reviews if review.user == random_user])
+
+        
+        review_to_edit = random.choice(self.reviews)
+
+        data = {
+                'user': review_to_edit.user.id,
+                'event':review_to_edit.event.id,
+                'event_type':review_to_edit.event_type,
+                'stars':3,
+                'title':"NEW TITLE",
+                'additional_info':"NEW ADDITIONAL INFO",
+                'trainer':review_to_edit.event.trainer.id,
+                }
+        
+        response = self.client.post(path=reverse('edit-review'), data=data, follow=False)
+        review_to_edit.refresh_from_db()
+
+
+        self.client.force_login(self.manager)
+
+        for review in views.get_reviews(self.manager):  
+            if review.id == review_to_edit.id and review.event_type == review_to_edit.event_type:
+                new_review = review
+                break
+
+        #il manager vede la recensione modificata
+        self.assertEqual(new_review.title, "NEW TITLE")
+        self.assertEqual(new_review.additional_info, "NEW ADDITIONAL INFO")
+
+    def test_manager_after_deletion(self):
+        random_user = random.choice(self.normal_users)
+        self.client.force_login(random_user)
+        filtered_reviews = [review for review in self.reviews if review.user == random_user]
+        review_to_delete = random.choice(filtered_reviews)
+        data = {
+                'event_id':review_to_delete.event.id,
+                'event_type':review_to_delete.event_type,
+                }
+
+        response = self.client.get(path=reverse('dashboard'), data=data, follow=False)
+        if isinstance(review_to_delete, models.GroupTrainingReview):
+            with self.assertRaises(models.GroupTrainingReview.DoesNotExist):
+                review_to_delete.refresh_from_db()
+        else:
+            with self.assertRaises(models.PersonalTrainingReview.DoesNotExist):
+                review_to_delete.refresh_from_db()
+
+        self.client.force_login(self.manager)
+        self.assertEqual(len(self.reviews) - 1, len(views.get_reviews(self.manager)))
