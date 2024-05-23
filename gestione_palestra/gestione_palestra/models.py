@@ -2,11 +2,16 @@ from django.contrib.auth.models import AbstractUser
 from django.core.exceptions import ValidationError
 from django.db import models
 from datetime import datetime, date
+from django.db.models.signals import post_save, post_delete
 from django.utils.translation import gettext_lazy as _
 from rest_framework import serializers
 from django.utils.timezone import now
+from django.dispatch import receiver
 import re
 from . import context_processors
+
+
+
 
 
 class User(AbstractUser):
@@ -27,7 +32,7 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
     first_name = models.CharField(max_length=100, null=False,blank=True)
     last_name = models.CharField(max_length=100, null=False,blank=True)
-    date_of_birth = models.DateField(null=False,blank=True,default=date.today)
+    date_of_birth = models.DateField(null=False,blank=True)
     height = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True)  # In centimetri
     weight = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True)  # In chilogrammi
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
@@ -41,8 +46,11 @@ class UserProfile(models.Model):
         if age > 100 or age < 14:
             raise ValidationError({'date_of_birth': 'Age must be an integer between 14 and 100.'})
         
-        if not re.match("^[a-zA-Z0-9]*$", self.name):
-            raise ValidationError({'name': 'Only alphanumeric characters are allowed for first and last names.'})
+        if not re.match("^[a-zA-Z0-9]*$", self.first_name):
+            raise ValidationError({'first_name': 'Only alphanumeric characters are allowed for first and last names.'})
+        
+        if not re.match("^[a-zA-Z0-9]*$", self.last_name):
+            raise ValidationError({'last_name': 'Only alphanumeric characters are allowed for first and last names.'})
         
         if not 55 <= self.height <= 230:
             raise ValidationError({'height': 'Height must be an integer between 55 and 230.'})
@@ -50,11 +58,6 @@ class UserProfile(models.Model):
         if not 50 <= self.weight <= 150:
             raise ValidationError({'weight': 'Weight must be an integer between 50 and 150.'})
         
-        if not 10 <= self.duration <= 120:
-            raise ValidationError({'duration': 'Duration must be an integer between 10 and 120.'})
-        
-        if not 5 <= self.max_participants <= 30:
-            raise ValidationError({'max_participants': 'Max participants must be an integer between 5 and 30.'})
         
     AGE_OF_RETIREMENT = 65  # Età di pensionamento
     LEGAL_ADULT_AGE = 18  # Età maggiore
@@ -87,7 +90,7 @@ class TrainerProfile(models.Model):
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
     first_name = models.CharField(max_length=100, null=False, blank=True)
     last_name = models.CharField(max_length=100, null=False, blank=True)
-    date_of_birth = models.DateField(null=False, blank=True, default=date.today)
+    date_of_birth = models.DateField(null=False, blank=True)
     certifications = models.FileField(upload_to='pt_CVs/', blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
@@ -97,16 +100,16 @@ class TrainerProfile(models.Model):
         super().clean()
         
         if not re.match("^[a-zA-Z0-9]*$", self.first_name):
-            raise ValidationError({'name': 'Only alphanumeric characters are allowed for first and last names.'})
+            raise ValidationError({'first_name': 'Only alphanumeric characters are allowed for first and last names.'})
         
         if not re.match("^[a-zA-Z0-9]*$", self.last_name):
-            raise ValidationError({'name': 'Only alphanumeric characters are allowed for first and last names.'})
+            raise ValidationError({'last_name': 'Only alphanumeric characters are allowed for first and last names.'})
         
         if self.date_of_birth > context_processors.today.date():
             raise ValidationError({'date_of_birth': 'The date you inserted is in the future.'})
         
         age = context_processors.today.year - self.date_of_birth.year - ((context_processors.today.month, context_processors.today.day) < (self.date_of_birth.month, self.date_of_birth.day))
-        if age > 100 or age < 14:
+        if age > 100 or age < 18:
             raise ValidationError({'date_of_birth': 'Age must be an integer between 14 and 100.'})
 
 
@@ -126,7 +129,7 @@ class SubscriptionPlan(models.Model):
     PLAN_CHOICES = [
         ('GROUP', 'Group Classes Only'),
         ('WEIGHTS', 'Gym Access Only'),
-        ('BOTH', 'Group Classes + Gym Access'),
+        ('FULL', 'Group Classes + Gym Access'),
     ]
 
     name = models.CharField(max_length=100)
@@ -137,8 +140,11 @@ class SubscriptionPlan(models.Model):
     def clean(self):
         super().clean()
 
-        if self.age_discount < 0 or self.age_discount > 100:
-            raise ValidationError({'age_discount': 'The age discount must be between 0 an 100.'})
+        if self.age_discount < 0 or self.age_discount > self.monthly_price:
+            raise ValidationError({'age_discount': 'The age discount must be between 0 and monthly_price.'})
+        
+        if self.monthly_price < 0 or self.monthly_price > 100:
+            raise ValidationError({'monthly_price': 'The monthly price must be between 0 and 100.'})
         
     def calculate_total_price(self, user_age):
         if user_age < 18 or user_age >= 65:
@@ -226,6 +232,16 @@ class GroupClassReservation(models.Model):
     group_class = models.ForeignKey('gestione_palestra.GroupTraining', on_delete=models.CASCADE)
     user = models.ForeignKey('gestione_palestra.User', on_delete=models.CASCADE)
 
+@receiver(post_save, sender=GroupClassReservation)
+def increment_total_partecipants(sender, instance, created, **kwargs):
+    if created:
+        instance.group_class.total_partecipants += 1
+        instance.group_class.save()
+
+@receiver(post_delete, sender=GroupClassReservation)
+def decrement_total_partecipants(sender, instance, **kwargs):
+    instance.group_class.total_partecipants -= 1
+    instance.group_class.save()
 
 class PersonalTraining(models.Model):
     trainer = models.ForeignKey('TrainerProfile', on_delete=models.CASCADE)
@@ -280,4 +296,5 @@ class GroupTrainingReview(TrainingReview):
     event = models.ForeignKey('gestione_palestra.GroupTraining', on_delete=models.CASCADE)
 
 class PersonalTrainingReview(TrainingReview):
-    event = models.ForeignKey('gestione_palestra.PersonalTraining', on_delete=models.CASCADE)
+    event = models.ForeignKey('gestione_palestra.PersonalTraining', null=True, on_delete=models.SET_NULL)
+    trainer = models.ForeignKey('gestione_palestra.TrainerProfile', null=True, on_delete=models.CASCADE, related_name='reviews')

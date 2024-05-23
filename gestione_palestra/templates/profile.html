@@ -60,8 +60,10 @@
     
     </div>
 
-    <div class="user-subscription">
+    <div class="user-subscription-container">
     {% if not request.user.is_instructor and not request.user.is_manager %}
+    {% if user_subscription %}
+    <div class="user-subscription">
         <h2> Your Subscription Plan: </h2>
         <table class="user-details">
             <tr>
@@ -87,11 +89,24 @@
                 {% else %}
                     <td></td>
                 {% endif %}
-            </tr>   
+            </tr>
+        </div>   
         </table>
+        <div class="buttons">
+            <form method="post" style="display:contents;">
+                {% csrf_token %}
+                <input type="hidden" value="{{ user_subscription.id }}">
+                {% if not user_subscription.expired %}
+                <button type="submit" style="border-radius: 5px; margin-top: 15px;">Cancel Subscription </button>
+                {% else %}
+                <button type="submit" style="border-radius: 5px; margin-top: 15px;">Renew Subscription </button>
+                {% endif %}
+            </form>
+        </div>
+        
         {% endif %}
     </div>
-    
+    {% endif%}
     
 </div>
 

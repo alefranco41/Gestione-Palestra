@@ -1,0 +1,50 @@
+Creating test database for alias 'default'...
+EE
+======================================================================
+ERROR: test_user_cancels_reservation (gestione_palestra.tests.GroupClassReservationTestCase.test_user_cancels_reservation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/alefranco41/Tecnologie_Web/techweb/Gestione-Palestra/gestione_palestra/gestione_palestra/tests.py", line 147, in test_user_cancels_reservation
+    reservation = models.GroupClassReservation.objects.create(user=self.user_with_profile, group_class=self.groupClass)
+                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alefranco41/.local/share/virtualenvs/Gestione-Palestra-tsDd8OYm/lib/python3.11/site-packages/django/db/models/manager.py", line 87, in manager_method
+    return getattr(self.get_queryset(), name)(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alefranco41/.local/share/virtualenvs/Gestione-Palestra-tsDd8OYm/lib/python3.11/site-packages/django/db/models/query.py", line 679, in create
+    obj.save(force_insert=True, using=self.db)
+  File "/home/alefranco41/.local/share/virtualenvs/Gestione-Palestra-tsDd8OYm/lib/python3.11/site-packages/django/db/models/base.py", line 822, in save
+    self.save_base(
+  File "/home/alefranco41/.local/share/virtualenvs/Gestione-Palestra-tsDd8OYm/lib/python3.11/site-packages/django/db/models/base.py", line 924, in save_base
+    post_save.send(
+  File "/home/alefranco41/.local/share/virtualenvs/Gestione-Palestra-tsDd8OYm/lib/python3.11/site-packages/django/dispatch/dispatcher.py", line 189, in send
+    response = receiver(signal=self, sender=sender, **named)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alefranco41/Tecnologie_Web/techweb/Gestione-Palestra/gestione_palestra/gestione_palestra/models.py", line 238, in increment_total_participants
+    instance.group_class.total_participants += 1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'GroupTraining' object has no attribute 'total_participants'
+
+======================================================================
+ERROR: test_user_cancels_reservation (gestione_palestra.tests.GroupClassReservationTestCase.test_user_cancels_reservation)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/alefranco41/Tecnologie_Web/techweb/Gestione-Palestra/gestione_palestra/gestione_palestra/tests.py", line 22, in tearDown
+    self.groupClass.delete()
+  File "/home/alefranco41/.local/share/virtualenvs/Gestione-Palestra-tsDd8OYm/lib/python3.11/site-packages/django/db/models/base.py", line 1183, in delete
+    return collector.delete()
+           ^^^^^^^^^^^^^^^^^^
+  File "/home/alefranco41/.local/share/virtualenvs/Gestione-Palestra-tsDd8OYm/lib/python3.11/site-packages/django/db/models/deletion.py", line 512, in delete
+    signals.post_delete.send(
+  File "/home/alefranco41/.local/share/virtualenvs/Gestione-Palestra-tsDd8OYm/lib/python3.11/site-packages/django/dispatch/dispatcher.py", line 189, in send
+    response = receiver(signal=self, sender=sender, **named)
+               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home/alefranco41/Tecnologie_Web/techweb/Gestione-Palestra/gestione_palestra/gestione_palestra/models.py", line 243, in decrement_total_participants
+    instance.group_class.total_participants -= 1
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'GroupTraining' object has no attribute 'total_participants'
+
+----------------------------------------------------------------------
+Ran 1 test in 0.027s
+
+FAILED (errors=2)
+Destroying test database for alias 'default'...

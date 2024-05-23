@@ -14,6 +14,7 @@ django-bootstrap4 = "*"
 djangorestframework = "*"
 pytz = "*"
 pillow = "*"
+django-extensions = "*"
 
 [dev-packages]
 

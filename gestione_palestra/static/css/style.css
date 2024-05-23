@@ -56,6 +56,12 @@ table{
   border-radius: 5px;
 }
 
+.user-subscription{
+  text-align: center;
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 10px;
+}
 
 .user-details th,
 .user-details td {
@@ -142,6 +148,10 @@ form.hidden {
 .user-profile {
   margin-bottom: 20px;
   margin-right: 100px;
+  text-align: center;
+  border: 1px solid #ccc;
+  padding: 20px;
+  border-radius: 10px;
 }
 
 

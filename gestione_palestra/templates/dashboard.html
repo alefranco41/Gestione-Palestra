@@ -114,7 +114,7 @@
                         {% if event.max_participants %}
                             {{ event.title }} Group Class {% if not request.user.is_instructor %} with {{ event.trainer.first_name }} {{ event.trainer.last_name }} {% endif %}
                             <br>
-                            {% if event.expired %}
+                            {% if event.expired and not request.user.is_instructor %}
                                 <b>This event has ended.</b> {% if not request.user.is_instructor %} {% if not event.review %} <a class="button" href="{% url 'leave-review' %}?event_type=group_training&amp;event_id={{event.id}}">Leave a Review</a>{% endif %} {% endif %}
                             {% else %}
                                 {% if not request.user.is_instructor %}
@@ -275,7 +275,7 @@ function createUserProfilePopupContent(userData) {
     content += `<tr><th>Height</th><td>${height} cm</td></tr>`;
     content += `<tr><th>Weight</th><td>${weight} kg</td></tr>`;
     if (profile_picture) {
-        content += `<tr><th>Profile Picture</th><td><img src="${profile_picture}" alt="${first_name} ${last_name}'s profile picture"></td></tr>`;
+        content += `<tr><th>Profile Picture</th><td><img src="${profile_picture}" style="max-width: 80px; max-height: 80px;" alt="${first_name} ${last_name}'s profile picture"></td></tr>`;
     }
     content += `</table>`;
     return content;

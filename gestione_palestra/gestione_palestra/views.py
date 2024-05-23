@@ -74,6 +74,7 @@ class HomePage(View):
 
 class GymClassesView(View):
     def get_context(self, request):
+        print(request)
         context = {}
         schedule = {}
         classes = models.GroupTraining.objects.all()
@@ -94,7 +95,6 @@ class GymClassesView(View):
         return render(request=request, template_name="classes-schedule.html", context=context)
 
     def post(self, request, *args, **kwargs):
-
         if not request.user.is_authenticated:
             messages.error(request, 'You must login first')
             return redirect(reverse('classes-schedule'))
@@ -103,7 +103,9 @@ class GymClassesView(View):
             messages.error(request, 'You are a staff member')
             return redirect(reverse('classes-schedule'))
         
-        if not models.UserProfile.objects.get(user=request.user).profileInfo():
+        try:
+            user_profile = models.UserProfile.objects.get(user=request.user).profileInfo()
+        except models.UserProfile.DoesNotExist:
             messages.error(request, 'You must complete your profile first')
             return redirect(reverse('classes-schedule'))
         
@@ -122,13 +124,13 @@ class GymClassesView(View):
             subscription = models.Subscription.objects.get(user=request.user)
             if subscription.expired():
                 messages.error(request, 'Your subscription has expired')
-                return redirect(reverse('classes-schedule'))
-            if subscription.plan.name == 'Gym Access Only':
+                return redirect(reverse('subscription-plans'))
+            if subscription.plan.plan_type == 'WEIGHTS':
                 messages.error(request, f'Your subscription plan ({subscription.plan.name}) does not allow that')
                 return redirect(reverse('classes-schedule'))
         except models.Subscription.DoesNotExist:
             messages.error(request, 'You are not a member')
-            return redirect(reverse('classes-schedule'))
+            return redirect(reverse('subscription-plans'))
         
         
         try:
@@ -147,10 +149,9 @@ class GymClassesView(View):
         
         reservation = models.GroupClassReservation(user=request.user,group_class=group_class)
         
-        group_class.total_partecipants += 1
         group_class.save()
         reservation.save()
-        messages.success(request, 'Review submitted successfully')
+        messages.success(request, 'Group class joined successfully')
         return redirect(reverse("dashboard"))
 
 class TrainerListView(View):
@@ -326,6 +327,20 @@ class ProfileView(View):
 
         return render(request=request, template_name='profile.html', context=context)
 
+    def post(self, request, *args, **kwargs):
+        try:
+            user_subscription = models.Subscription.objects.get(user=request.user)
+        except models.Subscription.DoesNotExist:
+            messages.error(request=request, message=f"Error, could not find a subscription plan")
+            return redirect(reverse("profile"))
+
+        if user_subscription.expired():
+            return redirect(reverse("subscription-plans"))
+        else:
+            messages.success(request=request, message=f"Successfully deleted your subscription")
+            user_subscription.delete()
+        
+        return redirect(reverse("profile"))
 
 
 class UpdateProfile(View):
@@ -532,8 +547,6 @@ class Dashboard(View):
                 if id_gt:
                     group_training = models.GroupTraining.objects.get(id=id_gt)
                     models.GroupClassReservation.objects.get(group_class_id=group_training.id, user_id=request.user.id).delete()
-                    group_training.total_partecipants -= 1
-                    group_training.save()
                     messages.success(request, 'The Group Class reservation has been cancelled')
                 else:
                     models.PersonalTraining.objects.get(id=id_pt).delete()
@@ -683,7 +696,6 @@ class BookWorkout(View):
             trainer = models.TrainerProfile.objects.get(id=pt_id)
         except models.TrainerProfile.DoesNotExist:
             messages.error(request, "The selected personal trainer couldn't be found")
-            return context
         
         trainer_fitness_goals = get_fitness_goals(trainer)
         
@@ -722,14 +734,6 @@ class BookWorkout(View):
         context['form'] = forms.PersonalTrainingForm()
 
         if request.method == 'POST':
-            if not request.user.is_authenticated:
-                messages.error(request, 'You must login first')
-                return context
-            elif request.user.is_manager or request.user.is_instructor:
-                messages.error(request, 'You are a staff member')
-                return context
-            
-        if request.method == 'POST':
             try:
                 day = request.POST.get('day')
 
@@ -761,6 +765,27 @@ class BookWorkout(View):
     
     def post(self, request, *args, **kwargs):
         form = forms.PersonalTrainingForm(data=request.POST)
+
+        if not request.user.is_authenticated:
+            messages.error(request, 'You must login first')
+            return redirect(reverse("login"))
+
+        elif request.user.is_manager or request.user.is_instructor:
+            messages.error(request, 'You are a staff member')
+            return redirect(reverse("trainer-list"))
+
+        try:
+            subscription = models.Subscription.objects.get(user=request.user)
+            if subscription.expired():
+                messages.error(request, 'Your subscription has expired')
+                return redirect(reverse("profile"))
+            if subscription.plan.plan_type == 'GROUP':
+                messages.error(request, f'Your subscription plan ({subscription.plan.name}) does not allow that')
+                return redirect(reverse("profile"))
+        except models.Subscription.DoesNotExist:
+            messages.error(request, 'You are not a member')
+            return redirect(reverse("subscription-plans"))
+
         context = self.get_context(request, request.POST.get('trainer'))
 
         all_messages = messages.get_messages(request)
