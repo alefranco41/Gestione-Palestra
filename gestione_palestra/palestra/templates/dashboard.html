@@ -167,7 +167,22 @@
 
 {% if request.user.is_manager %}
         <div class="fitness-goals-container">
+            {% if not fitness_goals %}
+            <div class="fitness-goal">
+                <p> <strong> Add new Fitness Goal </strong></p>
+                    <div class="buttons">
+                        <form method="post" style="display:contents">
+                            {% csrf_token %}
+                            <input type="text" name="new_fitness_goal" placeholder="Type the name here"></input>
+                            <button type="submit" style="border-radius: 5px;"> Add </button>
+                        </form>
+                    </div>
+                
+            </div>
+            {% else %}
             <h2> All Fitness Goals </h2>
+            {% endif %}
+            
             {% for fitness_goal_id, fitness_goal_name in fitness_goals %}
                 <div class="fitness-goal">
                     <p> <strong> {{ fitness_goal_name }} </strong></p>

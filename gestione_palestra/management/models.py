@@ -36,6 +36,14 @@ class GroupTraining(models.Model):
     title = models.TextField()
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
+    def clean(self):
+        super().clean()
+        
+        if self.max_participants and self.max_participants <= 0 or self.max_participants > 50:
+            raise ValidationError({'max_participants': 'Insert a number between 1 and 50'})
+        
+        if self.duration and self.duration <= 0 or self.duration > 120:
+            raise ValidationError({'duration': 'Insert a number between 1 and 120'})
 
     def ended(self):
         ended = False
@@ -94,13 +102,13 @@ class DurationDiscount(models.Model):
     ]
 
     duration = models.IntegerField(choices=DURATION_CHOICES)
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    discount_percentage = models.DecimalField(null=True, max_digits=5, decimal_places=2, default=0)
     subscription_plan = models.ForeignKey(SubscriptionPlan, on_delete=models.CASCADE)
 
     def clean(self):
         super().clean()
 
-        if self.discount_percentage < 0 or self.discount_percentage > 100:
+        if self.discount_percentage and self.discount_percentage < 0 or self.discount_percentage > 100:
             raise ValidationError({'age_discount': 'The discount percentage must be between 0 an 100.'})
 
 class FitnessGoal(models.Model):

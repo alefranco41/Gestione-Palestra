@@ -11,29 +11,29 @@
         <label for="trainer">Trainer:</label>
         <select name="trainer" id="trainer">
             {% for trainer in trainers %}
-                <option value="{{ trainer.id }}">{{ trainer.first_name }} {{ trainer.last_name }}</option>
+            <option value="{{ trainer.id }}" {% if form.trainer.value|stringformat:"s" == trainer.id|stringformat:"s" %} selected {% endif %}>{{ trainer.first_name }} {{ trainer.last_name }}</option>
             {% endfor %}
         </select><br>
         <label for="day">Day:</label>
         <select name="day" id="day">
             {% for day, day_name in form.fields.day.choices %}
-                <option value="{{ day }}">{{ day_name }}</option>
+                <option value="{{ day }}" {% if form.day.value == day_name %} selected {% endif %}>{{ day_name }}</option>
             {% endfor %}
         </select><br>
         <label for="start_hour">Start Hour:</label>
         <select name="start_hour" id="start_hour">
             {% for hour, hour_name in form.fields.start_hour.choices %}
-                <option value="{{ hour }}">{{ hour_name }}</option>
+                <option value="{{ hour }}" {% if form.start_hour.value|stringformat:"s" == hour|stringformat:"s" %} selected {% endif %} >{{ hour_name }}</option>
             {% endfor %}
         </select><br>
         <label for="duration">Duration (minutes):</label>
-        <input type="number" name="duration" id="duration"><br>
+        <input type="number" name="duration" id="duration" value="{{form.duration.value}}"><br>
         <label for="max_participants">Max Participants:</label>
-        <input type="number" name="max_participants" id="max_participants"><br>
+        <input type="number" name="max_participants" id="max_participants" value="{{form.max_participants.value}}"><br>
         <label for="image">Photo:</label>
         <input type="file" id="image" name="image" accept="image/*">
         <label for="title">Title:</label><br>
-        <textarea name="title" id="title" rows="2" cols="50"></textarea><br>
+        <textarea name="title" id="title" rows="2" cols="50">{{ form.title.value }}</textarea><br>
         <button type="submit">Create Group Training</button>
     </form>
 </div>

@@ -11,26 +11,26 @@
 
         <p>
             <label for="id_name">Name:</label>
-            <input type="text" name="name" class="form-control" maxlength="100" required="" id="id_name">
+            <input type="text" name="name" class="form-control" maxlength="100" required="" id="id_name" value={{ form.name.value }}>
         </p>
 
         <p>
             <label for="id_plan_type">Plan type:</label>
             <select name="plan_type" class="form-control" required="" id="id_plan_type">
-                <option value="GROUP" selected>Group Classes Only</option>
-                <option value="WEIGHTS">Gym Access Only</option>
-                <option value="BOTH">Group Classes + Gym Access</option>
-            </select>
+            {% for plan, plan_name in available_plans %}
+                <option value="{{ plan }}" {% if form.plan_type.value == plan %} selected {% endif %}>{{ plan_name }}</option>
+            {% endfor %}
+        </select>            
         </p>
 
         <p>
             <label for="id_monthly_price">Monthly price:</label>
-            <input type="number" name="monthly_price" class="form-control" step="0.01" required="" id="id_monthly_price">
+            <input type="number" name="monthly_price" class="form-control" step="0.01" required="" id="id_monthly_price" value="{{ form.monthly_price.value }}">
         </p>
 
         <p>
             <label for="id_age_discount">Age discount:</label>
-            <input type="number" name="age_discount" value="0" class="form-control" step="0.01" required="" id="id_age_discount">  
+            <input type="number" name="age_discount" value="0" class="form-control" step="0.01" required="" id="id_age_discount" value="{{ form.age_discount.value }}">  
         </p>
 
         <button type="submit"> Create Plan </button>

@@ -513,7 +513,7 @@ class Dashboard(View):
                 except SubscriptionPlan.DoesNotExist:
                     messages.error(request=request, message=f"Couldn't delete the subscription plan with id = {plan_id}")
 
-            if fg_delete:
+            if fg_delete is not None:
                 try:
                     fg = models.FitnessGoal.objects.get(name=fg_delete)
                 except models.FitnessGoal.DoesNotExist:
@@ -529,18 +529,24 @@ class Dashboard(View):
                     messages.error(request=request, message=f"Couldn't rename the fitness goal with name = {fg_rename}")
                 else:
                     fg.name = request.POST.get('new_name')
-                    fg.save()
-                    messages.success(request=request, message=f"Successfully renamed the fitness goal with name = {fg_rename}")
+                    if fg.name:
+                        fg.save()
+                        messages.success(request=request, message=f"Successfully renamed the fitness goal with name = {fg_rename}")
+                    else:
+                        messages.error(request=request, message=f"The new name can't be blank")
             
-            if new_fg:
-                try:
-                    fg = models.FitnessGoal.objects.get(name=new_fg)
-                except models.FitnessGoal.DoesNotExist:
-                    fg = models.FitnessGoal(name=new_fg)
-                    fg.save()
-                    messages.success(request=request, message=f"Successfully added the fitness goal with name = {new_fg}")
+            if new_fg is not None:
+                if new_fg == '':
+                    messages.error(request=request, message=f"The name can't be blank")
                 else:
-                    messages.error(request=request, message=f"An existing fitness goal with name = {new_fg} has been found")
+                    try:
+                        fg = models.FitnessGoal.objects.get(name=new_fg)
+                    except models.FitnessGoal.DoesNotExist:
+                        fg = models.FitnessGoal(name=new_fg)
+                        fg.save()
+                        messages.success(request=request, message=f"Successfully added the fitness goal with name = {new_fg}")
+                    else:
+                        messages.error(request=request, message=f"An existing fitness goal with name = {new_fg} has been found")
 
         return redirect(reverse('palestra:dashboard'))
     

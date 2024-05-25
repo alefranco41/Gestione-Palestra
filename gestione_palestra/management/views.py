@@ -50,7 +50,15 @@ class CreatePlan(View):
             form = forms.SubscriptionPlanForm()
 
         context['form'] = form
-
+        
+        choices = models.SubscriptionPlan.PLAN_CHOICES
+        for plan in models.SubscriptionPlan.objects.all():
+            for choice in choices:
+                if choice[0] == plan.plan_type:
+                    choices.remove(choice)
+                    break
+        
+        context['available_plans'] =  choices
         return context
 
     def get(self, request):
@@ -58,7 +66,12 @@ class CreatePlan(View):
             messages.error(request=request, message="You do not have the permission to do that")
             return redirect(reverse("home"))
 
-        return render(request=request, template_name="create-plan.html", context=self.get_context(request))
+        context = self.get_context(request)
+
+        if not context['available_plans']:
+            messages.error(request=request, message="All the available plans are already created, you must delete one first")
+            return redirect(reverse('palestra:dashboard'))
+        return render(request=request, template_name="create-plan.html", context=context)
 
     def post(self, request, *args, **kwargs):
         context = self.get_context(request)

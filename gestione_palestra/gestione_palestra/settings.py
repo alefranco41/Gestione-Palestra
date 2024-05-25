@@ -17,6 +17,10 @@ from celery.schedules import crontab
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
+TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
+MANAGEMENT_TEMPLATES_DIR = os.path.join(BASE_DIR, 'management', 'templates')
+PALESTRA_TEMPLATES_DIR = os.path.join(BASE_DIR, 'palestra', 'templates')
+
 
 TIME_ZONE = 'Europe/Rome'
 USE_TZ = True
@@ -65,7 +69,7 @@ SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [os.path.join(BASE_DIR, 'templates')],
+        'DIRS': [TEMPLATES_DIR, MANAGEMENT_TEMPLATES_DIR, PALESTRA_TEMPLATES_DIR],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [

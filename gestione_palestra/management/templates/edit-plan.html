@@ -14,16 +14,7 @@
             <label for="id_name">Name:</label>
             <input type="text" name="name" value="{{ plan.name }}" class="form-control" maxlength="100" required id="id_name">
         </p>
-        <p>
-            <label for="id_plan_type">Plan type:</label>
-            <select name="plan_type" class="form-control" required id="id_plan_type">
-
-        <option value="GROUP" {% if plan.plan_type == GROUP %} selected {% endif %} >Group Classes Only</option>
-        <option value="WEIGHTS" {% if plan.plan_type == WEIGHTS %} selected {% endif %}>Gym Access Only</option>
-        <option value="BOTH" {% if plan.plan_type == BOTH %} selected {% endif %}>Group Classes + Gym Access</option>
-
-        </select>
-        </p>
+            <input type="hidden" name="plan_type" class="form-control" required id="id_plan_type" value="{{ plan.plan_type }}">
         <p>
             <label for="id_monthly_price">Monthly price:</label>
             <input type="number" value={{ plan.monthly_price }} name="monthly_price" class="form-control" step="0.01" required id="id_monthly_price">

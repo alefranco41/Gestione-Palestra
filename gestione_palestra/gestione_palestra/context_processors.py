@@ -14,7 +14,11 @@ def global_context(request):
         plan.DURATION_CHOICES = management_models.DurationDiscount.DURATION_CHOICES     
         for duration, label in management_models.DurationDiscount.DURATION_CHOICES:
             try:
-                plan.discount_percentage[duration] = management_models.DurationDiscount.objects.get(duration=duration, subscription_plan=plan).discount_percentage
+                discount = management_models.DurationDiscount.objects.get(duration=duration, subscription_plan=plan).discount_percentage
+                if discount:
+                    plan.discount_percentage[duration] = discount
+                else:
+                    plan.discount_percentage[duration] = decimal.Decimal(0)
             except management_models.DurationDiscount.DoesNotExist:
                 plan.discount_percentage[duration] = decimal.Decimal(0)
 
