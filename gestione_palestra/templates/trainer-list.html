@@ -20,7 +20,7 @@
             </div>
             <div class="links">
             {% if not request.user.is_instructor and not request.user.is_manager %}
-                <a class="button" href="{% url 'book-workout' trainer.id  %}">Book a workout</a>
+                <a class="button" href="{% url 'palestra:book-workout' trainer.id  %}">Book a workout</a>
                 {% endif %}
                 {% if trainer.certifications %} <a class="button download-cv" href="{{ trainer.certifications.url }}" download="CV_{{trainer.first_name}}_{{trainer.last_name}}.pdf">Download CV</a> {% endif %}
             </div>

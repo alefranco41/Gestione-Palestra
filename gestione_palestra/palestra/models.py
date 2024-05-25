@@ -8,11 +8,8 @@ from rest_framework import serializers
 from django.utils.timezone import now
 from django.dispatch import receiver
 import re
-from . import context_processors
-
-
-
-
+from management.models import FitnessGoal
+from utils.global_variables import today
 
 class User(AbstractUser):
     is_manager = models.BooleanField(default=False)
@@ -23,7 +20,7 @@ class User(AbstractUser):
         verbose_name_plural = _('users')
 
 class UserProfile(models.Model):
-    user = models.OneToOneField('gestione_palestra.User', on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     # Attributi personalizzati
     gender_choices = [
         ('M', 'Male'),
@@ -32,19 +29,20 @@ class UserProfile(models.Model):
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
     first_name = models.CharField(max_length=100, null=False,blank=True)
     last_name = models.CharField(max_length=100, null=False,blank=True)
-    date_of_birth = models.DateField(null=False,blank=True)
-    height = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True)  # In centimetri
-    weight = models.DecimalField(max_digits=5, decimal_places=0, null=False,blank=True)  # In chilogrammi
+    date_of_birth = models.DateField(null=True,blank=True)
+    height = models.DecimalField(max_digits=5, decimal_places=0, null=True,blank=True)  # In centimetri
+    weight = models.DecimalField(max_digits=5, decimal_places=0, null=True,blank=True)  # In chilogrammi
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     
     def clean(self):
         super().clean()
-        if self.date_of_birth > context_processors.today.date():
+        if self.date_of_birth and self.date_of_birth > today.date():
             raise ValidationError({'date_of_birth': 'The date you inserted is in the future.'})
         
-        age = context_processors.today.year - self.date_of_birth.year - ((context_processors.today.month, context_processors.today.day) < (self.date_of_birth.month, self.date_of_birth.day))
-        if age > 100 or age < 14:
-            raise ValidationError({'date_of_birth': 'Age must be an integer between 14 and 100.'})
+        if self.date_of_birth.year:
+            age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            if age > 100 or age < 14:
+                raise ValidationError({'date_of_birth': 'Age must be an integer between 14 and 100.'})
         
         if not re.match("^[a-zA-Z0-9]*$", self.first_name):
             raise ValidationError({'first_name': 'Only alphanumeric characters are allowed for first and last names.'})
@@ -52,10 +50,10 @@ class UserProfile(models.Model):
         if not re.match("^[a-zA-Z0-9]*$", self.last_name):
             raise ValidationError({'last_name': 'Only alphanumeric characters are allowed for first and last names.'})
         
-        if not 55 <= self.height <= 230:
+        if self.height and not 55 <= self.height <= 230:
             raise ValidationError({'height': 'Height must be an integer between 55 and 230.'})
         
-        if not 50 <= self.weight <= 150:
+        if self.weight and not 50 <= self.weight <= 150:
             raise ValidationError({'weight': 'Weight must be an integer between 50 and 150.'})
         
         
@@ -77,12 +75,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class FitnessGoal(models.Model):
-    name = models.CharField(max_length=100)
-
-
 class TrainerProfile(models.Model):
-    user = models.OneToOneField('gestione_palestra.User', on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
     gender_choices = [
         ('M', 'Male'),
         ('F', 'Female'),
@@ -90,7 +84,7 @@ class TrainerProfile(models.Model):
     gender = models.CharField(max_length=1, choices=gender_choices, null=False, blank=True)
     first_name = models.CharField(max_length=100, null=False, blank=True)
     last_name = models.CharField(max_length=100, null=False, blank=True)
-    date_of_birth = models.DateField(null=False, blank=True)
+    date_of_birth = models.DateField(null=True, blank=True)
     certifications = models.FileField(upload_to='pt_CVs/', blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
     fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
@@ -105,17 +99,18 @@ class TrainerProfile(models.Model):
         if not re.match("^[a-zA-Z0-9]*$", self.last_name):
             raise ValidationError({'last_name': 'Only alphanumeric characters are allowed for first and last names.'})
         
-        if self.date_of_birth > context_processors.today.date():
+        if self.date_of_birth and self.date_of_birth > today.date():
             raise ValidationError({'date_of_birth': 'The date you inserted is in the future.'})
         
-        age = context_processors.today.year - self.date_of_birth.year - ((context_processors.today.month, context_processors.today.day) < (self.date_of_birth.month, self.date_of_birth.day))
-        if age > 100 or age < 18:
-            raise ValidationError({'date_of_birth': 'Age must be an integer between 14 and 100.'})
+        if self.date_of_birth:
+            age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            if age > 100 or age < 18:
+                raise ValidationError({'date_of_birth': 'Age must be an integer between 18 and 100.'})
 
 
 class Subscription(models.Model):
-    user = models.OneToOneField('gestione_palestra.User', on_delete=models.CASCADE, unique=True)
-    plan = models.ForeignKey('gestione_palestra.SubscriptionPlan', on_delete=models.CASCADE)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
+    plan = models.ForeignKey('management.SubscriptionPlan', on_delete=models.CASCADE)
     monthly_price = models.DecimalField(max_digits=10, decimal_places=2)
     start_date = models.DateField()
     end_date = models.DateField()
@@ -124,113 +119,9 @@ class Subscription(models.Model):
     def expired(self):
         return True if self.end_date < datetime.now().date() else False
 
-
-class SubscriptionPlan(models.Model):
-    PLAN_CHOICES = [
-        ('GROUP', 'Group Classes Only'),
-        ('WEIGHTS', 'Gym Access Only'),
-        ('FULL', 'Group Classes + Gym Access'),
-    ]
-
-    name = models.CharField(max_length=100)
-    plan_type = models.CharField(max_length=10, choices=PLAN_CHOICES)
-    monthly_price = models.DecimalField(max_digits=10, decimal_places=2)
-    age_discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
-
-    def clean(self):
-        super().clean()
-
-        if self.age_discount < 0 or self.age_discount > self.monthly_price:
-            raise ValidationError({'age_discount': 'The age discount must be between 0 and monthly_price.'})
-        
-        if self.monthly_price < 0 or self.monthly_price > 100:
-            raise ValidationError({'monthly_price': 'The monthly price must be between 0 and 100.'})
-        
-    def calculate_total_price(self, user_age):
-        if user_age < 18 or user_age >= 65:
-            return self.monthly_price - self.age_discount
-        else:
-            return self.monthly_price
-
-    def __str__(self):
-        return self.name
-
-
-class DurationDiscount(models.Model):
-    DURATION_CHOICES = [
-        (1, '1 Month'),
-        (3, '3 Months'),
-        (6, '6 Months'),
-        (12, '12 Months'),
-    ]
-
-    duration = models.IntegerField(choices=DURATION_CHOICES)
-    discount_percentage = models.DecimalField(max_digits=5, decimal_places=2, default=0)
-    subscription_plan = models.ForeignKey('gestione_palestra.SubscriptionPlan', on_delete=models.CASCADE)
-
-    def clean(self):
-        super().clean()
-
-        if self.discount_percentage < 0 or self.discount_percentage > 100:
-            raise ValidationError({'age_discount': 'The discount percentage must be between 0 an 100.'})
-
-
-class GroupTraining(models.Model):
-    trainer = models.ForeignKey('TrainerProfile', on_delete=models.CASCADE)
-    
-    DAY_CHOICES = [
-        ('Monday', 'Monday'),
-        ('Tuesday', 'Tuesday'),
-        ('Wednesday', 'Wednesday'),
-        ('Thursday', 'Thursday'),
-        ('Friday', 'Friday'),
-        ('Saturday', 'Saturday'),
-        ('Sunday', 'Sunday'),
-    ]
-    day = models.CharField(max_length=10, choices=DAY_CHOICES)
-    
-    START_HOUR_CHOICES = [
-        (9, '9:00'),
-        (10, '10:00'),
-        (11, '11:00'),
-        (12, '12:00'),
-        (13, '13:00'),
-        (14, '14:00'),
-        (15, '15:00'),
-        (16, '16:00'),
-        (17, '17:00'),
-        (18, '18:00'),
-    ]
-    start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
-    duration = models.PositiveIntegerField()  # Durata in minuti
-    
-    max_participants = models.PositiveIntegerField()
-    total_partecipants = models.PositiveIntegerField(default=0)
-    title = models.TextField()
-    image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
-
-
-    def ended(self):
-        ended = False
-
-        today_day_index = context_processors.today.weekday()
-        group_training_day_index = context_processors.day_mapping[self.day]
-
-        if today_day_index > group_training_day_index:
-            ended = True
-        elif today_day_index == group_training_day_index:
-            if context_processors.today.hour >= self.start_hour:
-                ended = True
-            else:
-                ended = False
-        else:
-            ended = False
-
-        return ended
-
 class GroupClassReservation(models.Model):
-    group_class = models.ForeignKey('gestione_palestra.GroupTraining', on_delete=models.CASCADE)
-    user = models.ForeignKey('gestione_palestra.User', on_delete=models.CASCADE)
+    group_class = models.ForeignKey('management.GroupTraining', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
 
 @receiver(post_save, sender=GroupClassReservation)
 def increment_total_partecipants(sender, instance, created, **kwargs):
@@ -244,7 +135,7 @@ def decrement_total_partecipants(sender, instance, **kwargs):
     instance.group_class.save()
 
 class PersonalTraining(models.Model):
-    trainer = models.ForeignKey('TrainerProfile', on_delete=models.CASCADE)
+    trainer = models.ForeignKey(TrainerProfile, on_delete=models.CASCADE)
     user = models.ForeignKey('User', on_delete=models.CASCADE)
     
     DAY_CHOICES = [
@@ -283,7 +174,7 @@ class PersonalTraining(models.Model):
 
 
 class TrainingReview(models.Model):
-    user = models.ForeignKey('gestione_palestra.User', on_delete=models.CASCADE)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
     stars = models.PositiveSmallIntegerField(choices=[(i,i) for i in range(6)])
     title = models.TextField()
     date = models.DateField(default=now)
@@ -293,8 +184,8 @@ class TrainingReview(models.Model):
         abstract = True
 
 class GroupTrainingReview(TrainingReview):
-    event = models.ForeignKey('gestione_palestra.GroupTraining', on_delete=models.CASCADE)
+    event = models.ForeignKey('management.GroupTraining', on_delete=models.CASCADE)
 
 class PersonalTrainingReview(TrainingReview):
-    event = models.ForeignKey('gestione_palestra.PersonalTraining', null=True, on_delete=models.SET_NULL)
-    trainer = models.ForeignKey('gestione_palestra.TrainerProfile', null=True, on_delete=models.CASCADE, related_name='reviews')
+    event = models.ForeignKey(PersonalTraining, null=True, on_delete=models.SET_NULL)
+    trainer = models.ForeignKey(TrainerProfile, null=True, on_delete=models.CASCADE, related_name='reviews')

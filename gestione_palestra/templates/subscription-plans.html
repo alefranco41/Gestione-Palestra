@@ -37,7 +37,7 @@
             </td>
         </tr>
     </table>
-    <form id="form_{{ plan.id }}" class="purchase-form" action="{% url 'subscription-plans'  %}" method="post">
+    <form id="form_{{ plan.id }}" class="purchase-form" action="{% url 'palestra:subscription-plans'  %}" method="post">
         {% csrf_token %}
         <input type="hidden" name="plan_id" value="{{ plan.id }}">
         <input type="hidden" name="duration_selected" id="duration_selected_{{ plan.id }}" value="">

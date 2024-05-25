@@ -8,7 +8,7 @@
 
 
 <div style="display: flex; justify-content: center; margin-top:50px;">
-    <form id="profile-form" action="{% url 'update-profile' %}" method="post" enctype="multipart/form-data">
+    <form id="profile-form" action="{% url 'palestra:update-profile' %}" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         
         <div class="form-group">

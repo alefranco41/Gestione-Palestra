@@ -2,9 +2,9 @@
 <nav>
   <ul>
     <li><a href="{% url 'homepage' %}">Home</a></li>
-    <li><a href="{% url 'trainer-list' %}">Our trainers</a></li>
-    <li><a href="{% url 'classes-schedule' %}">Gym classes schedule</a></li>
-    <li><a href="{% url 'subscription-plans' %}">Subscription plans</a></li>
+    <li><a href="{% url 'palestra:trainer-list' %}">Our trainers</a></li>
+    <li><a href="{% url 'palestra:classes-schedule' %}">Gym classes schedule</a></li>
+    <li><a href="{% url 'palestra:subscription-plans' %}">Subscription plans</a></li>
       
     {% if request.user.is_authenticated %}
     <li>
@@ -23,9 +23,9 @@
       
       
         <div id="user-menu" class="user-menu" style="display:none;">
-          <a href="{% url 'dashboard' %}">Dashboard</a> <br>
+          <a href="{% url 'palestra:dashboard' %}">Dashboard</a> <br>
           {% if not request.user.is_manager %}
-            <a href="{% url 'profile' %}">Profile</a> <br>
+            <a href="{% url 'palestra:profile' %}">Profile</a> <br>
           {% endif %}
           <a href="{% url 'logout' %}">Logout</a>
         </div>

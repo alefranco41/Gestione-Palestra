@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'bootstrap4',
     'django_extensions',
     'gestione_palestra',
+    'management',
+    'palestra'
 ]
 
 MIDDLEWARE = [
@@ -78,7 +80,7 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'gestione_palestra.wsgi.application'
-AUTH_USER_MODEL = 'gestione_palestra.User'
+AUTH_USER_MODEL = 'palestra.User'
 
 
 # Database

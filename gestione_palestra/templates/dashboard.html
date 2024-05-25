@@ -26,7 +26,7 @@
             <div class="display-class">
                 <p><strong> {{ group_class.title }} </strong> </p>
                 <div class="buttons">
-                    <a href="{% url 'edit-group-training' group_class.id  %}" class="button"> Edit Class </a>
+                    <a href="{% url 'management:edit-group-training' group_class.id  %}" class="button"> Edit Class </a>
                     <form style="display:contents;" method="post">
                         {% csrf_token %}
                         <input type="hidden" name="class_id" value="{{group_class.id}}">
@@ -35,7 +35,7 @@
                 </div>              
             </div>
         {% endfor %}
-        <a href="{% url 'create-group-training' %}" class="button">Create new group training</a>
+        <a href="{% url 'management:create-group-training' %}" class="button">Create new group training</a>
         </div>
     </div>
     
@@ -86,8 +86,8 @@
                     </tr>
                 </table>
                 <div class="buttons">
-                    <a href="{% url 'edit-plan' plan.id %}" class="button">Edit Plan</a>
-                    <a href="{% url 'edit-discounts' plan.id %}" class="button">Edit Discounts </a>
+                    <a href="{% url 'management:edit-plan' plan.id %}" class="button">Edit Plan</a>
+                    <a href="{% url 'management:edit-discounts' plan.id %}" class="button">Edit Discounts </a>
                 
                 <form style="display:contents;" method="post">
                     {% csrf_token %}
@@ -98,7 +98,7 @@
             </div>
         {% endfor %}
     </div>
-    <a href="{% url 'create-plan' %}" class="button">Create new Subscription Plan</a>
+    <a href="{% url 'management:create-plan' %}" class="button">Create new Subscription Plan</a>
 </div>
 </div>
 {% else %}
@@ -115,7 +115,7 @@
                             {{ event.title }} Group Class {% if not request.user.is_instructor %} with {{ event.trainer.first_name }} {{ event.trainer.last_name }} {% endif %}
                             <br>
                             {% if event.expired and not request.user.is_instructor %}
-                                <b>This event has ended.</b> {% if not request.user.is_instructor %} {% if not event.review %} <a class="button" href="{% url 'leave-review' %}?event_type=group_training&amp;event_id={{event.id}}">Leave a Review</a>{% endif %} {% endif %}
+                                <b>This event has ended.</b> {% if not request.user.is_instructor %} {% if not event.review %} <a class="button" href="{% url 'palestra:leave-review' %}?event_type=group_training&amp;event_id={{event.id}}">Leave a Review</a>{% endif %} {% endif %}
                             {% else %}
                                 {% if not request.user.is_instructor %}
                                     <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="group_training" value="{{event.id}}"><button type="submit" style="border-radius: 5px;">Cancel</button></form>        
@@ -126,7 +126,7 @@
                         {% else %}
                             {{ event.training_type }} Workout  with {% if not request.user.is_instructor %} {{ event.trainer.first_name }} {{ event.trainer.last_name }} {% else %} {{ event.user_profile.first_name }} {{ event.user_profile.last_name }}{% endif %}
                             {% if event.expired %}
-                                <b>This event has ended.</b> {% if not event.review %}<a class="button" href="{% url 'leave-review' %}?event_type=personal_training&amp;event_id={{event.id}}">Leave a Review</a> {% endif %}
+                                <b>This event has ended.</b> {% if not event.review %}<a class="button" href="{% url 'palestra:leave-review' %}?event_type=personal_training&amp;event_id={{event.id}}">Leave a Review</a> {% endif %}
                             {% else %}
                                 {% if not request.user.is_instructor %}
                                     <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="personal_training" value="{{event.id}}"><button type="submit" style="border-radius: 5px;">Cancel</button></form>
@@ -158,8 +158,8 @@
         <p><b>Title:</b> {{ review.title }}</p>
         {% if review.additional_info %} <p><b>Text:</b> {{ review.additional_info }}</p> {% endif %}
         {% if not request.user.is_instructor and not request.user.is_manager %}
-        {% if review.event.training_type %}<a class="button" href="{% url 'edit-review' %}?event_type=personal_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'dashboard' %}?event_type=personal_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
-        {% if review.event.max_participants %}<a class="button" href="{% url 'edit-review' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'dashboard' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
+        {% if review.event.training_type %}<a class="button" href="{% url 'palestra:edit-review' %}?event_type=personal_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'palestra:dashboard' %}?event_type=personal_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
+        {% if review.event.max_participants %}<a class="button" href="{% url 'palestra:edit-review' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'palestra:dashboard' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
         {% endif %}
     </div>        
     {% endfor %}
