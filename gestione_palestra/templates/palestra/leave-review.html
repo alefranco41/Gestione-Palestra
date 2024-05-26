@@ -9,23 +9,25 @@
 {% block content %}
 <div style="margin:auto;">
     <h2> Event informations </h2>
-    {% if event.max_participants %}
-    <div class="trainer-card">
-        {% if event.image %} <img  src="{{ event.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
-        <div class="trainer-details">
-            <p><strong>Title:</strong> {{event.title}}  Group Class with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
-            <p><strong>Duration:</strong> {{ event.duration }}</p>
-            <p><strong>Total Participants:</strong> {{ event.total_partecipants }}</p>
-            <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
-            </div>
-    </div>
-    {% else %}
-    <div class="trainer-card">
-        <div class="trainer-details">
-            <p><strong>Title:</strong> {{event.training_type}} Workout with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
-            <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
+    {% if event %}
+        {% if event.max_participants %}
+        <div class="trainer-card">
+            {% if event.image %} <img  src="{{ event.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
+            <div class="trainer-details">
+                <p><strong>Title:</strong> {{event.title}}  Group Class with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
+                <p><strong>Duration:</strong> {{ event.duration }}</p>
+                <p><strong>Total Participants:</strong> {{ event.total_partecipants }}</p>
+                <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
+                </div>
         </div>
-    </div>
+        {% else %}
+        <div class="trainer-card">
+            <div class="trainer-details">
+                <p><strong>Title:</strong> {{event.training_type}} Workout with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
+                <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
+            </div>
+        </div>
+        {% endif %}
     {% endif %}
     <h2> Write Review </h2>
     <form method="post" style="margin:auto; width:400px">

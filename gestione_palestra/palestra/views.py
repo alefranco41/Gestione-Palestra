@@ -1,5 +1,5 @@
 from palestra import forms, models
-from management.models import GroupTraining, SubscriptionPlan
+from management.models import GroupTraining, SubscriptionPlan, DurationDiscount
 from utils import functions, global_variables
 from django.shortcuts import render, redirect
 from django.views import View
@@ -11,7 +11,9 @@ from decimal import Decimal
 from datetime import datetime
 
 
-
+"""
+Controllare che l'utente abbia effettivamente partecipato all'evento quando lascia una recensione
+"""
 
 def get_reviews(user):
     reviews = []
@@ -196,11 +198,11 @@ class SubscriptionPlansView(View):
         start_date = datetime.now()
         end_date = start_date + relativedelta(months=duration)
 
-        duration_discounts = models.DurationDiscount.objects.filter(subscription_plan=plan)
+        duration_discounts = DurationDiscount.objects.filter(subscription_plan=plan)
         
         try:
             duration_discount = duration_discounts.get(duration=duration)
-        except  models.DurationDiscount.DoesNotExist:
+        except  DurationDiscount.DoesNotExist:
             discount_percentage = 0
         else:
             discount_percentage = duration_discount.discount_percentage
@@ -729,12 +731,7 @@ class LeaveReview(View):
             context['form'] = form
         else:
             messages.error(request, f'invalid event type: {event_type}')
-        
-        if not request.user.is_authenticated:
-            messages.error(request, 'You must login first')
-        
-        if request.user.is_manager or request.user.is_instructor:
-            messages.error(request, 'You are a staff member')
+            return redirect(reverse('palestra:dashboard'))
         
         all_messages = messages.get_messages(request)
         if all_messages:
@@ -753,6 +750,23 @@ class LeaveReview(View):
 
     def get(self, request):
         context = get_LeaveReview_context(request)
+
+        if not request.user.is_authenticated:
+            messages.error(request, 'You must login first')
+            return redirect(reverse('login'))
+        
+        if not context['event']:
+            messages.error(request, 'invalid event')
+            return redirect(reverse('palestra:dashboard'))
+        
+        if request.user.is_manager or request.user.is_instructor:
+            messages.error(request, 'You are a staff member')
+            return redirect(reverse('palestra:dashboard'))
+        
+
+        
+        
+
         return render(request=request, template_name="leave-review.html", context=context)
     
 class EditReview(View):

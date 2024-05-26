@@ -18,8 +18,8 @@ from celery.schedules import crontab
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 TEMPLATES_DIR = os.path.join(BASE_DIR, 'templates')
-MANAGEMENT_TEMPLATES_DIR = os.path.join(BASE_DIR, 'management', 'templates')
-PALESTRA_TEMPLATES_DIR = os.path.join(BASE_DIR, 'palestra', 'templates')
+MANAGEMENT_TEMPLATES_DIR = os.path.join(TEMPLATES_DIR, 'management')
+PALESTRA_TEMPLATES_DIR = os.path.join(TEMPLATES_DIR, 'palestra')
 
 
 TIME_ZONE = 'Europe/Rome'
@@ -162,11 +162,11 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 CELERY_IMPORTS = ('gestione_palestra.tasks',)
 
 CELERY_BEAT_SCHEDULE = {
-    'delete_entries_every_sunday_at_6pm': {
+    'delete_reservations': {
         'task': 'gestione_palestra.tasks.delete_reservations',  # Sostituisci con il percorso della tua funzione delete_entries
         'schedule': crontab(hour=18, minute=0, day_of_week=0),  # Ogni domenica alle 18:00
     },
-    'reset_group_training_info': {
+    'reset_training_info': {
         'task': 'gestione_palestra.tasks.reset_training_info',  # Sostituisci con il percorso della tua funzione delete_entries
         'schedule': crontab(minute=0),  # Ogni ora
     },
