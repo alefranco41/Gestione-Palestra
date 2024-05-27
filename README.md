@@ -11,13 +11,15 @@ Installation - Linux:
 8) bash script.sh
 
 
-Installation - Windows
+Installation - Windows:
+
 1) Install Erlang/OTP: https://github.com/erlang/otp/releases/download/OTP-27.0/otp_win64_27.0.exe
 2) install rabbitmq server: https://github.com/rabbitmq/rabbitmq-server/releases/download/v3.13.2/rabbitmq-server-3.13.2.exe
 3) git clone https://github.com/alefranco41/Gestione-Palestra.git
-4) cd .\Gestione-Palestra\
-5) python -m venv <virtual_env_name>
-6) .\<virtual_env_name>\Scripts\activate
-7) pip install -r requirements.txt
-8) cd gestione_palestra
-9) .\script.bat
+4) start cmd as administrator
+5) cd .\Gestione-Palestra\
+6) python -m venv <virtual_env_name>
+7) .\<virtual_env_name>\Scripts\activate
+8) pip install -r requirements.txt
+9) cd gestione_palestra
+10) .\script.bat
