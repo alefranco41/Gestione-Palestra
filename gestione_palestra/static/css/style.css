@@ -1,3 +1,68 @@
+
+.schedule-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+}
+
+.course-card {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.course-image {
+  max-width: 100%;
+  height: auto;
+  border-radius: 10px;
+}
+
+.course-info {
+  margin-top: 15px;
+}
+
+.hero-section {
+  background-color: red;
+  color: white;
+  text-align: center;
+  padding: 50px 0;
+}
+
+.hero-section button {
+  background-color: white;
+  color: red;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  margin-top: 20px;
+}
+
+.online-purchase-section, .at-home-section {
+  display: flex;
+  justify-content: space-between;
+  padding: 20px;
+}
+
+.online-purchase-text, .at-home-text {
+  flex: 1;
+  text-align: center;
+  padding: 20px;
+}
+
+.online-purchase-image, .at-home-image {
+  flex: 1;
+  padding: 20px;
+}
+
+.online-purchase-section img, .at-home-section img {
+  width: 100%;
+}
+
+
 .user-menu {
   background-color: #fff; /* Colore di sfondo del menu */
   border: 1px solid #ccc; /* Bordo del menu */

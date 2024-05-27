@@ -37,8 +37,12 @@ def global_context(request):
 
     fitness_goals = [(goal.id, goal.name) for goal in fitness_goals_choices]
     
+    n_fitness_goals = len(fitness_goals)
+    
     trainers = palestra_models.TrainerProfile.objects.all()
+    n_trainers = len(trainers)
 
+    n_group_classes = len(management_models.GroupTraining.objects.all())
     context =   {
                     'gym_name': 'Fit4All',
                     'now': date.today,
@@ -46,7 +50,10 @@ def global_context(request):
                     'fitness_goals':fitness_goals,
                     'days':global_variables.week_days,
                     'hours':range(9,19),
-                    'trainers':trainers
+                    'trainers':trainers,
+                    'n_trainers':n_trainers,
+                    'n_group_classes':n_group_classes,
+                    'n_fitness_goals':n_fitness_goals
                 }
     
     return context

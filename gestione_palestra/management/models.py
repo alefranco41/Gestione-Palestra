@@ -45,7 +45,7 @@ class GroupTraining(models.Model):
         if self.duration and self.duration <= 0 or self.duration > 120:
             raise ValidationError({'duration': 'Insert a number between 1 and 120'})
 
-    def ended(self):
+    def expired(self):
         ended = False
 
         today_day_index = today.weekday()

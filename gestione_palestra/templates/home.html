@@ -1,5 +1,28 @@
 {% extends "base.html" %}
+{% load static %}
 {% block title %} {{ gym_name }} - Homepage {% endblock title %}
 
 {% block header %} Welcome to {{ gym_name }} {% endblock %}
 
+{% block content %}
+<div class="online-purchase-section" style="display: flex; justify-content: space-between; padding: 20px;">
+    <div class="online-purchase-text" style="flex: 1; text-align: center;">
+        <h3>Join us</h3>
+        <button onclick="window.location.href='palestra/subscription-plans'">Purchase now</button>
+    </div>
+    <div class="online-purchase-image" style="flex: 1;">
+        <img src="{% static 'img/image1.jpg' %}" alt="Online Purchase" style="width: 100%;">
+    </div>
+</div>
+
+<div class="at-home-section" style="display: flex; justify-content: space-between; padding: 20px;">
+    <div class="at-home-image" style="flex: 1;">
+        <img src="{% static 'img/image2.jpg' %}" alt="At Home" style="width: 100%;">
+    </div>
+    <div class="at-home-text" style="flex: 1; text-align: center;">
+        <h3>Group Classes</h3>
+        <p>{{ n_group_classes }} classes <br> {{ n_fitness_goals }} fitness goals<br>{{ n_trainers }} Live Trainer</p>
+        <button onclick="window.location.href='palestra/classes-schedule'">Join a group class</button>
+    </div>
+</div>
+{% endblock content %}

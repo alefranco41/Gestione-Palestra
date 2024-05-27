@@ -64,7 +64,7 @@ class GymClassesView(View):
             schedule[day] = {}
         
         for class_instance in classes:
-            class_instance.ended = class_instance.ended()
+            class_instance.expired = class_instance.expired()
             schedule[class_instance.day][class_instance.start_hour] = class_instance
 
         context['schedule'] = schedule
@@ -93,7 +93,7 @@ class GymClassesView(View):
         class_id = request.POST.get('class_id')
         group_class = GroupTraining.objects.get(id=class_id)
         
-        if group_class.ended():
+        if group_class.expired():
             messages.error(request, 'This group class has ended, come back the next week')
             return redirect(reverse('palestra:classes-schedule'))
         
@@ -466,8 +466,7 @@ class Dashboard(View):
                     messages.success(request=request, message="Review deleted successfully")
                     return redirect(reverse('palestra:dashboard'))
                 except (GroupTraining.DoesNotExist, models.GroupTrainingReview.DoesNotExist):
-                    print(f"{request.user}, {event}")
-                    messages.error(request, f'Group training review not found with user: {request.user}')
+                    messages.error(request, f'Group training review not found')
             elif event_type == 'personal_training':
                 try:
                     event = models.PersonalTraining.objects.get(id=event_id)
@@ -476,7 +475,7 @@ class Dashboard(View):
                     messages.success(request=request, message="Review deleted successfully")
                     return redirect(reverse('palestra:dashboard'))
                 except (models.PersonalTraining.DoesNotExist, models.PersonalTrainingReview.DoesNotExist):
-                    messages.error(request, f'Personal training review not found with user: {request.user}')
+                    messages.error(request, f'Personal training review not found')
         
         context.update(self.get_context(request))
         return render(request=request, template_name="dashboard.html", context=context)
@@ -613,7 +612,7 @@ class BookWorkout(View):
                 user = request.POST.get('user')
                 group_classes = GroupTraining.objects.filter(day=day, start_hour=hour)
                 for group_class in group_classes:
-                    if not group_class.ended():
+                    if not group_class.expired():
                         if models.GroupClassReservation.objects.get(user=user, group_class=group_class):
                             messages.error(request, f'You have an upcoming group class training session already booked for {group_class.day} at {group_class.start_hour}')
                             return context
@@ -690,7 +689,7 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None, edit=F
                 try:
                     context['review'] = models.GroupTrainingReview.objects.get(user=request.user, event=event)
                 except models.GroupTrainingReview.DoesNotExist:
-                    messages.error(request, f"Group traininig review not found with user: {request.user.username} and group training id: {event.id}")
+                    messages.error(request, f"Group training review not found")
                     return context
             
         elif event_type == 'personal_training':
@@ -703,7 +702,7 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None, edit=F
                 try:
                     context['review'] = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
                 except models.PersonalTrainingReview.DoesNotExist:
-                    messages.error(request, f"Personal training review not found with user: {request.user.username} and id: {event.id}")
+                    messages.error(request, f"Personal training review not found")
                     return context
             
             event.date = functions.get_event_date(event)
@@ -750,12 +749,13 @@ class LeaveReview(View):
 
     def get(self, request):
         context = get_LeaveReview_context(request)
+        event = context.get('event', None)
 
         if not request.user.is_authenticated:
             messages.error(request, 'You must login first')
             return redirect(reverse('login'))
         
-        if not context['event']:
+        if not event:
             messages.error(request, 'invalid event')
             return redirect(reverse('palestra:dashboard'))
         
@@ -763,15 +763,39 @@ class LeaveReview(View):
             messages.error(request, 'You are a staff member')
             return redirect(reverse('palestra:dashboard'))
         
+        try:
+            if not event.expired():
+                messages.error(request, "You can't leave a review for this event yet")
+                return redirect(reverse('palestra:dashboard'))
+            
+            if isinstance(event, GroupTraining):
+                reservation = models.GroupClassReservation.objects.get(group_class=event, user=request.user)
 
-        
-        
+        except (models.GroupClassReservation.DoesNotExist):   
+            messages.error(request, 'You did not partecipate to that event')
+            return redirect(reverse('palestra:dashboard'))
 
+                    
         return render(request=request, template_name="leave-review.html", context=context)
     
 class EditReview(View):
     def get(self, request):
         context = get_LeaveReview_context(request=request, edit=True)
+
+        event = context.get('event', None)
+
+        if not request.user.is_authenticated:
+            messages.error(request, 'You must login first')
+            return redirect(reverse('login'))
+        
+        if not event:
+            messages.error(request, 'invalid event')
+            return redirect(reverse('palestra:dashboard'))
+        
+        if request.user.is_manager or request.user.is_instructor:
+            messages.error(request, 'You are a staff member')
+            return redirect(reverse('palestra:dashboard'))
+        
         return render(request=request, template_name="edit-review.html", context=context)
 
     def post(self, request, *args, **kwargs):

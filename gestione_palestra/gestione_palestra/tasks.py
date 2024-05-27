@@ -16,6 +16,6 @@ def delete_reservations():
 def reset_training_info():
     all_group_trainings = management_models.GroupTraining.objects.all()
     for group_training in all_group_trainings:
-        if group_training.ended():
+        if group_training.expired():
             group_training.total_partecipants = 0
             group_training.save()

@@ -36,6 +36,7 @@
         <input type="hidden" name="trainer" value="{{trainer.id}}">
         <input type="hidden" name="user" value="{{request.user.id}}">
         <button type="submit">Book the workout</button>
+        <button type="button" style="margin-top:10px;" class="btn btn-secondary" onclick="window.location.href='{% url 'palestra:dashboard' %}'">Dismiss</button>
     </form>
 </div>
 

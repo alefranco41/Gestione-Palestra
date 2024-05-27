@@ -61,6 +61,7 @@
         <input type="hidden" name="event" value="{{ event.id }}">
         <input type="hidden" name="trainer" value="{{ event.trainer }}">
         <button type="submit"> Leave Review! </button>
+        <button type="button" style="margin-top:10px;" class="btn btn-secondary" onclick="window.location.href='{% url 'palestra:dashboard' %}'">Dismiss</button>
     </form>
 </div>
 

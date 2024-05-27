@@ -9,7 +9,7 @@ from django.utils.timezone import now
 from django.dispatch import receiver
 import re
 from management.models import FitnessGoal
-from utils.global_variables import today
+from utils import functions, global_variables
 
 class User(AbstractUser):
     is_manager = models.BooleanField(default=False)
@@ -36,13 +36,13 @@ class UserProfile(models.Model):
     
     def clean(self):
         super().clean()
-        if self.date_of_birth and self.date_of_birth > today.date():
+        if self.date_of_birth and self.date_of_birth > global_variables.today.date():
             raise ValidationError({'date_of_birth': 'The date you inserted is in the future.'})
         
         if self.date_of_birth.year:
-            age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            age = global_variables.today.year - self.date_of_birth.year - ((global_variables.today.month, global_variables.today.day) < (self.date_of_birth.month, self.date_of_birth.day))
             if age > 100 or age < 14:
-                raise ValidationError({'date_of_birth': 'Age must be an integer between 14 and 100.'})
+                raise ValidationError({'date_of_birth': 'Your age must be between 14 and 100.'})
         
         if not re.match("^[a-zA-Z0-9]*$", self.first_name):
             raise ValidationError({'first_name': 'Only alphanumeric characters are allowed for first and last names.'})
@@ -99,13 +99,13 @@ class TrainerProfile(models.Model):
         if not re.match("^[a-zA-Z0-9]*$", self.last_name):
             raise ValidationError({'last_name': 'Only alphanumeric characters are allowed for first and last names.'})
         
-        if self.date_of_birth and self.date_of_birth > today.date():
+        if self.date_of_birth and self.date_of_birth > global_variables.today.date():
             raise ValidationError({'date_of_birth': 'The date you inserted is in the future.'})
         
         if self.date_of_birth:
-            age = today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+            age = global_variables.today.year - self.date_of_birth.year - ((global_variables.today.month, global_variables.today.day) < (self.date_of_birth.month, self.date_of_birth.day))
             if age > 100 or age < 18:
-                raise ValidationError({'date_of_birth': 'Age must be an integer between 18 and 100.'})
+                raise ValidationError({'date_of_birth': 'Your age must be between 14 and 100.'})
 
 
 class Subscription(models.Model):
@@ -170,6 +170,16 @@ class PersonalTraining(models.Model):
     def training_type_choices(self):
         return [(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()]
     
+    def expired(self):
+        if global_variables.day_mapping[self.day] > global_variables.today.weekday():
+            return False
+        elif global_variables.day_mapping[self.day] == global_variables.today.weekday():
+            if self.start_hour >= global_variables.today.hour:
+                return False
+            else:
+                return True
+        else:
+            return True
 
 
 

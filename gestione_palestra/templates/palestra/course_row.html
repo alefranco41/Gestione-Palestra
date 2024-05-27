@@ -1,42 +1,36 @@
 {% load custom_filters %}
-
-<tr>
-    {% if request.GET.day or request.GET.hour or request.GET.available or request.GET.trainer %}
-        <td> {{ day }} </td>
-    {% else %}
-        {% if forloop.first %}
-            <td rowspan="{{ hours_data|length }}">{{ day }}</td>
-        {% endif %}
+<div class="course-card">
+    {% if course.image %}
+    <img src="{{ course.image.url }}" alt="{{ course.title }}" class="course-image">
     {% endif %}
-
-    <td>{{ course.title }}</td>
-    <td>{{ course.trainer.first_name }} {{ course.trainer.last_name }}</td>
-    <td>{{ hour }}</td>
-    <td>{{ course.duration }}</td>
-    <td>{{ course.max_participants }}</td>
-    <td>
-        {% if not course.ended %}
-            {{ course.max_participants|subtract:course.total_partecipants }}
-        {% else %}
-            0
-        {% endif %}
-    </td>
-    <td>
-        {% if course.ended %}
-            Ended
-        {% elif course.max_participants|subtract:course.total_partecipants == 0 %}
-            Full
-        {% else %}
-            Available
-        {% endif %}
-    </td>
-    {% if not request.user.is_instructor and not request.user.is_manager%}
-        <td>
-            <form class="classes-form" method="post">{% csrf_token %}
-                <input type="hidden" name="class_id" value="{{ course.id }}">
-                <button type="submit">Join Class</button>
-            </form>
-        </td>
+    <div class="course-info">
+        <h3>{{ course.title }}</h3>
+        <p><strong>Day:</strong> {{ day }}</p>
+        <p><strong>Trainer:</strong> {{ course.trainer.first_name }} {{ course.trainer.last_name }}</p>
+        <p><strong>Start Hour:</strong> {{ hour }}</p>
+        <p><strong>Duration:</strong> {{ course.duration }} mins</p>
+        <p><strong>Max Participants:</strong> {{ course.max_participants }}</p>
+        <p><strong>Remaining Spots:</strong> 
+            {% if not course.expired %}
+                {{ course.max_participants|subtract:course.total_partecipants }}
+            {% else %}
+                0
+            {% endif %}
+        </p>
+        <p><strong>Status:</strong> 
+            {% if course.expired %}
+                Ended
+            {% elif course.max_participants|subtract:course.total_partecipants == 0 %}
+                Full
+            {% else %}
+                Available
+            {% endif %}
+        </p>
+    </div>
+    {% if not request.user.is_instructor and not request.user.is_manager %}
+    <form class="classes-form" method="post">{% csrf_token %}
+        <input type="hidden" name="class_id" value="{{ course.id }}">
+        <button type="submit">Join Class</button>
+    </form>
     {% endif %}
-        
-</tr>
+</div>
