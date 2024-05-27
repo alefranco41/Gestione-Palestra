@@ -1,6 +1,7 @@
 from django.db import models
 from django.core.exceptions import ValidationError
 from utils.global_variables import today, day_mapping
+from datetime import timedelta, datetime
 
 class GroupTraining(models.Model):
     trainer = models.ForeignKey('palestra.TrainerProfile', on_delete=models.CASCADE)
@@ -29,21 +30,31 @@ class GroupTraining(models.Model):
         (18, '18:00'),
     ]
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
-    duration = models.PositiveIntegerField()  # Durata in minuti
+    duration = models.PositiveIntegerField()  #Durata in minuti
     
     max_participants = models.PositiveIntegerField()
     total_partecipants = models.PositiveIntegerField(default=0)
-    title = models.TextField()
+    title = models.TextField(max_length=100)
     image = models.ImageField(upload_to='group-classes/', null=True, blank=True)
 
     def clean(self):
         super().clean()
         
-        if self.max_participants and self.max_participants <= 0 or self.max_participants > 50:
-            raise ValidationError({'max_participants': 'Insert a number between 1 and 50'})
+        if self.max_participants:
+            if self.max_participants <= 0 or self.max_participants > 50:
+                raise ValidationError({'max_participants': 'Insert a number between 1 and 50'})
         
-        if self.duration and self.duration <= 0 or self.duration > 120:
-            raise ValidationError({'duration': 'Insert a number between 1 and 120'})
+        if self.duration:
+            if self.duration < 10 or self.duration > 120:
+                raise ValidationError({'duration': 'Insert a number between 10 and 120'})
+
+    def get_date_interval(self):
+        this_monday = today - timedelta(days=today.weekday())
+        group_class_day = this_monday + timedelta(days=day_mapping[self.day])
+        start_interval = datetime(year=group_class_day.year, month=group_class_day.month, day=group_class_day.day, hour=self.start_hour)
+        end_interval = start_interval + timedelta(minutes=self.duration)
+        return (start_interval,end_interval)
+    
 
     def expired(self):
         ended = False

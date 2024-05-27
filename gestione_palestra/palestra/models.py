@@ -164,7 +164,7 @@ class PersonalTraining(models.Model):
     start_hour = models.PositiveSmallIntegerField(choices=START_HOUR_CHOICES)
 
     training_type = models.CharField(max_length=10)
-    additional_info = models.TextField(blank=True)
+    additional_info = models.TextField(blank=True, max_length=500)
 
     @property
     def training_type_choices(self):
@@ -186,9 +186,9 @@ class PersonalTraining(models.Model):
 class TrainingReview(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
     stars = models.PositiveSmallIntegerField(choices=[(i,i) for i in range(6)])
-    title = models.TextField()
+    title = models.TextField(max_length=100)
     date = models.DateField(default=now)
-    additional_info = models.TextField(blank=True)
+    additional_info = models.TextField(blank=True, max_length=500)
 
     class Meta:
         abstract = True

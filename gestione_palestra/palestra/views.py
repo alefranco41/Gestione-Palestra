@@ -68,6 +68,27 @@ class GymClassesView(View):
             schedule[class_instance.day][class_instance.start_hour] = class_instance
 
         context['schedule'] = schedule
+
+        all_group_classes = GroupTraining.objects.all()
+        days = set()
+        hours = set()
+        available_trainers = set()
+        for group_class in all_group_classes:
+            days.add(group_class.day)
+            hours.add(group_class.start_hour)
+            available_trainers.add(group_class.trainer)
+
+        available_days = []
+        for day in global_variables.day_mapping.keys():
+            if day in days:
+                available_days.append(day)
+
+        available_hours = sorted(list(hours))
+        
+         
+        context['available_days'] = available_days
+        context['available_hours'] = available_hours
+        context['available_trainers'] = available_trainers
         return context
     
     def get(self, request):
@@ -578,21 +599,24 @@ class BookWorkout(View):
                     continue
 
                 availability[day] = available_hours_today
-                continue
-            
-            availability[day] = [i for i in range(9,19)]
+            else:  
+                availability[day] = [i for i in range(9,19)]
             
             for group_training in group_trainings:
-                if group_training.day == day:
+                if group_training.day == day and group_training.start_hour in availability[day]:
                     availability[day].remove(group_training.start_hour)
             
             
             for personal_training in personal_trainings:
-                if personal_training.day == day:
+                if personal_training.day == day and personal_training.start_hour in availability[day]:
                     availability[day].remove(personal_training.start_hour)
+
+            if not availability[day]:
+                del availability[day]
 
         context['trainer'] = trainer
         context['trainer_fitness_goals'] = trainer_fitness_goals
+        print(trainer_fitness_goals)
         context['availability'] = availability
         context['form'] = forms.PersonalTrainingForm()
 

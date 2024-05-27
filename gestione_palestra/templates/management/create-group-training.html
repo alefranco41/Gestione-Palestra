@@ -6,7 +6,7 @@
 {% block content %}
 <div style="margin:auto;">
     <h2>Create Group Training</h2>
-    <form method="post" style="margin:auto; width:400px">
+    <form method="post" style="margin:auto; width:400px" enctype="multipart/form-data">
         {% csrf_token %}
         <label for="trainer">Trainer:</label>
         <select name="trainer" id="trainer">

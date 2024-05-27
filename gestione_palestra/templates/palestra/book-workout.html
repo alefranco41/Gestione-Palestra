@@ -21,14 +21,9 @@
         </select><br>
         <label for="training_type">Training Type:</label><br>
         <select name="training_type" id="id_training_type">
-            {% if 'BodyBuilding' in trainer_fitness_goals%} <option value="1"> BodyBuilding</option>{%endif%}
-            {% if 'Strength Training' in trainer_fitness_goals%} <option value="2"> Strength Training</option>{%endif%}
-            {% if 'Weight Loss' in trainer_fitness_goals%} <option value="3"> Weight Loss</option>{%endif%}
-            {% if 'Endurance Training' in trainer_fitness_goals%} <option value="4"> Endurance Training</option>{%endif%}
-            {% if 'Flexibility and Mobility' in trainer_fitness_goals%} <option value="5"> Flexibility and Mobility</option>{%endif%}
-            {% if 'Functional Fitness' in trainer_fitness_goals%} <option value="6"> Functional Fitness</option>{%endif%}
-            {% if 'Sport-Specific Training' in trainer_fitness_goals%} <option value="7"> Sport-Specific Training</option>{%endif%}
-            {% if 'Rehabilitation' in trainer_fitness_goals%} <option value="8"> Rehabilitation</option>{%endif%}
+            {% for fitness_goal_id, fitness_goal_name in fitness_goals %}
+                {% if fitness_goal_name in trainer_fitness_goals %} <option value="{{ fitness_goal_id }}"> {{ fitness_goal_name }} </option> {% endif %}
+            {% endfor %}
           </select>
  
         <label for="additional_info">Additional Info:</label><br>

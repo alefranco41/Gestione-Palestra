@@ -6,7 +6,9 @@ from django.views import View
 from django.contrib import messages
 from django.shortcuts import render
 from django.urls import reverse
-from utils.global_variables import today
+from datetime import datetime, timedelta
+from utils.global_variables import today, day_mapping
+
 
 
 class NewGroupTraining(View):    
@@ -24,9 +26,23 @@ class NewGroupTraining(View):
         if request.method == 'POST':
             form = forms.GroupTrainingForm(request.POST, request.FILES)
             trainers = TrainerProfile.objects.all()
-            if form.is_valid():
-                existing_courses = models.GroupTraining.objects.filter(day=form.cleaned_data.get('day'), start_hour=form.cleaned_data.get('start_hour'))
-                if not existing_courses:
+            if form.is_valid():                
+                all_courses = models.GroupTraining.objects.all()
+                if all_courses:
+                    this_monday = today - timedelta(days=today.weekday())
+                    group_class_day = this_monday + timedelta(days=day_mapping[form.cleaned_data['day']])
+                    new_start = datetime(year=group_class_day.year, month=group_class_day.month, day=group_class_day.day, hour=int(form.cleaned_data['start_hour']))
+                    new_end = new_start + timedelta(minutes=form.cleaned_data['duration'])
+
+                    overlapping = False
+            
+                    for course in all_courses:
+                        start, end = course.get_date_interval()
+                        if max(new_start, start) < min(new_end, end):
+                            overlapping = True
+                            break
+                
+                if not overlapping or not all_courses:
                     form.save()
                 else:
                     messages.error(request, 'There is already a group class in that time frame')
@@ -236,16 +252,30 @@ class EditGroupTraining(View):
             else:
                 form = forms.GroupTrainingForm(request.POST, request.FILES, instance=class_item)
                 if form.is_valid():
-                    existing_courses = models.GroupTraining.objects.filter(day=form.cleaned_data.get('day'), start_hour=form.cleaned_data.get('start_hour'))
-                    if not existing_courses:
-                        form.save()
-                    else:
-                        course = existing_courses.first()
-                        if course.id != class_id:
+                    all_courses = models.GroupTraining.objects.all()
+                    if all_courses:
+                        this_monday = today - timedelta(days=today.weekday())
+                        group_class_day = this_monday + timedelta(days=day_mapping[form.cleaned_data['day']])
+                        new_start = datetime(year=group_class_day.year, month=group_class_day.month, day=group_class_day.day, hour=int(form.cleaned_data['start_hour']))
+                        new_end = new_start + timedelta(minutes=form.cleaned_data['duration'])
+
+                        overlapping = False
+                
+                        for course in all_courses:
+                            if course == class_item:
+                                continue
+                            start, end = course.get_date_interval()
+                            if max(new_start, start) < min(new_end, end):
+                                overlapping = True
+                                break
+                        
+                        if not overlapping:
+                            form.save()
+                        else:
                             messages.error(request, 'There is already a group class in that time frame')
                             return render(request, 'edit-group-training.html', {'class':class_item, 'form': form, 'trainers':trainers})
-                        
-                    form.save()
+                    else:
+                        form.save()
                 else:
                     functions.print_errors(form, request)
                     return render(request, 'edit-group-training.html', {'class':class_item, 'form':form, 'trainers':trainers})
