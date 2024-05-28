@@ -74,6 +74,9 @@ class GroupTraining(models.Model):
 
         return ended
     
+    def full(self):
+        return self.total_partecipants == self.max_participants
+    
 class SubscriptionPlan(models.Model):
     PLAN_CHOICES = [
         ('GROUP', 'Group Classes Only'),

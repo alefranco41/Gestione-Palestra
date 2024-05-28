@@ -4,6 +4,7 @@
   flex-wrap: wrap;
   gap: 20px;
   justify-content: center;
+  max-width: 80%;
 }
 
 .course-card {
@@ -13,10 +14,12 @@
   width: 300px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   text-align: center;
+  margin: 5px;
 }
 
 .course-image {
   max-width: 100%;
+  max-height: 175px;
   height: auto;
   border-radius: 10px;
 }
@@ -150,6 +153,7 @@ table{
   display: flex; /* Utilizza il layout flessibile */
   flex-wrap: wrap; /* Avvolgi i piani su una nuova riga quando necessario */
   justify-content: space-around; /* Distribuisci uniformemente i piani lungo il contenitore */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .display-class{
@@ -169,6 +173,8 @@ table{
   flex-direction: column; /* Imposta la direzione dei figli in colonna */
   justify-content: center; /* Centra verticalmente il contenuto */
   align-items: center; /* Centra orizzontalmente il contenuto */
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
 }
 
 .plan-dashboard {
@@ -197,6 +203,13 @@ body {
   padding: 0;
   display: flex;
   flex-direction: column;
+}
+
+header {
+  background-color: #333;
+  color: #fff;
+  text-align: center;
+  padding: 20px 0;
 }
 
 form.hidden {
@@ -251,7 +264,7 @@ form.hidden {
 }
 
 .trainers-container {
-  display: flex;
+  display: inline-flex;
   text-align: left;
   align-self: center;
 }
@@ -259,11 +272,12 @@ form.hidden {
 .trainer-card {
   padding: 20px;
   text-align-last: left;
-  border: 2px solid #333333;
+  border: 2px solid #ccc;
   border-radius: 5px;
   background-color: #f9f9f9;
   margin-left: 20px;
-  /* text-align: left; */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 .trainer-card img {
   display: block;
@@ -307,15 +321,7 @@ form.hidden {
   text-align: left;
   margin-left: 10px;
 }
-.trainer-card {
-  padding: 20px;
-  text-align-last: left;
-  border: 2px solid #333333;
-  border-radius: 5px;
-  background-color: #f9f9f9;
-  margin-left: 20px;
-  /* text-align: left; */
-}
+
 .trainer-card img {
   display: block;
   margin: 0 auto;
@@ -383,10 +389,11 @@ form {
 }
 
 .filter-form {
-  display: flex;
   align-items: center;
-  margin-bottom: 10px;
   width: auto;
+  position: fixed;
+  left: 0;
+  margin-left: 20px;
 }
 .filter-form label {
   margin-left: 10px; /* Aggiunge spazio tra il label e il select */
@@ -419,18 +426,26 @@ header{
   padding: 20px 0;
 }
 
+.course-card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.course-card:hover, .trainer-card:hover, .plan:hover {
+  transform: scale(1.05);
+}
 
 .buttons{
   display: ruby;
+  margin-top: 10px;
 }
-.footer {
-  position: fixed;
+footer {
+  position: sticky;
   bottom: 0;
   left: 0; /* Se vuoi che il footer sia allineato a sinistra */
   width: 100%; /* Se vuoi che il footer si estenda per tutta la larghezza */
   background-color: #333; /* Colore di sfondo del footer */
   color: #fff; /* Colore del testo del footer */
-  padding: 20px 0;
+  padding: 10px 0;
   text-align: center; /* Allinea il testo al centro nel footer */
 }
   
@@ -479,11 +494,6 @@ h2 {
   color: #000000;
 }
 
-footer {
-  position: fixed;
-  bottom: 0;
-  width: 100%;
-}
 
 button {
   border-radius: 5px;
@@ -491,6 +501,10 @@ button {
   background-color: #333333;
   color: #fff;
   cursor: pointer;
+}
+
+.main-content {
+  text-align: center;
 }
 
 button:hover {
@@ -538,3 +552,4 @@ p {
     text-align: center;
     padding: 10px;
 }
+

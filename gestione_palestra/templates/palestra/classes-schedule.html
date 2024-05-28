@@ -3,11 +3,11 @@
 
 {% block title %} {{ gym_name }} - Our Schedule {% endblock title %}
 
-{% block header %} Our Schedule {% endblock header %}
+{% block header %} Our Group Classes {% endblock header %}
 
 {% block content %}
-<div style="margin:auto; display:ruby">
 
+<div style="margin-bottom: 50px; display:ruby-text; text-align:center;">
     <form method="get" action="" class="filter-form" id="filter-form">
         <label> <strong> Filter the group classes </strong> </label>
         <label for="day">Day:</label>
@@ -33,36 +33,30 @@
         </select>
         <label for="available">Available:</label>
         <input type="checkbox" name="available" id="available" {% if request.GET.available == 'on' %}checked{% endif %}>
+        <div class="buttons">
+            <button type="button" id="reset-button" onclick="reset_filters()"> Reset filters </button>
+        </div>
     </form>
 
     <div class="schedule-grid" id="courses-body">
         {% for day, hours_data in schedule.items %}
             {% for hour, course in hours_data.items %}
-                {% if request.GET.day %}
-                    {% if request.GET.day == day %}
-                        {% include "course_row.html" %}
-                    {% endif %}
-                {% elif request.GET.hour %}
-                    {% if request.GET.hour|default:""|add:"0" == hour %}
-                        {% include "course_row.html" %}
-                    {% endif %}
-                {% elif request.GET.trainer %}
-                    {% if request.GET.trainer == course.trainer.id|stringformat:"s" %}
-                        {% include "course_row.html" %}
-                    {% endif %}
-                {% elif request.GET.available == "on" %}
-                    {% if not course.expired and course.max_participants|subtract:course.total_partecipants != 0 %}
-                        {% include "course_row.html" %}
-                    {% endif %}
-                {% else %}
-                    {% include "course_row.html" %}
-                {% endif %}
+                {% include "course_row.html" %}
             {% endfor %}
         {% endfor %}
     </div>
 </div>
 
 <script>
+function reset_filters() {
+    // Resetta i valori del form
+    document.getElementById('filter-form').reset();
+
+    // Rimuovi i parametri di query e ricarica la pagina
+    const url = window.location.href.split('?')[0];
+    window.location.href = url;
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     const daySelect = document.getElementById('day');
     const hourSelect = document.getElementById('hour');

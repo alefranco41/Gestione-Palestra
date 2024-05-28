@@ -55,28 +55,52 @@ def get_reviews(user):
 
 class GymClassesView(View):
     def get_context(self, request):
-        print(request)
         context = {}
         schedule = {}
-        classes = GroupTraining.objects.all()
+        days = set()
+        hours = set()
+        available_trainers = set()
+        all_group_classes = GroupTraining.objects.all()
 
         for day in global_variables.week_days:
             schedule[day] = {}
         
-        for class_instance in classes:
-            class_instance.expired = class_instance.expired()
-            schedule[class_instance.day][class_instance.start_hour] = class_instance
+        day_filter = request.GET.get('day')
+        hour_filter = request.GET.get('hour')
+        trainer_filter = request.GET.get('trainer')
+        available_filter = request.GET.get('available')
+        
+        for class_instance in all_group_classes:
+            days.add(class_instance.day)
+            hours.add(class_instance.start_hour)
+            available_trainers.add(class_instance.trainer)
+            
+            include = True
+            if day_filter and class_instance.day != day_filter:
+                include = False
 
-        context['schedule'] = schedule
+            if hour_filter:
+                try:
+                    hour_filter = int(hour_filter)
+                    if class_instance.start_hour != hour_filter:
+                        include = False
+                except ValueError:
+                    pass
 
-        all_group_classes = GroupTraining.objects.all()
-        days = set()
-        hours = set()
-        available_trainers = set()
-        for group_class in all_group_classes:
-            days.add(group_class.day)
-            hours.add(group_class.start_hour)
-            available_trainers.add(group_class.trainer)
+            try:
+                if trainer_filter and class_instance.trainer != models.TrainerProfile.objects.get(id=trainer_filter):
+                    include = False
+            except models.TrainerProfile.DoesNotExist:
+                pass
+            
+            if available_filter and class_instance.expired() or class_instance.full():
+                include = False
+            
+            if include:
+                class_instance.expired = class_instance.expired()
+                schedule[class_instance.day][class_instance.start_hour] = class_instance
+
+        
 
         available_days = []
         for day in global_variables.day_mapping.keys():
@@ -85,10 +109,12 @@ class GymClassesView(View):
 
         available_hours = sorted(list(hours))
         
-         
+        
         context['available_days'] = available_days
         context['available_hours'] = available_hours
         context['available_trainers'] = available_trainers
+        context['schedule'] = schedule
+
         return context
     
     def get(self, request):
