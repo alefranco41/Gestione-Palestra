@@ -11,10 +11,6 @@ from decimal import Decimal
 from datetime import datetime
 
 
-"""
-Controllare che l'utente abbia effettivamente partecipato all'evento quando lascia una recensione
-"""
-
 def get_reviews(user):
     reviews = []
     if user.is_authenticated:

@@ -438,17 +438,29 @@ header{
   display: ruby;
   margin-top: 10px;
 }
-footer {
-  position: sticky;
-  bottom: 0;
-  left: 0; /* Se vuoi che il footer sia allineato a sinistra */
-  width: 100%; /* Se vuoi che il footer si estenda per tutta la larghezza */
-  background-color: #333; /* Colore di sfondo del footer */
-  color: #fff; /* Colore del testo del footer */
-  padding: 10px 0;
-  text-align: center; /* Allinea il testo al centro nel footer */
+
+
+.footer {
+  display: grid;
+  height: 40px;
+  width: 100%;
+  background-image: none;
+  background-repeat: repeat;
+  background-attachment: scroll;
+  background-position: 0% 0%;
+  background-color: #333;
+  color: #fff;
+  position: fixed;
+  bottom: 0pt;
+  text-align: center;
+  left: 0pt;
 }
-  
+
+.footer_contents {
+  height:24px; 
+  width: 1000px; 
+  margin:auto;
+}
 
 
 label,
