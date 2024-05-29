@@ -67,7 +67,7 @@
 
 
 .user-menu {
-  background-color: #fff; /* Colore di sfondo del menu */
+  background-color: #366089; /* Colore di sfondo del menu */
   border: 1px solid #ccc; /* Bordo del menu */
   padding: 10px; /* Spaziatura interna del menu */
   position: absolute; /* Posizionamento assoluto rispetto al contenitore */
@@ -118,8 +118,8 @@ table{
 
 .fitness-goals-container {
   align-self: end;
-  display: flex;
-  margin-bottom: 100px;
+  display: -webkit-box;
+  margin-bottom: 300px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
@@ -206,10 +206,10 @@ body {
 }
 
 header {
-  background-color: #333;
+  background-color: #003569c9;
   color: #fff;
   text-align: center;
-  padding: 20px 0;
+  padding: 10px 0;
 }
 
 form.hidden {
@@ -237,10 +237,11 @@ form.hidden {
 .content {
   position: relative;
   flex: 1;
-  display: flex;
+  display: ruby-text;
   justify-content: center;
   height: 100vh;
   margin-top: 100px;
+  margin-bottom: 100px;
 }
 
 .purchase-form {
@@ -267,6 +268,7 @@ form.hidden {
   display: inline-flex;
   text-align: left;
   align-self: center;
+  margin-top: 100px;
 }
 
 .trainer-card {
@@ -290,27 +292,14 @@ form.hidden {
   font: bold 11px Arial;
   text-decoration: none;
   background-color: #EEEEEE;
-  color: #333333;
+  color: #003569c9;
   padding: 2px 6px 2px 6px;
   border-top: 1px solid #CCCCCC;
-  border-right: 1px solid #333333;
-  border-bottom: 1px solid #333333;
+  border-right: 1px solid #003569c9;
+  border-bottom: 1px solid #003569c9;
   border-left: 1px solid #CCCCCC;
 }
 
-
-.reviews-container {
-  max-height: 400px;
-  overflow-y: auto;
-  margin-right: 100px;
-  border: 1px solid #ccc;
-  text-align: center;
-  border-radius: 2%;
-  position: absolute;
-  top: 0;
-  right: 0;
-  width: 20%;
-}
 
 
 
@@ -388,13 +377,31 @@ form {
   border: 1px solid #ccc;
 }
 
-.filter-form {
+.filter-form, .reviews-container, .past-events-container {
   align-items: center;
   width: auto;
   position: fixed;
+}
+
+.filter-form {
   left: 0;
   margin-left: 20px;
 }
+
+.reviews-container{
+  left: 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  margin-left: 20px;
+}
+
+.past-events-container{
+  right: 0;
+  margin-right: 20px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
 .filter-form label {
   margin-left: 10px; /* Aggiunge spazio tra il label e il select */
 }
@@ -419,12 +426,6 @@ form {
   }
 }
 
-header{
-  background-color: #333;
-  color: #fff;
-  text-align: center;
-  padding: 20px 0;
-}
 
 .course-card {
   transition: transform 0.3s ease, box-shadow 0.3s ease;
@@ -448,7 +449,7 @@ header{
   background-repeat: repeat;
   background-attachment: scroll;
   background-position: 0% 0%;
-  background-color: #333;
+  background-color: #003569c9;
   color: #fff;
   position: fixed;
   bottom: 0pt;
@@ -485,7 +486,7 @@ nav ul li {
 }
 
 nav ul li a {
-  color: #333;
+  color: #ffffff;
   text-decoration: none;
 }
 
@@ -510,7 +511,7 @@ h2 {
 button {
   border-radius: 5px;
   padding: 10px;
-  background-color: #333333;
+  background-color: #003569c9;
   color: #fff;
   cursor: pointer;
 }

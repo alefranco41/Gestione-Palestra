@@ -35,16 +35,15 @@ def get_reviews(user):
                 for event in gc_events:
                     reviews.extend(gc_reviews.filter(event=event))
         else:
-            reviews.extend(pt_reviews.filter(user=user))
-            for review in reviews:
-                review.training_type = models.FitnessGoal.objects.get(id=review.event.training_type).name
-                
+            reviews.extend(pt_reviews.filter(user=user))    
             reviews.extend(gc_reviews.filter(user=user))
         
+
         for review in reviews:
             if isinstance(review, models.GroupTrainingReview):
                 review.event_type = "group_training"
             else:
+                review.training_type = models.FitnessGoal.objects.get(id=review.event.training_type).name
                 review.event_type = "personal_training"
             
     return reviews
@@ -375,6 +374,7 @@ class UpdateProfile(View):
 class Dashboard(View):
     def get_context(self, request):
         context = {}
+        past_events = []
         group_classes_reviews = None
         training_sessions_reviews = None
 
@@ -434,16 +434,8 @@ class Dashboard(View):
                     except GroupTraining.DoesNotExist:
                         continue
 
-                if global_variables.day_mapping[group_class.day] > global_variables.today.weekday():
-                    group_class.expired = False
-                elif global_variables.day_mapping[group_class.day] == global_variables.today.weekday():
-                    if group_class.start_hour >= global_variables.today.hour:
-                        group_class.expired = False
-                    else:
-                        group_class.expired = True
-                else:
-                    group_class.expired = True
-
+                
+                    group_class.expired = group_class.expired()
 
                 review = None
                 if group_classes_reviews:
@@ -453,9 +445,13 @@ class Dashboard(View):
                         review = None
 
                 group_class.review = review
+                group_class.date = functions.get_event_date(group_class)
                 
-                schedule[group_class.day][group_class.start_hour] = group_class
-            
+                if group_class.expired:
+                    past_events.append(group_class)
+                else:
+                    schedule[group_class.day][group_class.start_hour] = group_class
+
             for booked_training_session in booked_training_sessions:
                 if request.user.is_instructor:
                     try:
@@ -470,15 +466,7 @@ class Dashboard(View):
                 except models.FitnessGoal.DoesNotExist:
                     booked_training_session.training_type = None
 
-                if global_variables.day_mapping[booked_training_session.day] > global_variables.today.weekday():
-                    booked_training_session.expired = False
-                elif global_variables.day_mapping[booked_training_session.day] == global_variables.today.weekday():
-                    if booked_training_session.start_hour >= global_variables.today.hour:
-                        booked_training_session.expired = False
-                    else:
-                        booked_training_session.expired = True
-                else:
-                    booked_training_session.expired = True
+                booked_training_session.expired = booked_training_session.expired()
                 
                 review = None
                 if training_sessions_reviews:
@@ -487,9 +475,16 @@ class Dashboard(View):
                     except models.PersonalTrainingReview.DoesNotExist:
                         review = None
                 booked_training_session.review = review
-                schedule[booked_training_session.day][booked_training_session.start_hour] = booked_training_session
-            
+                booked_training_session.date = functions.get_event_date(booked_training_session)
+
+                if booked_training_session.expired:
+                    past_events.append(booked_training_session)
+                else:
+                    schedule[booked_training_session.day][booked_training_session.start_hour] = booked_training_session
+
+
             context['schedule'] = schedule
+            context['past_events'] = past_events
         return context
 
     def get(self, request):
@@ -767,7 +762,7 @@ class LeaveReview(View):
     def post(self, request, *args, **kwargs):
         context = get_LeaveReview_context(request=request)
         event_type = request.GET.get('event_type')
-
+        
         if event_type == 'group_training':
             form = forms.GroupTrainingReviewForm(request.POST)
             context['form'] = form
@@ -876,10 +871,6 @@ class EditReview(View):
             return redirect(reverse('palestra:dashboard'))
         else:
             functions.print_errors(form, request)
-
-        
-        for message in messages.get_messages(request):
-            print(message)
 
         context['review'] = old_review
         return render(request=request, template_name="edit-review.html", context=context)

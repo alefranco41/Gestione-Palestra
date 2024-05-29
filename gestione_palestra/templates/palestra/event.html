@@ -1,0 +1,42 @@
+<div class="course-card">
+    {% if event.image %}
+        <img src="{{ event.image.url }}" alt="{{ event.title }}" class="course-image">
+    {% endif %}
+    <div class="course-info">
+        <h3>
+            {% if event.max_participants %}
+                {{ event.title }} Group Class {% else %} {{ event.training_type }} Workout {% if not request.user.is_instructor %} with {{ event.trainer.first_name }} {{ event.trainer.last_name }} {% else %} with {{ event.user }} {% endif %}
+            {% endif %}
+        </h3>
+        <p><strong>Date:</strong> {{ event.date }}</p>
+        <p><strong>Day:</strong> {{ day }}</p>
+        <p><strong>Start Hour:</strong> {{ hour }}:00</p>
+        {% if not request.user.is_instructor and not event.max_participants %} <p><strong>Trainer:</strong> {{ event.trainer.first_name }} {{ event.trainer.last_name }} </p> {% endif %}
+    </div>
+    {% if event.max_participants %}
+        {% if event.expired %}
+                <p><strong>This event has ended.</strong></p>
+                {% if not request.user.is_instructor %}
+                    {% if not event.review %}
+                        <form method="get" style="display: contents;" action="{% url 'palestra:leave-review' %}">
+                            <input type="hidden" name="event_type" value="group_training">
+                            <input type="hidden" name="event_id" value="{{ event.id }}">
+                            <button type="submit">Leave a Review</button>
+                        </form>
+                    {% endif %}
+                {% endif %}
+            {% else %}
+                {% if not request.user.is_instructor %}
+                    <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="group_training" value="{{event.id}}"><button type="submit" style="border-radius: 5px;">Cancel</button></form>        
+                {% else %}
+                    <button class="view_participants" data-event="{{ event.participants }}" onclick="handleButtonClick(event)" style="border-radius: 5px;"> View Participants </button>
+                {% endif %}
+            {% endif %}
+    {% else %}
+        {% if not request.user.is_instructor %}
+            <form method="post" class="hidden">{% csrf_token %}<input type="hidden" name="personal_training" value="{{event.id}}"><button type="submit" style="border-radius: 5px;">Cancel</button></form>
+        {% else %}
+            <button style="border-radius: 5px;" class="view_profile" data-event="{{ event.user_profile }}" onclick="handleButtonClick(event)"> View Profile</button>
+        {% endif %}
+    {% endif %}
+</div>

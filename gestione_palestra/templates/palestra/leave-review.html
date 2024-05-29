@@ -11,7 +11,7 @@
     <h2> Event informations </h2>
     {% if event %}
         {% if event.max_participants %}
-        <div class="trainer-card">
+        <div>
             {% if event.image %} <img  src="{{ event.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
             <div class="trainer-details">
                 <p><strong>Title:</strong> {{event.title}}  Group Class with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
@@ -21,7 +21,7 @@
                 </div>
         </div>
         {% else %}
-        <div class="trainer-card">
+        <div>
             <div class="trainer-details">
                 <p><strong>Title:</strong> {{event.training_type}} Workout with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
                 <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
@@ -59,7 +59,7 @@
         
         <input type="hidden" name="user" value="{{ request.user.id }}">
         <input type="hidden" name="event" value="{{ event.id }}">
-        <input type="hidden" name="trainer" value="{{ event.trainer }}">
+        <input type="hidden" name="trainer" value="{{ event.trainer.id }}">
         <button type="submit"> Leave Review! </button>
         <button type="button" style="margin-top:10px;" class="btn btn-secondary" onclick="window.location.href='{% url 'palestra:dashboard' %}'">Dismiss</button>
     </form>

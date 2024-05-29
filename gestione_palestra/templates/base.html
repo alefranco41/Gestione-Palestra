@@ -16,9 +16,10 @@
 
 <header>
   <h1>{% block header %} {% endblock header %} </h1>
+    {% include "navbar.html" %}
 </header>
 
-{% include "navbar.html" %}
+
 
 {% bootstrap_messages %}
 

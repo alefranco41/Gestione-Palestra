@@ -6,7 +6,6 @@
 {% block header %} Our Trainers {% endblock %}
 
 {% block content %}
-<h2>Trainers List</h2>
     <div class="trainers-container">
         {% for trainer, fitness_goals in trainers %}
         <div class="trainer-card">
@@ -19,12 +18,22 @@
                 <p><strong>Fitness Goals:</strong> {% for goal in fitness_goals %}<li>{{ goal }}</li>{% endfor %}</p>
             </div>
             <div class="links">
-            {% if not request.user.is_instructor and not request.user.is_manager %}
-                <a class="button" href="{% url 'palestra:book-workout' trainer.id  %}">Book a workout</a>
-                {% endif %}
-                {% if trainer.certifications %} <a class="button download-cv" href="{{ trainer.certifications.url }}" download="CV_{{trainer.first_name}}_{{trainer.last_name}}.pdf">Download CV</a> {% endif %}
+                    {% if not request.user.is_instructor and not request.user.is_manager %}
+                        <form method="get" style="display:contents;" action="{% url 'palestra:book-workout' trainer.id  %}">
+                            {% csrf_token %} 
+                            <button type="submit" style="margin:10px;">Book a workout</button>   
+                        </form>
+                    {% endif %}
+                
+                    {% if trainer.certifications %}
+                        <form method="get" style="display:contents;" action="{{ trainer.certifications.url }}" target="_blank">
+                            {% csrf_token %}
+                            <button type="submit" style="margin:10px;">Download CV</button>
+                        </form>
+                    {% endif %}
             </div>
             </div>
         {% endfor %}
     </div>
+
 {% endblock %}

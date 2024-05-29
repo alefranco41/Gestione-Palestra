@@ -171,13 +171,14 @@ class PersonalTraining(models.Model):
         return [(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()]
     
     def expired(self):
+        print(global_variables.today.hour, self.start_hour)
         if global_variables.day_mapping[self.day] > global_variables.today.weekday():
             return False
         elif global_variables.day_mapping[self.day] == global_variables.today.weekday():
-            if self.start_hour >= global_variables.today.hour:
-                return False
-            else:
+            if global_variables.today.hour >= self.start_hour:
                 return True
+            else:
+                return False
         else:
             return True
 
