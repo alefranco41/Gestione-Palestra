@@ -26,14 +26,17 @@ def get_reviews(user):
             except models.TrainerProfile.DoesNotExist:
                 pass
             else:
-                pt_events = models.PersonalTraining.objects.filter(trainer=trainer)
+                pt_events = models.CompletedPersonalTraining.objects.filter(trainer=trainer)
                 gc_events = GroupTraining.objects.filter(trainer=trainer)
 
+            
                 for event in pt_events:
                     reviews.extend(pt_reviews.filter(event=event))
 
                 for event in gc_events:
-                    reviews.extend(gc_reviews.filter(event=event))
+                    completed_events = models.CompletedGroupTrainingReservation.objects.filter(group_class=event)
+                    if completed_events.exists():
+                        reviews.extend(gc_reviews.filter(event__in=completed_events))
         else:
             reviews.extend(pt_reviews.filter(user=user))    
             reviews.extend(gc_reviews.filter(user=user))
@@ -377,8 +380,9 @@ class Dashboard(View):
         past_events = []
         group_classes_reviews = None
         training_sessions_reviews = None
-
         context['reviews'] = get_reviews(request.user)
+
+
         if request.user.is_manager:
             context['group_classes'] = GroupTraining.objects.all()
         else:
@@ -391,12 +395,10 @@ class Dashboard(View):
                 
 
                 instructor_group_classes = GroupTraining.objects.filter(trainer=trainer)
-
                 booked_group_classes = []
+                
                 for group_class in instructor_group_classes:
-                    
                     reservation_objects = models.GroupClassReservation.objects.filter(group_class=group_class)
-                    
                     participants = []
                     if reservation_objects:
                         participants_ids = reservation_objects.values_list('user_id', flat=True)
@@ -410,13 +412,48 @@ class Dashboard(View):
                             partecipant = models.UserProfileSerializer(partecipant).data
                             participants.append(partecipant)
 
-                    group_class.participants = participants
-                    booked_group_classes.append(group_class)
+                        group_class.participants = participants
+                    booked_group_classes.append((group_class, False, participants))
+
+                    completed_reservation_objects = models.CompletedGroupTrainingReservation.objects.filter(group_class=group_class)
+                    grouped_reservations = {}
+                    for reservation in completed_reservation_objects:
+                        if not grouped_reservations.get(reservation.completed_date):
+                            grouped_reservations[reservation.completed_date] = []
+                        
+                        grouped_reservations[reservation.completed_date].append(reservation)
+
                     
-                booked_training_sessions = models.PersonalTraining.objects.filter(trainer=trainer)
+                    for date, reservations in grouped_reservations.items():
+                        participants = []
+                        participants_ids = []
+                        for reservation in reservations:
+                            participants_ids.append(reservation.user.id)
+
+                        for partecipant_id in participants_ids:
+                            try:
+                                partecipant = models.UserProfile.objects.get(user_id=partecipant_id)
+                            except models.UserProfile.DoesNotExist:
+                                continue
+                            #logica qua
+                            partecipant = models.UserProfileSerializer(partecipant).data
+                            participants.append(partecipant)
+                    
+                        if len(participants) > 0:
+                            booked_group_classes.append((group_class, date, participants))
+
+                personal_trainings = models.PersonalTraining.objects.filter(trainer=trainer)
+                completed_personal_trainings = models.CompletedPersonalTraining.objects.filter(trainer=trainer)
+                booked_training_sessions = list(personal_trainings) + list(completed_personal_trainings)
             else:
-                booked_group_classes = models.GroupClassReservation.objects.filter(user=request.user)
-                booked_training_sessions = models.PersonalTraining.objects.filter(user=request.user)
+                group_classes = models.GroupClassReservation.objects.filter(user=request.user)
+                completed_group_classes = models.CompletedGroupTrainingReservation.objects.filter(user=request.user)
+                booked_group_classes = list(group_classes) + list(completed_group_classes)
+
+                personal_trainings = models.PersonalTraining.objects.filter(user=request.user)
+                completed_personal_trainings = models.CompletedPersonalTraining.objects.filter(user=request.user)
+
+                booked_training_sessions = list(personal_trainings) + list(completed_personal_trainings)
                 group_classes_reviews = models.GroupTrainingReview.objects.filter(user=request.user)
                 training_sessions_reviews = models.PersonalTrainingReview.objects.filter(user=request.user)
                 
@@ -427,27 +464,39 @@ class Dashboard(View):
                 for hour in range(9,19):
                     schedule[day][hour] = None
             
-            for group_class in booked_group_classes:
-                if isinstance(group_class, models.GroupClassReservation):
+            for group_class_reservation in booked_group_classes:
+                ended = True
+                if isinstance(group_class_reservation, models.GroupClassReservation) or isinstance(group_class_reservation, models.CompletedGroupTrainingReservation):
                     try:
-                        group_class = GroupTraining.objects.get(id=group_class.group_class.id)
+                        group_class = GroupTraining.objects.get(id=group_class_reservation.group_class.id)
                     except GroupTraining.DoesNotExist:
                         continue
+                else:
+                    group_class, date, participants = group_class_reservation
+                    if date:
+                        group_class.date = date
+                    else:
+                        group_class.date = functions.get_event_date(group_class)
+                        group_class.participants = participants
+                        ended = group_class.expired()
 
+                if isinstance(group_class_reservation, models.GroupClassReservation):
+                    ended = group_class.expired()
+                    group_class.date = functions.get_event_date(group_class)
+
+                if isinstance(group_class_reservation, models.CompletedGroupTrainingReservation):
+                    review = None
+                    group_class.id = group_class_reservation.id
+                    if group_classes_reviews:
+                        try:
+                            review = group_classes_reviews.get(event=group_class.id)
+                        except models.GroupTrainingReview.DoesNotExist:
+                            review = None
+
+                    group_class.review = review
+                    group_class.date = group_class_reservation.completed_date
                 
-                    group_class.expired = group_class.expired()
-
-                review = None
-                if group_classes_reviews:
-                    try:
-                        review = group_classes_reviews.get(event=group_class.id)
-                    except models.GroupTrainingReview.DoesNotExist:
-                        review = None
-
-                group_class.review = review
-                group_class.date = functions.get_event_date(group_class)
-                
-                if group_class.expired:
+                if ended:
                     past_events.append(group_class)
                 else:
                     schedule[group_class.day][group_class.start_hour] = group_class
@@ -465,23 +514,27 @@ class Dashboard(View):
                     booked_training_session.training_type = models.FitnessGoal.objects.get(id=booked_training_session.training_type).name
                 except models.FitnessGoal.DoesNotExist:
                     booked_training_session.training_type = None
-
-                booked_training_session.expired = booked_training_session.expired()
                 
-                review = None
-                if training_sessions_reviews:
-                    try:
-                        review = training_sessions_reviews.get(event=booked_training_session.id)
-                    except models.PersonalTrainingReview.DoesNotExist:
-                        review = None
-                booked_training_session.review = review
-                booked_training_session.date = functions.get_event_date(booked_training_session)
+                ended = True
+                if isinstance(booked_training_session, models.PersonalTraining):
+                    ended = booked_training_session.expired()
+                    booked_training_session.date = functions.get_event_date(booked_training_session)
 
-                if booked_training_session.expired:
+                if isinstance(booked_training_session, models.CompletedPersonalTraining):
+                    review = None
+                    if training_sessions_reviews:
+                        try:
+                            review = training_sessions_reviews.get(event=booked_training_session.id)
+                        except models.PersonalTrainingReview.DoesNotExist:
+                            review = None
+                    booked_training_session.review = review
+                    booked_training_session.date = functions.get_event_date(booked_training_session)
+                    
+
+                if ended:
                     past_events.append(booked_training_session)
                 else:
                     schedule[booked_training_session.day][booked_training_session.start_hour] = booked_training_session
-
 
             context['schedule'] = schedule
             context['past_events'] = past_events
@@ -498,7 +551,7 @@ class Dashboard(View):
         if event_id and event_type:
             if event_type == 'group_training':
                 try:
-                    event = GroupTraining.objects.get(id=event_id)
+                    event = models.CompletedGroupTrainingReservation.objects.get(id=event_id)
                     review = models.GroupTrainingReview.objects.get(user=request.user, event=event)
                     review.delete()
                     messages.success(request=request, message="Review deleted successfully")
@@ -507,7 +560,7 @@ class Dashboard(View):
                     messages.error(request, f'Group training review not found')
             elif event_type == 'personal_training':
                 try:
-                    event = models.PersonalTraining.objects.get(id=event_id)
+                    event = models.CompletedPersonalTraining.objects.get(id=event_id)
                     review = models.PersonalTrainingReview.objects.get(user=event.user, event=event)
                     review.delete()
                     messages.success(request=request, message="Review deleted successfully")
@@ -633,7 +686,6 @@ class BookWorkout(View):
 
         context['trainer'] = trainer
         context['trainer_fitness_goals'] = trainer_fitness_goals
-        print(trainer_fitness_goals)
         context['availability'] = availability
         context['form'] = forms.PersonalTrainingForm()
 
@@ -719,12 +771,12 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None, edit=F
         
         if event_type == 'group_training':
             try:
-                event = GroupTraining.objects.get(id=event_id)
-            except GroupTraining.DoesNotExist:
-                context['errror'] = f"Group training not found with id: {event_id}"
+                event = models.CompletedGroupTrainingReservation.objects.get(id=event_id)
+            except models.CompletedGroupTrainingReservation.DoesNotExist:
+                context['errror'] = f"Group training not found"
                 return context
             
-            event.date = functions.get_event_date(event)
+            event.date = functions.get_event_date(event.group_class)
             
             if edit:
                 try:
@@ -735,9 +787,9 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None, edit=F
             
         elif event_type == 'personal_training':
             try:
-                event = models.PersonalTraining.objects.get(id=event_id)
+                event = models.CompletedPersonalTraining.objects.get(id=event_id)
             except models.PersonalTraining.DoesNotExist:
-                messages.error(request, f"Personal training session not found with id: {event_id}")
+                messages.error(request, f"Personal training session not found")
                 return context
             if edit:
                 try:
@@ -752,7 +804,6 @@ def get_LeaveReview_context(request=None, event_id=None, event_type=None, edit=F
             messages.error(request, f'invalid event type: {event_type}')
             event = None
 
-        
         context['event'] = event
         
         return context
@@ -805,7 +856,7 @@ class LeaveReview(View):
             return redirect(reverse('palestra:dashboard'))
         
         try:
-            if not event.expired():
+            if not isinstance(event, models.CompletedPersonalTraining) and not isinstance(event, models.CompletedGroupTrainingReservation) and event.expired():
                 messages.error(request, "You can't leave a review for this event yet")
                 return redirect(reverse('palestra:dashboard'))
             

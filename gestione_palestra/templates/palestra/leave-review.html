@@ -10,21 +10,19 @@
 <div style="margin:auto;">
     <h2> Event informations </h2>
     {% if event %}
-        {% if event.max_participants %}
+        {% if event.group_class %}
         <div>
-            {% if event.image %} <img  src="{{ event.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
+            {% if event.group_class.image %} <img  src="{{ event.group_class.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
             <div class="trainer-details">
-                <p><strong>Title:</strong> {{event.title}}  Group Class with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
-                <p><strong>Duration:</strong> {{ event.duration }}</p>
-                <p><strong>Total Participants:</strong> {{ event.total_partecipants }}</p>
-                <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
+                <p><strong>Title:</strong> {{event.group_class.title}}  Group Class with {{ event.group_class.trainer.first_name}} {{ event.group_class.trainer.last_name}}</p>
+                <p><strong>Date:</strong> {{ event.completed_date|date:"F j, Y" }}, {{ event.completed_date|time:"g:i A" }}</p>
                 </div>
         </div>
         {% else %}
         <div>
             <div class="trainer-details">
                 <p><strong>Title:</strong> {{event.training_type}} Workout with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
-                <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
+                <p><strong>Date:</strong> {{ event.completed_date|date:"F j, Y" }}, {{ event.completed_date|time:"g:i A" }}</p>
             </div>
         </div>
         {% endif %}

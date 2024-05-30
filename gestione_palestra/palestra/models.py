@@ -123,6 +123,11 @@ class GroupClassReservation(models.Model):
     group_class = models.ForeignKey('management.GroupTraining', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)
 
+class CompletedGroupTrainingReservation(models.Model):
+    group_class = models.ForeignKey('management.GroupTraining', on_delete=models.CASCADE,)
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    completed_date = models.DateField(auto_now_add=True)
+
 @receiver(post_save, sender=GroupClassReservation)
 def increment_total_partecipants(sender, instance, created, **kwargs):
     if created:
@@ -171,7 +176,6 @@ class PersonalTraining(models.Model):
         return [(str(goal.id), goal.name) for goal in FitnessGoal.objects.all()]
     
     def expired(self):
-        print(global_variables.today.hour, self.start_hour)
         if global_variables.day_mapping[self.day] > global_variables.today.weekday():
             return False
         elif global_variables.day_mapping[self.day] == global_variables.today.weekday():
@@ -182,7 +186,15 @@ class PersonalTraining(models.Model):
         else:
             return True
 
-
+class CompletedPersonalTraining(models.Model):
+    trainer = models.ForeignKey(TrainerProfile, on_delete=models.CASCADE)
+    user = models.ForeignKey('User', on_delete=models.CASCADE)
+    day = models.CharField(max_length=10, choices=PersonalTraining.DAY_CHOICES)
+    start_hour = models.PositiveSmallIntegerField(choices=PersonalTraining.START_HOUR_CHOICES)
+    training_type = models.CharField(max_length=10)
+    additional_info = models.TextField(blank=True, max_length=500)
+    completed_date = models.DateField(auto_now_add=True)
+    
 
 class TrainingReview(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
@@ -195,8 +207,8 @@ class TrainingReview(models.Model):
         abstract = True
 
 class GroupTrainingReview(TrainingReview):
-    event = models.ForeignKey('management.GroupTraining', on_delete=models.CASCADE)
+    event = models.ForeignKey(CompletedGroupTrainingReservation, on_delete=models.CASCADE)
 
 class PersonalTrainingReview(TrainingReview):
-    event = models.ForeignKey(PersonalTraining, null=True, on_delete=models.SET_NULL)
+    event = models.ForeignKey(CompletedPersonalTraining, null=True, on_delete=models.CASCADE)
     trainer = models.ForeignKey(TrainerProfile, null=True, on_delete=models.CASCADE, related_name='reviews')

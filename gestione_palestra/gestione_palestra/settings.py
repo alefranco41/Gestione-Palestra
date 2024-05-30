@@ -163,8 +163,8 @@ CELERY_IMPORTS = ('gestione_palestra.tasks',)
 
 CELERY_BEAT_SCHEDULE = {
     'reset_training_info': {
-        'task': 'gestione_palestra.tasks.reset_training_info',  # Sostituisci con il percorso della tua funzione delete_entries
-        'schedule': crontab(minute=0),  # Ogni ora
+        'task': 'gestione_palestra.tasks.reset_training_info',  # Sostituisci con il percorso della tua funzione
+        'schedule': crontab(minute='*'),  # Ogni minuto
     },
 }
 

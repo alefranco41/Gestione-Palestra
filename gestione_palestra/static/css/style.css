@@ -80,20 +80,26 @@
 
 .user-details, .user-details-dashboard {
   width: 100%;
-  margin: 50px auto 0;
   border-collapse: collapse;
+}
+
+.user-details-dashboard{
+  margin: 50px;
 }
 
 
 .popup-content {
   border: 1px solid #ccc;
-  display: block;
   border-radius: 5px;
   height: fit-content;
   overflow-y: auto;
   text-align: center;
-  margin-left: 50px;
   max-height: 450px;
+  margin: 50px;
+}
+
+.popup{
+  display: flex;
 }
 
 .manager-content{
@@ -381,6 +387,8 @@ form {
   align-items: center;
   width: auto;
   position: fixed;
+  max-height: 400px;
+  overflow-y: auto;
 }
 
 .filter-form {

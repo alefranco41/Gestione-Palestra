@@ -1,16 +1,20 @@
+{% load custom_filters %}
 <div class="course-card">
     {% if event.image %}
         <img src="{{ event.image.url }}" alt="{{ event.title }}" class="course-image">
     {% endif %}
     <div class="course-info">
         <h3>
-            {% if event.max_participants %}
-                {{ event.title }} Group Class {% else %} {{ event.training_type }} Workout {% if not request.user.is_instructor %} with {{ event.trainer.first_name }} {{ event.trainer.last_name }} {% else %} with {{ event.user }} {% endif %}
+            {% if not request.user.is_instructor %}
+                {% if event.max_participants %} {{ event.title }} Group Class  {% else %} {{ event.training_type }} Workout {% endif %}
+            {% else %}
+            {% if event.max_participants %} {{ event.title }} Group Class  {% else %} {{ event.training_type }} Workout with {{ event.user }} {% endif %}
             {% endif %}
-        </h3>
+            </h3>
         <p><strong>Date:</strong> {{ event.date }}</p>
         <p><strong>Day:</strong> {{ day }}</p>
         <p><strong>Start Hour:</strong> {{ hour }}:00</p>
+        {% if event.max_participants %} <p><strong>Total participants:</strong> {{ event.total_partecipants }}</p> {% endif %}
         {% if not request.user.is_instructor and not event.max_participants %} <p><strong>Trainer:</strong> {{ event.trainer.first_name }} {{ event.trainer.last_name }} </p> {% endif %}
     </div>
     {% if event.max_participants %}

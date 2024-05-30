@@ -6,6 +6,8 @@
 
 {% block content %}
 
+<div class="popup-content" style="display: none;"></div>
+
 {% if not request.user.is_manager %}
 <div style="margin-top:50px;">
     <h2>Your Schedule for this week:</h2>
@@ -14,8 +16,7 @@
 
 
 <div class="content" {% if request.user.is_manager %} style="display:flex;" {% endif %}>
-    <div class="popup-content" style="display: none;">
-    </div>
+    
     {% if request.user.is_manager %}
     
     <div class="manager-container">
@@ -45,7 +46,7 @@
         {% for plan in subscription_plans %}
             <div class="plan-dashboard">
                 <h3>Plan #{{ forloop.counter }}</h3>
-                <table class="user-details-dashboard">
+                <table class="user-details">
                     <tr>
                         <th>Plan Name</th>
                         <td>{{ plan.name }}</td>
@@ -115,11 +116,11 @@
     {% for review in reviews %}
     <div class="reviews-content">
         <p><b>Review #{{ forloop.counter }} - <b>score:</b>{{ review.stars }}:</b> {% if request.user.is_instructor or request.user.is_manager %} written by {{ review.user }}  on {{ review.date }} {% else %} written on {{ review.date }} {% endif %} </p>
-        <p><b>Event:</b> {% if review.event.max_participants %}
+        <p><b>Event:</b> {% if review.event.group_class %}
                             {% if request.user.is_instructor %}
-                                {{ review.event.title }} Group Class
+                                {{ review.event.group_class.title }} Group Class
                             {% else %}
-                                {{ review.event.title }} Group Class with {{ review.event.trainer.first_name }} {{ review.event.trainer.last_name }}
+                                {{ review.event.group_class.title }} Group Class with {{ review.event.group_class.trainer.first_name }} {{ review.event.group_class.trainer.last_name }}
                             {% endif %}
                         {% else %}
                             {% if request.user.is_instructor %}
@@ -133,7 +134,7 @@
         {% if review.additional_info %} <p><b>Text:</b> {{ review.additional_info }}</p> {% endif %}
         {% if not request.user.is_instructor and not request.user.is_manager %}
         {% if review.event.training_type %}<a class="button" href="{% url 'palestra:edit-review' %}?event_type=personal_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'palestra:dashboard' %}?event_type=personal_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
-        {% if review.event.max_participants %}<a class="button" href="{% url 'palestra:edit-review' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'palestra:dashboard' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
+        {% if review.event.group_class %}<a class="button" href="{% url 'palestra:edit-review' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Edit Review </a> <a class="button" href="{% url 'palestra:dashboard' %}?event_type=group_training&amp;event_id={{review.event.id}}"> Delete Review </a> {% endif %}
         {% endif %}
     </div>        
     {% endfor %}
@@ -147,8 +148,6 @@
         {% if event.max_participants %}
             {% if event.image %} <img  src="{{ event.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
                 <p><strong>Title:</strong> {{event.title}}  Group Class {% if not request.user.is_instructor %} with {{ event.trainer.first_name}} {{ event.trainer.last_name}}  {% endif %}</p>
-                <p><strong>Duration:</strong> {{ event.duration }}</p>
-                <p><strong>Total Participants:</strong> {{ event.total_partecipants }}</p>
                 <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
         {% else %}
                 <p><strong>Title:</strong> {{event.training_type}} Workout {% if not request.user.is_instructor %} with {{ event.trainer.first_name}} {{ event.trainer.last_name}} {% else %} with {{ event.user}} {% endif %}</p>
@@ -298,8 +297,7 @@
 function createUserProfilePopupContent(userData) {
     const { id, first_name, last_name, date_of_birth, height, weight, profile_picture } = userData;
     let content = `<h2>User Profile</h2>`;
-    content += `<table class="user-details">`;
-    content += `<tr><th>ID</th><td>${id}</td></tr>`;
+    content += `<table class="user-details-dashboard">`;
     content += `<tr><th>Name</th><td>${first_name} ${last_name}</td></tr>`;
     content += `<tr><th>Date of Birth</th><td>${date_of_birth}</td></tr>`;
     content += `<tr><th>Height</th><td>${height} cm</td></tr>`;
@@ -317,7 +315,7 @@ function createEventParticipantsPopupContent(participantsData) {
         content += '<p>No participants</p>';
     } else {
         participantsData.forEach(participant => {
-            content += `<table class="user-details">`;
+            content += `<table class="user-details-dashboard">`;
             content += `<tr><th>Name</th><td>${participant.first_name} ${participant.last_name}</td></tr>`;
             content += `<tr><th>Date of Birth</th><td>${participant.date_of_birth}</td></tr>`;
             content += `<tr><th>Gender</th><td>${participant.gender}</td></tr>`;
