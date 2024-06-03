@@ -1,14 +1,40 @@
 {% extends "base.html" %}
 {% load static %}
+{% load custom_filters %}
 {% block title %} {{ gym_name }} - Homepage {% endblock title %}
 
 {% block header %} Welcome to {{ gym_name }} {% endblock %}
 
 {% block content %}
 <div class="online-purchase-section" style="display: flex; justify-content: space-between; padding: 20px;">
-    <div class="online-purchase-text" style="flex: 1; text-align: center;">
-        <h3>Join us</h3>
-        <button onclick="window.location.href='palestra/subscription-plans'">Purchase now</button>
+    <div class="course-card" style="flex: 1; text-align: center;">
+        <div class="inner-content">
+            <div class="inner-inner-content">
+                <h3>Join us</h3>
+                <p>{{ n_plans }} subscription plans</p>
+                <div class="buttons">
+                    <button onclick="window.location.href='palestra/subscription-plans'">Become a member</button>
+                </div>
+            </div>
+
+            <div class="reviews-home">
+                <h3> Our reviews </h3>
+                <div id="review-container" class="review-container">
+                    {% for review in reviews %}
+                        <div class="review-home">
+                            <p><b>Score:</b> <span class="stars">{{ review.stars|star_rating }}</span> written by {{ review.user }} on {{ review.date }}</p>
+                            <p><b>Event:</b> {% if review.event.group_class %}
+                                {{ review.event.group_class.title }} Group Class with {{ review.event.group_class.trainer.first_name }} {{ review.event.group_class.trainer.last_name }}
+                            {% else %}
+                                {{ review.training_type }} Workout with {{ review.event.trainer.first_name }} {{ review.event.trainer.last_name }}
+                            {% endif %}</p>
+                            <p><b>Title:</b> {{ review.title }}</p>
+                            {% if review.additional_info %} <p><b>Text:</b> {{ review.additional_info }}</p> {% endif %}
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
     </div>
     <div class="online-purchase-image" style="flex: 1;">
         <img src="{% static 'img/image1.jpg' %}" alt="Online Purchase" style="width: 100%;">
@@ -19,10 +45,47 @@
     <div class="at-home-image" style="flex: 1;">
         <img src="{% static 'img/image2.jpg' %}" alt="At Home" style="width: 100%;">
     </div>
-    <div class="at-home-text" style="flex: 1; text-align: center;">
-        <h3>Group Classes</h3>
-        <p>{{ n_group_classes }} classes <br> {{ n_fitness_goals }} fitness goals<br>{{ n_trainers }} Live Trainer</p>
-        <button onclick="window.location.href='palestra/classes-schedule'">Join a group class</button>
+    <div class="course-card" style="flex: 1; text-align: center;">
+        <div class="inner-content">
+            <div class="inner-inner-content">
+                <h3>Group Classes</h3>
+                <p>{{ n_group_classes }} classes <br>{{ n_trainers }} Live Trainer</p>
+                <div class="buttons">
+                    <button onclick="window.location.href='palestra/classes-schedule'">Join a group class</button>
+                </div>
+            </div>
+            <div class="inner-inner-content">
+                <h3>Workouts</h3>
+                <p>{{ n_fitness_goals }} fitness goals<br>{{ n_trainers }} Live Trainer</p>
+                <div class="buttons">
+                    <button onclick="window.location.href='palestra/trainer-list'">Book a Workout</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
+
+<script>
+    let currentReviewIndex = 0;
+    const reviews = document.querySelectorAll('.review-home');
+
+    function showReview(index) {
+        reviews.forEach((review, i) => {
+            review.style.opacity = i === index ? '1' : '0';
+            review.style.zIndex = i === index ? '1' : '-1';
+        });
+    }
+
+    function nextReview() {
+        currentReviewIndex = (currentReviewIndex + 1) % reviews.length;
+        showReview(currentReviewIndex);
+    }
+
+    // Show the first review initially
+    showReview(currentReviewIndex);
+
+    // Automatically move to the next review every 5 seconds
+    setInterval(nextReview, 5000);
+</script>
+
 {% endblock content %}

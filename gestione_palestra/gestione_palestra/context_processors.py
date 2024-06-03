@@ -1,11 +1,13 @@
 from datetime import date
 import decimal
 from palestra import models as palestra_models
+from palestra.views import get_reviews
 from management import models as management_models
 from utils import global_variables
 
 def global_context(request):
     plans = management_models.SubscriptionPlan.objects.all()
+    n_plans = len(plans)
     for plan in plans:
         plan.discount_percentage = {}
         plan.full_price = plan.monthly_price
@@ -32,6 +34,8 @@ def global_context(request):
         plan.reduced_12 = round(12 * (plan.monthly_price * (1 - plan.discount_percentage[12] / 100) - plan.age_discount), 2)
 
 
+    all_reviews = get_reviews(palestra_models.User.objects.filter(is_manager=True).first())
+
 
     fitness_goals_choices = management_models.FitnessGoal.objects.all()
 
@@ -53,7 +57,9 @@ def global_context(request):
                     'trainers':trainers,
                     'n_trainers':n_trainers,
                     'n_group_classes':n_group_classes,
-                    'n_fitness_goals':n_fitness_goals
+                    'n_fitness_goals':n_fitness_goals,
+                    'n_plans':n_plans,
+                    'reviews':all_reviews
                 }
     
     return context

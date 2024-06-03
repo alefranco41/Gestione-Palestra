@@ -7,15 +7,7 @@
   max-width: 80%;
 }
 
-.course-card {
-  border: 1px solid #ccc;
-  border-radius: 10px;
-  padding: 20px;
-  width: 300px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-  text-align: center;
-  margin: 5px;
-}
+
 
 .course-image {
   max-width: 100%;
@@ -87,6 +79,50 @@
   margin: 50px;
 }
 
+.review-container {
+  position: relative;
+  height: 200px; /* Imposta un'altezza fissa adatta alle tue recensioni */
+  overflow: hidden;
+}
+
+.review-home {
+  position: absolute;
+  width: 100%;
+  transition: opacity 1s ease-in-out;
+}
+
+.stars {
+  display: inline-block;
+  font-size: 1.2em;
+  color: #FFD700;
+}
+
+
+.review-navigation {
+  margin-top: 10px;
+  text-align: center;
+}
+.review-navigation button {
+  margin: 0 5px;
+  padding: 10px 20px;
+  background-color: #007BFF;
+  color: white;
+  border: none;
+  cursor: pointer;
+}
+.review-navigation button:hover {
+  background-color: #0056b3;
+}
+
+.stars {
+  display: inline-block;
+  font-size: 1.2em;
+  color: #FFD700;
+}
+.star {
+  display: inline-block;
+}
+
 
 .popup-content {
   border: 1px solid #ccc;
@@ -107,17 +143,18 @@
   margin-bottom: 100px;
 }
 
-.manager-container{
+.manager-container {
   border: 1px solid #ccc;
   border-radius: 5px;
+  margin-right: 20px;
   display: inline-flex;
   flex-direction: column;
-  float: left;
   padding: 15px;
   max-height: 500px;
   overflow-y: auto;
+  position: absolute;
+  right: 0;
 }
-
 table{
   text-align: center;
 }
@@ -436,8 +473,16 @@ form {
 
 
 .course-card {
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 20px;
+  width: 300px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  margin: 5px;
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
+
 
 .course-card:hover, .trainer-card:hover, .plan:hover {
   transform: scale(1.05);
@@ -447,6 +492,11 @@ form {
   display: ruby;
   margin-top: 10px;
 }
+
+.inner-inner-content{
+  padding: 20px;
+}
+
 
 
 .footer {

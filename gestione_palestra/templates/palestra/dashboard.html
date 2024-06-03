@@ -102,7 +102,7 @@
 </div>
 
 </div>
-{% else %}
+{% endif %}
 
 <div class="reviews-container">
     {% if request.user.is_instructor %}
@@ -176,7 +176,7 @@
         {% endfor %}
     {% endfor %}
 </div>
-{% endif %}
+
 
 
 {% if request.user.is_manager %}
