@@ -9,7 +9,7 @@ from django.utils.timezone import now
 from django.dispatch import receiver
 import re
 from management.models import FitnessGoal
-from utils import functions, global_variables
+from utils import global_variables
 
 class User(AbstractUser):
     is_manager = models.BooleanField(default=False)
@@ -87,7 +87,7 @@ class TrainerProfile(models.Model):
     date_of_birth = models.DateField(null=True, blank=True)
     certifications = models.FileField(upload_to='pt_CVs/', blank=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', null=True, blank=True)
-    fitness_goals = models.ManyToManyField(FitnessGoal, blank=True)  # Cambio qui
+    fitness_goals = models.ManyToManyField(FitnessGoal)  # Cambio qui
     pt_photo = models.ImageField(upload_to='pt_images/', null=True, blank=True)
 
     def clean(self):
@@ -107,7 +107,9 @@ class TrainerProfile(models.Model):
             if age > 100 or age < 18:
                 raise ValidationError({'date_of_birth': 'Your age must be between 14 and 100.'})
 
-
+        if self.fitness_goals.count() == 0:
+            raise ValidationError({'fitness_goals': 'A trainer must have at least one fitness goal.'})
+        
 class Subscription(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     plan = models.ForeignKey('management.SubscriptionPlan', on_delete=models.CASCADE)

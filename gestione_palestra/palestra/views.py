@@ -8,7 +8,41 @@ from django.shortcuts import render
 from django.urls import reverse
 from dateutil.relativedelta import relativedelta
 from decimal import Decimal
-from datetime import datetime
+from datetime import datetime, date as datetime_date, time
+
+def compute_availability(pt_id):
+    today_day_name = global_variables.today.strftime("%A")
+    today_hour = global_variables.today.hour 
+
+    available_days = [global_variables.week_days[i] for i in range(global_variables.week_days.index(today_day_name), len(global_variables.week_days))]
+    available_hours_today = [i for i in range(9,19) if i > today_hour]
+
+    personal_trainings = models.PersonalTraining.objects.filter(trainer_id=pt_id)
+    group_trainings = GroupTraining.objects.filter(trainer_id=pt_id)
+
+    availability = {}
+    for day in available_days:
+        if day == today_day_name:
+            if not available_hours_today:
+                continue
+
+            availability[day] = available_hours_today
+        else:  
+            availability[day] = [i for i in range(9,19)]
+        
+        for group_training in group_trainings:
+            if group_training.day == day and group_training.start_hour in availability[day]:
+                availability[day].remove(group_training.start_hour)
+        
+        
+        for personal_training in personal_trainings:
+            if personal_training.day == day and personal_training.start_hour in availability[day]:
+                availability[day].remove(personal_training.start_hour)
+
+        if not availability[day]:
+            del availability[day]
+    
+    return availability
 
 
 def get_reviews(user):
@@ -382,7 +416,6 @@ class Dashboard(View):
         training_sessions_reviews = None
         context['reviews'] = get_reviews(request.user)
 
-
         if request.user.is_manager:
             context['group_classes'] = GroupTraining.objects.all()
         else:
@@ -393,7 +426,6 @@ class Dashboard(View):
                     messages.error(request, f"personal trainer not found: {request.user.username}")
                     return context
                 
-
                 instructor_group_classes = GroupTraining.objects.filter(trainer=trainer)
                 booked_group_classes = []
                 
@@ -435,7 +467,6 @@ class Dashboard(View):
                                 partecipant = models.UserProfile.objects.get(user_id=partecipant_id)
                             except models.UserProfile.DoesNotExist:
                                 continue
-                            #logica qua
                             partecipant = models.UserProfileSerializer(partecipant).data
                             participants.append(partecipant)
                     
@@ -538,7 +569,8 @@ class Dashboard(View):
 
             context['schedule'] = schedule
 
-            past_events.sort(key=lambda x: x.date, reverse=True)
+            # Converte tutte le date in datetime per ordinare correttamente
+            past_events.sort(key=lambda x: datetime.combine(x.date, time.min) if isinstance(x.date, datetime_date) else x.date, reverse=True)
             context['past_events'] = past_events
         return context
 
@@ -612,6 +644,10 @@ class Dashboard(View):
                     fg = models.FitnessGoal.objects.get(name=fg_delete)
                 except models.FitnessGoal.DoesNotExist:
                     messages.error(request=request, message=f"Couldn't delete the fitness goal with name = {fg_delete}")
+                except models.FitnessGoal.MultipleObjectsReturned:
+                    fgs = models.FitnessGoal.objects.filter(name=fg_delete)
+                    for fg in fgs:
+                        fg.delete()
                 else:
                     fg.delete()
                     messages.success(request=request, message=f"Successfully deleted the fitness goal with name = {fg_delete}")
@@ -655,40 +691,9 @@ class BookWorkout(View):
         
         trainer_fitness_goals = functions.get_fitness_goals(trainer)
         
-        today_day_name = global_variables.today.strftime("%A")
-        today_hour = global_variables.today.hour 
-
-        available_days = [global_variables.week_days[i] for i in range(global_variables.week_days.index(today_day_name), len(global_variables.week_days))]
-        available_hours_today = [i for i in range(9,19) if i > today_hour]
-
-        personal_trainings = models.PersonalTraining.objects.filter(trainer_id=pt_id)
-        group_trainings = GroupTraining.objects.filter(trainer_id=pt_id)
-
-        availability = {}
-        for day in available_days:
-            if day == today_day_name:
-                if not available_hours_today:
-                    continue
-
-                availability[day] = available_hours_today
-            else:  
-                availability[day] = [i for i in range(9,19)]
-            
-            for group_training in group_trainings:
-                if group_training.day == day and group_training.start_hour in availability[day]:
-                    availability[day].remove(group_training.start_hour)
-            
-            
-            for personal_training in personal_trainings:
-                if personal_training.day == day and personal_training.start_hour in availability[day]:
-                    availability[day].remove(personal_training.start_hour)
-
-            if not availability[day]:
-                del availability[day]
-
         context['trainer'] = trainer
         context['trainer_fitness_goals'] = trainer_fitness_goals
-        context['availability'] = availability
+        context['availability'] = compute_availability(pt_id)
         context['form'] = forms.PersonalTrainingForm()
 
         if request.method == 'POST':
@@ -753,7 +758,12 @@ class BookWorkout(View):
                     return render(request, template_name="book-workout.html", context=context)
         
         if form.is_valid():
-            form.save()
+            available_pairs = [(day,hour) for day,hours in context['availability'].items() for hour in hours]
+            if (form.cleaned_data.get('day'), form.cleaned_data.get('start_hour')) in available_pairs:
+                form.save()
+            else:
+                messages.error(request, f"The selected period is not available: {form.cleaned_data.get('day')} at {form.cleaned_data.get('start_hour')}:00")
+                return render(request, template_name="book-workout.html", context=context)
         else:
             functions.print_errors(form, request)
             return render(request, template_name="book-workout.html", context=context)
