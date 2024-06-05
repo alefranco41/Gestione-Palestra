@@ -4,7 +4,7 @@ from django.urls import reverse
 from django.contrib.auth.models import AnonymousUser
 import random
 import math
-
+from utils.functions import get_event_date
 from palestra import views as palestra_views, models as palestra_models
 from management import models as management_models
 
@@ -240,6 +240,7 @@ class GetReviewsTestCase(TestCase):
     def setUp(self):
 
         self.manager = palestra_models.User.objects.create(username=f"manager", email=f"manager@gmail.com", password="123", is_manager=True)
+        self.manager.save()
 
         normal_users = []
         for i in range(100):
@@ -252,7 +253,7 @@ class GetReviewsTestCase(TestCase):
         self.normal_users = normal_users
 
         random_trainers = []
-        for i in range(10):
+        for i in range(5):
             random_trainer = palestra_models.User.objects.create(username=f"trainer_{i}", email=f"email_{i}@gmail.com", password="123", is_instructor=True)
             random_trainer.save()
             random_trainer_profile = palestra_models.TrainerProfile.objects.create(user_id=random_trainer.id, user=random_trainer, first_name=f"first name {i}", last_name=f"last name {i}", date_of_birth=datetime(1999, 10, 10))
@@ -269,13 +270,13 @@ class GetReviewsTestCase(TestCase):
             user = random.choice(self.normal_users)
 
             if i % 2:
-                pt_event = palestra_models.PersonalTraining.objects.create(trainer=trainer,
+                pt_event = palestra_models.CompletedPersonalTraining.objects.create(trainer=trainer,
                                                                   user=user,
                                                                   day=random.choice(palestra_models.PersonalTraining.DAY_CHOICES)[0],
                                                                   start_hour=random.choice(palestra_models.PersonalTraining.START_HOUR_CHOICES)[0],
-                                                                  training_type=random_fitness_goal.id)
+                                                                  training_type=random_fitness_goal.id, completed_date=datetime.now())
                 pt_event.save()
-
+                
                 review = palestra_models.PersonalTrainingReview.objects.create(event=pt_event, trainer=trainer, user=user, stars=math.floor(i/2), title=f"Title_{i}")
                 review.event_type = "personal_training"
                 review.save()
@@ -284,7 +285,15 @@ class GetReviewsTestCase(TestCase):
                                                                day=random.choice(palestra_models.PersonalTraining.DAY_CHOICES)[0],
                                                                start_hour=random.choice(palestra_models.PersonalTraining.START_HOUR_CHOICES)[0])
                 gt_event.save()
-                review = palestra_models.GroupTrainingReview.objects.create(event=gt_event, user=user, stars=math.floor(i/2), title=f"Title_{i}")
+
+                completed_group_training = palestra_models.CompletedGroupTrainingReservation(
+                    group_class=gt_event,
+                    user=user,
+                    completed_date=get_event_date(gt_event)
+                )
+                completed_group_training.save()
+
+                review = palestra_models.GroupTrainingReview.objects.create(event=completed_group_training, user=user, stars=math.floor(i/2), title=f"Title_{i}")
                 review.trainer = trainer
                 review.event_type = "group_training"
                 review.save()
@@ -317,15 +326,26 @@ class GetReviewsTestCase(TestCase):
         self.client.force_login(random_user)
         review_to_edit = random.choice([review for review in self.reviews if review.user == random_user])
 
-        data = {
-                'user': random_user.id,
-                'event':review_to_edit.event.id,
-                'event_type':review_to_edit.event_type,
-                'stars':3,
-                'title':"NEW TITLE",
-                'additional_info':"NEW ADDITIONAL INFO",
-                'trainer':review_to_edit.event.trainer.id,
-                }
+
+        if isinstance(review_to_edit, palestra_models.PersonalTrainingReview):
+            data = {
+                        'user': random_user.id,
+                        'event':review_to_edit.event.id,
+                        'event_type':review_to_edit.event_type,
+                        'stars':3,
+                        'title':"NEW TITLE",
+                        'additional_info':"NEW ADDITIONAL INFO",
+                        'trainer':review_to_edit.event.trainer.id,
+                    }
+        else:
+            data = {
+                        'user': random_user.id,
+                        'event':review_to_edit.event.id,
+                        'event_type':review_to_edit.event_type,
+                        'stars':3,
+                        'title':"NEW TITLE",
+                        'additional_info':"NEW ADDITIONAL INFO",
+                    }
         
         response = self.client.post(path=reverse('palestra:edit-review'), data=data, follow=False)
         self.assertEqual(response.status_code, 302)  
@@ -398,17 +418,27 @@ class GetReviewsTestCase(TestCase):
     def test_trainer_after_edit(self):
         random_user = random.choice(self.normal_users)
         self.client.force_login(random_user)
-        review_to_edit = random.choice([review for review in self.reviews if review.user == random_user])
+        review_to_edit = random.choice([review for review in self.reviews if review.user == random_user and isinstance(review, palestra_models.PersonalTrainingReview)])
 
-        data = {
-                'user': review_to_edit.user.id,
-                'event':review_to_edit.event.id,
-                'event_type':review_to_edit.event_type,
-                'stars':3,
-                'title':"NEW TITLE",
-                'additional_info':"NEW ADDITIONAL INFO",
-                'trainer':review_to_edit.event.trainer.id,
-                }
+        if isinstance(review_to_edit, palestra_models.PersonalTrainingReview):
+            data = {
+                        'user': random_user.id,
+                        'event':review_to_edit.event.id,
+                        'event_type':review_to_edit.event_type,
+                        'stars':3,
+                        'title':"NEW TITLE",
+                        'additional_info':"NEW ADDITIONAL INFO",
+                        'trainer':review_to_edit.event.trainer.id,
+                    }
+        else:
+            data = {
+                        'user': random_user.id,
+                        'event':review_to_edit.event.id,
+                        'event_type':review_to_edit.event_type,
+                        'stars':3,
+                        'title':"NEW TITLE",
+                        'additional_info':"NEW ADDITIONAL INFO",
+                    }
         
 
         response = self.client.post(path=reverse('palestra:edit-review'), data=data, follow=False)
@@ -417,6 +447,7 @@ class GetReviewsTestCase(TestCase):
         
         random_trainer = palestra_models.User.objects.get(username=review_to_edit.event.trainer.user)
         self.client.force_login(random_trainer)
+        
         for review in palestra_views.get_reviews(random_trainer):  
             if review.id == review_to_edit.id and review.event_type == review_to_edit.event_type:
                 new_review = review
@@ -432,7 +463,7 @@ class GetReviewsTestCase(TestCase):
     def test_trainer_after_deletion(self):
         random_user = random.choice(self.normal_users)
         self.client.force_login(random_user)
-        review_to_delete = random.choice([review for review in self.reviews if review.user == random_user])
+        review_to_delete = random.choice([review for review in self.reviews if review.user == random_user and isinstance(review, palestra_models.PersonalTrainingReview)])
 
         data = {
                 'event_id':review_to_delete.event.id,
@@ -464,23 +495,32 @@ class GetReviewsTestCase(TestCase):
         self.client.force_login(random_user)
         review_to_edit = random.choice([review for review in self.reviews if review.user == random_user])
 
+        if isinstance(review_to_edit, palestra_models.PersonalTrainingReview):
+            data = {
+                        'user': random_user.id,
+                        'event':review_to_edit.event.id,
+                        'event_type':review_to_edit.event_type,
+                        'stars':3,
+                        'title':"NEW TITLE",
+                        'additional_info':"NEW ADDITIONAL INFO",
+                        'trainer':review_to_edit.event.trainer.id,
+                    }
+        else:
+            data = {
+                        'user': random_user.id,
+                        'event':review_to_edit.event.id,
+                        'event_type':review_to_edit.event_type,
+                        'stars':3,
+                        'title':"NEW TITLE",
+                        'additional_info':"NEW ADDITIONAL INFO",
+                    }
         
-        review_to_edit = random.choice(self.reviews)
 
-        data = {
-                'user': review_to_edit.user.id,
-                'event':review_to_edit.event.id,
-                'event_type':review_to_edit.event_type,
-                'stars':3,
-                'title':"NEW TITLE",
-                'additional_info':"NEW ADDITIONAL INFO",
-                'trainer':review_to_edit.event.trainer.id,
-                }
-        
         response = self.client.post(path=reverse('palestra:edit-review'), data=data, follow=False)
         review_to_edit.refresh_from_db()
 
-
+        
+        
         self.client.force_login(self.manager)
 
         for review in palestra_views.get_reviews(self.manager):  
@@ -488,11 +528,11 @@ class GetReviewsTestCase(TestCase):
                 new_review = review
                 break
 
-        #il manager vede la recensione modificata
+        #il Personal trainer vede la recensione modificata
         self.assertEqual(new_review.title, "NEW TITLE")
         self.assertEqual(new_review.additional_info, "NEW ADDITIONAL INFO")
-
-        self.assertTrue(len(self.reviews), len(palestra_views.get_reviews(self.manager)))
+        
+        self.assertEqual(len(self.reviews), len(palestra_views.get_reviews(self.manager)))
 
     def test_manager_after_deletion(self):
         random_user = random.choice(self.normal_users)

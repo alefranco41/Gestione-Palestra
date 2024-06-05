@@ -15,6 +15,7 @@ djangorestframework = "*"
 pytz = "*"
 pillow = "*"
 django-extensions = "*"
+django-celery-beat = "*"
 
 [dev-packages]
 

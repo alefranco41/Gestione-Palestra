@@ -34,8 +34,21 @@ def global_context(request):
         plan.reduced_12 = round(12 * (plan.monthly_price * (1 - plan.discount_percentage[12] / 100) - plan.age_discount), 2)
 
 
-    all_reviews = get_reviews(palestra_models.User.objects.filter(is_manager=True).first())
+    pt_reviews = palestra_models.PersonalTrainingReview.objects.all()
+    gc_reviews = palestra_models.GroupTrainingReview.objects.all()
 
+    all_reviews = []
+    all_reviews.extend(pt_reviews)
+    all_reviews.extend(gc_reviews)
+    
+    for review in all_reviews:
+        if isinstance(review, palestra_models.GroupTrainingReview):
+            review.event_type = "group_training"
+        else:
+            review.training_type = palestra_models.FitnessGoal.objects.get(id=review.event.training_type).name
+            review.event_type = "personal_training"
+
+    all_reviews = sorted(all_reviews, key=lambda x:x.date, reverse=True)
 
     fitness_goals_choices = management_models.FitnessGoal.objects.all()
 

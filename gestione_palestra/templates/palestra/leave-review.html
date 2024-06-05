@@ -15,14 +15,14 @@
             {% if event.group_class.image %} <img  src="{{ event.group_class.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
             <div class="trainer-details">
                 <p><strong>Title:</strong> {{event.group_class.title}}  Group Class with {{ event.group_class.trainer.first_name}} {{ event.group_class.trainer.last_name}}</p>
-                <p><strong>Date:</strong> {{ event.completed_date|date:"F j, Y" }}, {{ event.completed_date|time:"g:i A" }}</p>
+                <p><strong>Date:</strong> {{ event.completed_date|date:"F j, Y" }}</p>
                 </div>
         </div>
         {% else %}
         <div>
             <div class="trainer-details">
                 <p><strong>Title:</strong> {{event.training_type}} Workout with {{ event.trainer.first_name}} {{ event.trainer.last_name}}</p>
-                <p><strong>Date:</strong> {{ event.completed_date|date:"F j, Y" }}, {{ event.completed_date|time:"g:i A" }}</p>
+                <p><strong>Date:</strong> {{ event.completed_date|date:"F j, Y" }}</p>
             </div>
         </div>
         {% endif %}

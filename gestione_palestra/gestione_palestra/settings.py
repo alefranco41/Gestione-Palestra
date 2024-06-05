@@ -49,7 +49,8 @@ INSTALLED_APPS = [
     'django_extensions',
     'gestione_palestra',
     'management',
-    'palestra'
+    'palestra',
+    'django_celery_beat',
 ]
 
 MIDDLEWARE = [
@@ -97,22 +98,6 @@ DATABASES = {
     }
 }
 
-"""LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'console': {
-            'level': 'DEBUG',
-            'class': 'logging.StreamHandler',
-        },
-    },
-    'loggers': {
-        'django.db.backends': {
-            'level': 'DEBUG',
-            'handlers': ['console'],
-        },
-    },
-}"""
 
 
 MEDIA_URL = '/media/'
@@ -161,11 +146,12 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CELERY_IMPORTS = ('gestione_palestra.tasks',)
 
+
+CELERY_BEAT_SCHEDULER = 'django_celery_beat.schedulers:DatabaseScheduler'
+
 CELERY_BEAT_SCHEDULE = {
-    'reset_training_info': {
-        'task': 'gestione_palestra.tasks.reset_training_info',  # Sostituisci con il percorso della tua funzione
+    'reset': {
+        'task': 'gestione_palestra.tasks.reset_training_info',  
         'schedule': crontab(minute='*'),  # Ogni minuto
     },
 }
-
-

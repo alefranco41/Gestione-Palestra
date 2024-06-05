@@ -49,7 +49,7 @@ def get_reviews(user):
                 review.training_type = models.FitnessGoal.objects.get(id=review.event.training_type).name
                 review.event_type = "personal_training"
             
-    return reviews
+    return sorted(reviews, key=lambda x:x.date, reverse=True)
 
 class GymClassesView(View):
     def get_context(self, request):
@@ -528,7 +528,7 @@ class Dashboard(View):
                         except models.PersonalTrainingReview.DoesNotExist:
                             review = None
                     booked_training_session.review = review
-                    booked_training_session.date = functions.get_event_date(booked_training_session)
+                    booked_training_session.date = booked_training_session.completed_date
                     
 
                 if ended:
@@ -537,6 +537,8 @@ class Dashboard(View):
                     schedule[booked_training_session.day][booked_training_session.start_hour] = booked_training_session
 
             context['schedule'] = schedule
+
+            past_events.sort(key=lambda x: x.date, reverse=True)
             context['past_events'] = past_events
         return context
 
@@ -896,6 +898,8 @@ class EditReview(View):
         event_type = request.POST.get('event_type')
         context = get_LeaveReview_context(request=request, event_type=event_type, event_id=event, edit=True)
         old_review = None
+        form = None
+
 
         if event_type == 'personal_training':
             try:
@@ -905,7 +909,6 @@ class EditReview(View):
             else:
                 form = forms.PersonalTrainingReviewForm(request.POST, instance=old_review)
         elif event_type == 'group_training':
-            
             try:
                 old_review = models.GroupTrainingReview.objects.get(user=user, event=event)
             except models.GroupTrainingReview.DoesNotExist:
@@ -916,12 +919,13 @@ class EditReview(View):
         else:
             messages.error(request, f"Invalid choice for event_type: {event_type}")
 
-        if form.is_valid(): 
-            form.save()
-            messages.success(request, "Your review has been successfully edited")
-            return redirect(reverse('palestra:dashboard'))
-        else:
-            functions.print_errors(form, request)
+        if form:
+            if form.is_valid(): 
+                form.save()
+                messages.success(request, "Your review has been successfully edited")
+                return redirect(reverse('palestra:dashboard'))
+            else:
+                functions.print_errors(form, request)
 
         context['review'] = old_review
         return render(request=request, template_name="edit-review.html", context=context)

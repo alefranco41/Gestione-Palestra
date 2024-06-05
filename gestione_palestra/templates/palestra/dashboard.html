@@ -148,10 +148,10 @@
         {% if event.max_participants %}
             {% if event.image %} <img  src="{{ event.image.url }}" alt="Profile Picture" style="max-width: 200px;">{% endif %}
                 <p><strong>Title:</strong> {{event.title}}  Group Class {% if not request.user.is_instructor %} with {{ event.trainer.first_name}} {{ event.trainer.last_name}}  {% endif %}</p>
-                <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
+                <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}</p>
         {% else %}
                 <p><strong>Title:</strong> {{event.training_type}} Workout {% if not request.user.is_instructor %} with {{ event.trainer.first_name}} {{ event.trainer.last_name}} {% else %} with {{ event.user}} {% endif %}</p>
-                <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}, {{ event.date|time:"g:i A" }}</p>
+                <p><strong>Date:</strong> {{ event.date|date:"F j, Y" }}</p>
         {% endif %}
             {% if not request.user.is_instructor %}
                 {% if not event.review %}
