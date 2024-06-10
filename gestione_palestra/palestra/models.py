@@ -121,6 +121,11 @@ class Subscription(models.Model):
     def expired(self):
         return True if self.end_date < datetime.now().date() else False
 
+    def save(self, *args, **kwargs):
+        if not self.plan.is_active:
+            raise ValidationError('Cannot subscribe to an inactive plan.')
+        super().save(*args, **kwargs)
+        
 class GroupClassReservation(models.Model):
     group_class = models.ForeignKey('management.GroupTraining', on_delete=models.CASCADE)
     user = models.ForeignKey(User, on_delete=models.CASCADE)

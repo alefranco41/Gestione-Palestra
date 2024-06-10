@@ -634,10 +634,14 @@ class Dashboard(View):
                     messages.error(request=request, message=f"Couldn't delete group training with id = {class_id}")
             if plan_id:
                 try:
-                    SubscriptionPlan.objects.get(id=plan_id).delete()
-                    messages.success(request=request, message=f"Successfully deleted the subscription plan with id = {plan_id}")
+                    sub_plan = SubscriptionPlan.objects.get(id=plan_id)
+                    if sub_plan.is_active:
+                        sub_plan.deactivate()
+                    else:
+                        sub_plan.activate()
+                    messages.success(request=request, message=f"Successfully disabled the subscription plan with id = {plan_id}")
                 except SubscriptionPlan.DoesNotExist:
-                    messages.error(request=request, message=f"Couldn't delete the subscription plan with id = {plan_id}")
+                    messages.error(request=request, message=f"Couldn't disabled the subscription plan with id = {plan_id}")
 
             if fg_delete is not None:
                 try:

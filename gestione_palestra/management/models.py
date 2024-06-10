@@ -89,6 +89,7 @@ class SubscriptionPlan(models.Model):
     plan_type = models.CharField(max_length=10, choices=PLAN_CHOICES)
     monthly_price = models.DecimalField(max_digits=10, decimal_places=2)
     age_discount = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    is_active = models.BooleanField(default=True)  
 
     def clean(self):
         super().clean()
@@ -107,6 +108,15 @@ class SubscriptionPlan(models.Model):
 
     def __str__(self):
         return self.name
+
+    def deactivate(self):
+        self.is_active = False
+        self.save()
+    
+    def activate(self):
+        self.is_active = True
+        self.save()
+
     
 class DurationDiscount(models.Model):
     DURATION_CHOICES = [

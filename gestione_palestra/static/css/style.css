@@ -162,7 +162,7 @@ table{
 .fitness-goals-container {
   align-self: end;
   display: -webkit-box;
-  margin-bottom: 300px;
+  margin-bottom: 100px;
   border: 1px solid #ccc;
   border-radius: 5px;
 }
@@ -236,6 +236,9 @@ table{
   display: inline-block; /* Make the profile container inline with other list items */
 }
 
+html{
+  zoom: 80%;
+}
 html, body {
   height: 100%;
 }

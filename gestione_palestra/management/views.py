@@ -71,7 +71,8 @@ class CreatePlan(View):
         for plan in models.SubscriptionPlan.objects.all():
             for choice in choices:
                 if choice[0] == plan.plan_type:
-                    choices.remove(choice)
+                    if plan.is_active:
+                        choices.remove(choice)
                     break
         
         context['available_plans'] =  choices
@@ -85,7 +86,7 @@ class CreatePlan(View):
         context = self.get_context(request)
 
         if not context['available_plans']:
-            messages.error(request=request, message="All the available plans are already created, you must delete one first")
+            messages.error(request=request, message="All the available plans are already enabled, you must disable one first")
             return redirect(reverse('palestra:dashboard'))
         return render(request=request, template_name="create-plan.html", context=context)
 

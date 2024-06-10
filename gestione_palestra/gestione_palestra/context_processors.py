@@ -1,13 +1,13 @@
 from datetime import date
 import decimal
 from palestra import models as palestra_models
-from palestra.views import get_reviews
+import random
 from management import models as management_models
 from utils import global_variables
 
 def global_context(request):
     plans = management_models.SubscriptionPlan.objects.all()
-    n_plans = len(plans)
+    n_plans = len([plan for plan in plans if plan.is_active])
     for plan in plans:
         plan.discount_percentage = {}
         plan.full_price = plan.monthly_price
@@ -48,8 +48,7 @@ def global_context(request):
             review.training_type = palestra_models.FitnessGoal.objects.get(id=review.event.training_type).name
             review.event_type = "personal_training"
 
-    all_reviews = sorted(all_reviews, key=lambda x:x.date, reverse=True)
-
+    random.shuffle(all_reviews)
     fitness_goals_choices = management_models.FitnessGoal.objects.all()
 
     fitness_goals = [(goal.id, goal.name) for goal in fitness_goals_choices]

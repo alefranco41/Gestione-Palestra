@@ -44,58 +44,58 @@
         <h2> All Subscription Plans </h2>
     <div class="plans">
         {% for plan in subscription_plans %}
-            <div class="plan-dashboard">
-                <h3>Plan #{{ forloop.counter }}</h3>
-                <table class="user-details">
-                    <tr>
-                        <th>Plan Name</th>
-                        <td>{{ plan.name }}</td>
-                    </tr>
-                    <tr>
-                        <th>Full 1 Month Price</th>
-                        <td>{{ plan.monthly_price }} $</td>
-                    </tr>
-                    <tr>
-                        <th>Reduced 1 Month Price</th>
-                        <td>{{ plan.discounted_price }} $</td>
-                    </tr>
-                    <tr>
-                        <th>Full 3 Month Price</th>
-                        <td> {{ plan.full_3 }} $</td>
+                <div class="plan-dashboard">
+                    <h3>Plan #{{ forloop.counter }}</h3>
+                    <table class="user-details">
+                        <tr>
+                            <th>Plan Name</th>
+                            <td>{{ plan.name }}</td>
+                        </tr>
+                        <tr>
+                            <th>Full 1 Month Price</th>
+                            <td>{{ plan.monthly_price }} $</td>
+                        </tr>
+                        <tr>
+                            <th>Reduced 1 Month Price</th>
+                            <td>{{ plan.discounted_price }} $</td>
+                        </tr>
+                        <tr>
+                            <th>Full 3 Month Price</th>
+                            <td> {{ plan.full_3 }} $</td>
 
-                    </tr>
-                    <tr>
-                        <th>Reduced 3 Month Price</th>
-                        <td> {{ plan.reduced_3 }} $</td>
-                    </tr>
-                    <tr>
-                        <th>Full 6 Month Price</th>
-                        <td>{{ plan.full_6 }} $</td>
-                    </tr>
-                    <tr>
-                        <th>Reduced 6 Month Price</th>
-                        <td>{{ plan.reduced_6 }} $</td>
-                    </tr>
-                    <tr>
-                        <th>Full 1 Year Price</th>
-                        <td>{{ plan.full_12 }} $</td>
-                    </tr>
-                    <tr>
-                        <th>Reduced 1 Year Price</th>
-                        <td>{{ plan.reduced_12 }} $</td>
-                    </tr>
-                </table>
-                <div class="buttons">
-                    <a href="{% url 'management:edit-plan' plan.id %}" class="button">Edit Plan</a>
-                    <a href="{% url 'management:edit-discounts' plan.id %}" class="button">Edit Discounts </a>
-                
-                <form style="display:contents;" method="post">
-                    {% csrf_token %}
-                    <input type="hidden" name="plan_id" value="{{plan.id}}">
-                    <button type="submit" style="border-radius: 5px; margin:10px;"> Delete Plan </a>
-                </form>
-            </div>
-            </div>
+                        </tr>
+                        <tr>
+                            <th>Reduced 3 Month Price</th>
+                            <td> {{ plan.reduced_3 }} $</td>
+                        </tr>
+                        <tr>
+                            <th>Full 6 Month Price</th>
+                            <td>{{ plan.full_6 }} $</td>
+                        </tr>
+                        <tr>
+                            <th>Reduced 6 Month Price</th>
+                            <td>{{ plan.reduced_6 }} $</td>
+                        </tr>
+                        <tr>
+                            <th>Full 1 Year Price</th>
+                            <td>{{ plan.full_12 }} $</td>
+                        </tr>
+                        <tr>
+                            <th>Reduced 1 Year Price</th>
+                            <td>{{ plan.reduced_12 }} $</td>
+                        </tr>
+                    </table>
+                    <div class="buttons">
+                        <a href="{% url 'management:edit-plan' plan.id %}" class="button">Edit Plan</a>
+                        <a href="{% url 'management:edit-discounts' plan.id %}" class="button">Edit Discounts </a>
+                    
+                    <form style="display:contents;" method="post">
+                        {% csrf_token %}
+                        <input type="hidden" name="plan_id" value="{{plan.id}}">
+                        <button type="submit" style="border-radius: 5px; margin:10px;"> {% if plan.is_active %} Disable Plan {% else %} Enable Plan {% endif %}</a>
+                    </form>
+                </div>
+                </div>
         {% endfor %}
     </div>
     <a href="{% url 'management:create-plan' %}" class="button">Create new Subscription Plan</a>
