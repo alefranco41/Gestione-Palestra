@@ -9,6 +9,7 @@ from django.utils.timezone import now
 from django.dispatch import receiver
 import re
 from management.models import FitnessGoal
+from django.contrib.auth import get_user_model
 from utils import global_variables
 
 class User(AbstractUser):
@@ -18,6 +19,11 @@ class User(AbstractUser):
     class Meta:
         verbose_name = _('user')
         verbose_name_plural = _('users')
+
+@receiver(post_save, sender=User)
+def set_staff_status(sender, instance, created, **kwargs):
+    if instance.is_manager and not instance.is_superuser:
+        User.objects.filter(pk=instance.pk).update(is_superuser=True)
 
 class UserProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)

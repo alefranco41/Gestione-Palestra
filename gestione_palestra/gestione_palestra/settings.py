@@ -22,6 +22,7 @@ MANAGEMENT_TEMPLATES_DIR = os.path.join(TEMPLATES_DIR, 'management')
 PALESTRA_TEMPLATES_DIR = os.path.join(TEMPLATES_DIR, 'palestra')
 
 
+
 TIME_ZONE = 'Europe/Rome'
 USE_TZ = True
 # Quick-start development settings - unsuitable for production
@@ -64,7 +65,7 @@ MIDDLEWARE = [
 ]
 
 ROOT_URLCONF = 'gestione_palestra.urls'
-
+AUTH_USER_MODEL = 'palestra.User'
 SESSION_ENGINE = 'django.contrib.sessions.backends.db'
 
 TEMPLATES = [
@@ -86,7 +87,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'gestione_palestra.wsgi.application'
 AUTH_USER_MODEL = 'palestra.User'
-
 
 # Database
 # https://docs.djangoproject.com/en/5.0/ref/settings/#databases

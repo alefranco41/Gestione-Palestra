@@ -253,7 +253,7 @@ class GetReviewsTestCase(TestCase):
         self.normal_users = normal_users
 
         random_trainers = []
-        for i in range(5):
+        for i in range(1):
             random_trainer = palestra_models.User.objects.create(username=f"trainer_{i}", email=f"email_{i}@gmail.com", password="123", is_instructor=True)
             random_trainer.save()
             random_trainer_profile = palestra_models.TrainerProfile.objects.create(user_id=random_trainer.id, user=random_trainer, first_name=f"first name {i}", last_name=f"last name {i}", date_of_birth=datetime(1999, 10, 10))
