@@ -23,6 +23,7 @@
       
       
         <div id="user-menu" class="user-menu" style="display:none;">
+          {% if request.user.is_manager %} <a href="/admin">Admin page</a> <br> {% endif %}
           <a href="{% url 'palestra:dashboard' %}">Dashboard</a> <br>
           {% if not request.user.is_manager %}
             <a href="{% url 'palestra:profile' %}">Profile</a> <br>
